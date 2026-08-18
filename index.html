@@ -4396,7 +4396,12 @@ function finishTest() {
             );
 
             if (typeof promouserSyncTestResult === "function") {
-                promouserSyncTestResult(finalCPS, testId, testTimeLabel);
+                if (selectedMouse === "both") {
+                    document.getElementById("cpsStatus").textContent =
+                        "BOTH MOUSE MODE • LOCAL RESULT";
+                } else {
+                    promouserSyncTestResult(finalCPS, testId, testTimeLabel);
+                }
             }
 
         }
@@ -6377,6 +6382,12 @@ async function promouserHandleAutoclicker(finalCPS=0){
 }
 
 async function promouserSyncTestResult(finalCPS,testId,testTimeLabel){
+    /*
+      BOTH MOUSE MODE is a local practice mode. Results can still appear
+      in the user's local CPS history, but they must NEVER contribute to
+      online/global leaderboard stats, achievements, or coins.
+    */
+    if(selectedMouse==="both")return;
     if(!pmFirebaseReady||!pmAuthUser||!Number.isFinite(finalCPS)||pmPrivateMode)return;
     try{
         const db=firebase.firestore(),ref=db.collection("users").doc(pmAuthUser.uid);
