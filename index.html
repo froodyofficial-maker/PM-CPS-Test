@@ -9062,29 +9062,39 @@ body.glitchPop .pmCoinPill{
 
 <!-- FINAL FIX: RETRO ARCADE SHOP + TRUE IN-PROFILE FLUFF YOU FIT -->
 <style id="pmFinalRetroFluffFix">
-/* FLUFF YOU: keep the effect exactly inside the actual avatar, including the larger public-profile header. */
+/* FLUFF YOU: the hands are a separate transparent overlay, but the entire effect is clipped INSIDE the exact PFP frame. */
 .pmAvatarWrap .pmFluffBorderImage{
   left:0!important;top:0!important;right:auto!important;bottom:auto!important;
   width:104px!important;height:104px!important;transform:none!important;
-  object-fit:fill!important;clip-path:none!important;border-radius:50%!important;
+  object-fit:fill!important;
+  clip-path:inset(0 round 10px)!important;
+  border-radius:10px!important;
 }
 .pmPublicAvatarStage .pmFluffBorderImage{
   left:0!important;top:0!important;right:auto!important;bottom:auto!important;
   width:115px!important;height:115px!important;transform:none!important;
-  object-fit:fill!important;clip-path:none!important;border-radius:50%!important;
+  object-fit:fill!important;
+  clip-path:inset(0 round 10px)!important;
+  border-radius:10px!important;
 }
+/* Public profile uses a 145px stage with the actual 115px avatar inset by 15px. */
 .pmPublicTop > .pmPublicAvatarStage .pmFluffBorderImage{
   left:15px!important;top:15px!important;width:115px!important;height:115px!important;
+  clip-path:inset(0 round 10px)!important;
 }
 .pmLeaderboardAvatarBox .pmFluffBorderImage{
   left:0!important;top:0!important;width:40px!important;height:40px!important;
-  transform:none!important;object-fit:fill!important;clip-path:none!important;border-radius:50%!important;
+  transform:none!important;object-fit:fill!important;
+  clip-path:inset(0 round 10px)!important;
+  border-radius:10px!important;
 }
 .pmCosmeticPreview .pmFluffBorderImage{
   left:0!important;top:0!important;width:100%!important;height:100%!important;
-  transform:none!important;object-fit:fill!important;clip-path:none!important;border-radius:50%!important;
+  transform:none!important;object-fit:fill!important;
+  clip-path:inset(0 round 10px)!important;
+  border-radius:10px!important;
 }
-/* Never let the border itself push outside the avatar stage. */
+/* The overlay can never extend beyond the actual avatar frame. */
 .pmAvatarWrap,.pmPublicAvatarStage,.pmLeaderboardAvatarBox,.pmCosmeticPreview{overflow:hidden!important;}
 </style>
 <script id="pmFinalRetroFluffFixScript">
@@ -9309,5 +9319,163 @@ body.glitchPop .pmCoinPill{
     setInterval(enforceAdminVisibility,5000);
 })();
 </script>
+
+<!-- =========================================================
+     SECRET BETA TESTER MODE
+     Code: imabetatester
+     UI-only sandbox: shop items appear owned, but no gameplay/data
+     actions are allowed. This does NOT write ownership to Firebase.
+========================================================= -->
+<style id="pmSecretBetaTesterStyles">
+  #pmBetaTesterBadge{
+    position:fixed;right:16px;bottom:16px;z-index:2147483646;
+    display:none;padding:10px 14px;border:2px dashed #00e5ff;
+    border-radius:10px;background:#05080b;color:#00e5ff;
+    font:900 11px/1 Arial,sans-serif;letter-spacing:2px;
+    box-shadow:0 0 16px rgba(0,229,255,.25);
+    pointer-events:none;
+  }
+  #pmBetaTesterOverlay{
+    position:fixed;inset:0;z-index:2147483645;display:none;
+    pointer-events:none;background:rgba(0,0,0,.16);
+  }
+  #pmBetaTesterOverlay .pmBetaOverlayText{
+    position:absolute;top:74px;left:50%;transform:translateX(-50%);
+    padding:8px 14px;border:1px solid #00e5ff;border-radius:999px;
+    background:#05080bcc;color:#00e5ff;
+    font:900 10px/1 Arial,sans-serif;letter-spacing:2px;
+  }
+  body.pmBetaTesterMode .page.active > *:not(.pageHeader){
+    filter:saturate(.82);
+  }
+  body.pmBetaTesterMode .page.active button:not(.backButton),
+  body.pmBetaTesterMode .page.active input,
+  body.pmBetaTesterMode .page.active textarea,
+  body.pmBetaTesterMode .page.active select,
+  body.pmBetaTesterMode .page.active [role="button"],
+  body.pmBetaTesterMode .page.active .clickArea,
+  body.pmBetaTesterMode .page.active .timeBtn,
+  body.pmBetaTesterMode .page.active .mouseOption,
+  body.pmBetaTesterMode .page.active .uiOption,
+  body.pmBetaTesterMode .page.active .stat.clickable,
+  body.pmBetaTesterMode .page.active a{
+    pointer-events:none!important;
+    opacity:.62!important;
+  }
+  body.pmBetaTesterMode .page.active .backButton{pointer-events:auto!important;}
+  body.pmBetaTesterMode .page.active::after{
+    content:"BETA UI PREVIEW • CONTROLS DISABLED";
+    position:absolute;left:50%;bottom:22px;transform:translateX(-50%);
+    padding:8px 12px;border:1px dashed #00e5ff;border-radius:8px;
+    background:#05080bdd;color:#00e5ff;z-index:20;
+    font:900 9px/1 Arial,sans-serif;letter-spacing:1.5px;pointer-events:none;
+  }
+</style>
+<script id="pmSecretBetaTesterScript">
+(function(){
+  const CODE="imabetatester";
+  const STORAGE_KEY="promouserBetaTesterMode";
+  let buffer="";
+  let betaActive=sessionStorage.getItem(STORAGE_KEY)==="1";
+
+  function betaOwned(){ return betaActive; }
+
+  function showBetaUI(){
+    document.body.classList.add("pmBetaTesterMode");
+    let badge=document.getElementById("pmBetaTesterBadge");
+    if(!badge){
+      badge=document.createElement("div");
+      badge.id="pmBetaTesterBadge";
+      badge.textContent="BETA TESTER • UI PREVIEW";
+      document.body.appendChild(badge);
+    }
+    badge.style.display="block";
+    let overlay=document.getElementById("pmBetaTesterOverlay");
+    if(!overlay){
+      overlay=document.createElement("div");
+      overlay.id="pmBetaTesterOverlay";
+      overlay.innerHTML='<div class="pmBetaOverlayText">BETA UI PREVIEW</div>';
+      document.body.appendChild(overlay);
+    }
+    overlay.style.display="block";
+    refreshBetaShop();
+  }
+
+  function activateBeta(){
+    if(betaActive)return;
+    betaActive=true;
+    sessionStorage.setItem(STORAGE_KEY,"1");
+    showBetaUI();
+    try{ if(typeof pmRenderShop==="function")pmRenderShop(); }catch(e){}
+    try{ if(typeof pmRenderCollection==="function")pmRenderCollection(); }catch(e){}
+    try{ if(typeof pmRenderExtraShop==="function")pmRenderExtraShop(); }catch(e){}
+    alert("BETA TESTER MODE ENABLED\\nAll shop items are available for UI testing. Gameplay and account-changing controls are disabled.");
+  }
+
+  function refreshBetaShop(){
+    if(!betaActive)return;
+    document.querySelectorAll('[data-pm-new-item]').forEach(el=>{
+      if(el.dataset.pmNewItem)el.style.display="";
+    });
+    document.querySelectorAll('#pmShopPage button, #shopPage button, #pmShopPage .pmShopCard button').forEach(btn=>{
+      if(!btn.classList.contains('backButton')){
+        const txt=(btn.textContent||"").toUpperCase();
+        if(txt.includes("BUY")||txt.includes("OWNED")){
+          btn.textContent="OWNED • BETA";
+        }
+      }
+    });
+  }
+
+  // Override ownership checks without changing the real Firestore ownership.
+  // Existing functions continue to work, but beta mode makes every cosmetic/UI
+  // look owned locally for preview purposes only.
+  const oldPmOwn=window.pmOwn;
+  window.pmOwn=function(id){
+    if(betaActive)return true;
+    return typeof oldPmOwn==="function"?oldPmOwn.apply(this,arguments):false;
+  };
+  const oldPmIsOwnedCosmetic=window.pmIsOwnedCosmetic;
+  window.pmIsOwnedCosmetic=function(id){
+    if(betaActive)return true;
+    return typeof oldPmIsOwnedCosmetic==="function"?oldPmIsOwnedCosmetic.apply(this,arguments):false;
+  };
+
+  // Make the profanity filter effectively OFF during beta preview so every
+  // cosmetic remains visible for testing. The user's saved setting is untouched.
+  const oldProfanity=window.pmProfanityFilterEnabled;
+  window.pmProfanityFilterEnabled=function(){
+    if(betaActive)return false;
+    return typeof oldProfanity==="function"?oldProfanity.apply(this,arguments):false;
+  };
+
+  // Detect the secret code when typed anywhere, without adding a visible code box.
+  document.addEventListener("keydown",function(e){
+    if(e.ctrlKey||e.altKey||e.metaKey)return;
+    const k=String(e.key||"").toLowerCase();
+    if(k.length!==1)return;
+    buffer=(buffer+k).slice(-CODE.length);
+    if(buffer===CODE)activateBeta();
+  },true);
+
+  // Also recognize a pasted/typed code in any normal text field.
+  document.addEventListener("input",function(e){
+    const t=e.target;
+    if(!t||typeof t.value!=="string")return;
+    const normalized=t.value.toLowerCase().replace(/[\\_*\s]/g,"");
+    if(normalized===CODE || normalized.endsWith(CODE))activateBeta();
+  },true);
+
+  // Beta mode survives page navigation in this tab, but never changes the account.
+  if(betaActive)showBetaUI();
+
+  // Re-apply after dynamic shop/collection renders.
+  setInterval(function(){
+    if(!betaActive)return;
+    try{refreshBetaShop();}catch(e){}
+  },700);
+})();
+</script>
+
 </body>
 </html>
