@@ -9216,7 +9216,13 @@ body.glitchPop .pmCoinPill{
     const PM_SOLE_ADMIN_UID = "WtQ6Vaz7a1Ogt3A0KTYYmFkCU132";
 
     window.pmIsSoleAdmin = function(){
-        return !!(window.pmAuthUser && window.pmAuthUser.uid === PM_SOLE_ADMIN_UID);
+        // pmAuthUser is a top-level lexical variable in the original app,
+        // so it is NOT reliably exposed as window.pmAuthUser.
+        try{
+            return !!(typeof pmAuthUser !== "undefined" && pmAuthUser && pmAuthUser.uid === PM_SOLE_ADMIN_UID);
+        }catch(e){
+            return false;
+        }
     };
 
     function pmAdminDenied(){
@@ -9320,472 +9326,40 @@ body.glitchPop .pmCoinPill{
 })();
 </script>
 
-<!-- =========================================================
-     SECRET BETA TESTER MODE
-     Code: imabetatester
-     UI-only sandbox: shop items appear owned, but no gameplay/data
-     actions are allowed. This does NOT write ownership to Firebase.
-========================================================= -->
-<style id="pmSecretBetaTesterStyles">
-  #pmBetaTesterBadge{
-    position:fixed;right:16px;bottom:16px;z-index:2147483646;
-    display:none;padding:10px 14px;border:2px dashed #00e5ff;
-    border-radius:10px;background:#05080b;color:#00e5ff;
-    font:900 11px/1 Arial,sans-serif;letter-spacing:2px;
-    box-shadow:0 0 16px rgba(0,229,255,.25);
-    pointer-events:none;
-  }
-  #pmBetaTesterOverlay{
-    position:fixed;inset:0;z-index:2147483645;display:none;
-    pointer-events:none;background:rgba(0,0,0,.16);
-  }
-  #pmBetaTesterOverlay .pmBetaOverlayText{
-    position:absolute;top:74px;left:50%;transform:translateX(-50%);
-    padding:8px 14px;border:1px solid #00e5ff;border-radius:999px;
-    background:#05080bcc;color:#00e5ff;
-    font:900 10px/1 Arial,sans-serif;letter-spacing:2px;
-  }
-  body.pmBetaTesterMode .page.active > *:not(.pageHeader){
-    filter:saturate(.82);
-  }
-  body.pmBetaTesterMode .page.active button:not(.backButton),
-  body.pmBetaTesterMode .page.active input,
-  body.pmBetaTesterMode .page.active textarea,
-  body.pmBetaTesterMode .page.active select,
-  body.pmBetaTesterMode .page.active [role="button"],
-  body.pmBetaTesterMode .page.active .clickArea,
-  body.pmBetaTesterMode .page.active .timeBtn,
-  body.pmBetaTesterMode .page.active .mouseOption,
-  body.pmBetaTesterMode .page.active .uiOption,
-  body.pmBetaTesterMode .page.active .stat.clickable,
-  body.pmBetaTesterMode .page.active a{
-    pointer-events:none!important;
-    opacity:.62!important;
-  }
-  body.pmBetaTesterMode .page.active .backButton{pointer-events:auto!important;}
-  body.pmBetaTesterMode .page.active::after{
-    content:"BETA UI PREVIEW • CONTROLS DISABLED";
-    position:absolute;left:50%;bottom:22px;transform:translateX(-50%);
-    padding:8px 12px;border:1px dashed #00e5ff;border-radius:8px;
-    background:#05080bdd;color:#00e5ff;z-index:20;
-    font:900 9px/1 Arial,sans-serif;letter-spacing:1.5px;pointer-events:none;
-  }
+<style id="pmFinalFluffBetaFixStyles">
+/* The 210px shop preview contains a 128px PFP. Keep FLUFF YOU exactly on that PFP. */
+.pmCosmeticPreview .pmFluffBorderImage{
+  position:absolute!important;
+  left:41px!important;
+  top:41px!important;
+  width:128px!important;
+  height:128px!important;
+  transform:none!important;
+  object-fit:fill!important;
+  border-radius:10px!important;
+  clip-path:inset(0 round 10px)!important;
+  overflow:hidden!important;
+}
+.pmCosmeticPreview{
+  position:relative!important;
+  overflow:hidden!important;
+}
+
+/* Keep FLUFF YOU on the real 104px/115px avatar frames everywhere else. */
+.pmAvatarWrap .pmFluffBorderImage{
+  left:0!important;top:0!important;width:104px!important;height:104px!important;
+  transform:none!important;object-fit:fill!important;
+  clip-path:inset(0 round 10px)!important;border-radius:10px!important;
+}
+.pmPublicAvatarStage .pmFluffBorderImage{
+  left:0!important;top:0!important;width:115px!important;height:115px!important;
+  transform:none!important;object-fit:fill!important;
+  clip-path:inset(0 round 10px)!important;border-radius:10px!important;
+}
+.pmPublicTop > .pmPublicAvatarStage .pmFluffBorderImage{
+  left:15px!important;top:15px!important;width:115px!important;height:115px!important;
+}
 </style>
-<script id="pmSecretBetaTesterScript">
-(function(){
-  const CODE="imabetatester";
-  const STORAGE_KEY="promouserBetaTesterMode";
-  let buffer="";
-  let betaActive=sessionStorage.getItem(STORAGE_KEY)==="1";
-
-  function betaOwned(){ return betaActive; }
-
-  function showBetaUI(){
-    document.body.classList.add("pmBetaTesterMode");
-    let badge=document.getElementById("pmBetaTesterBadge");
-    if(!badge){
-      badge=document.createElement("div");
-      badge.id="pmBetaTesterBadge";
-      badge.textContent="BETA TESTER • UI PREVIEW";
-      document.body.appendChild(badge);
-    }
-    badge.style.display="block";
-    let overlay=document.getElementById("pmBetaTesterOverlay");
-    if(!overlay){
-      overlay=document.createElement("div");
-      overlay.id="pmBetaTesterOverlay";
-      overlay.innerHTML='<div class="pmBetaOverlayText">BETA UI PREVIEW</div>';
-      document.body.appendChild(overlay);
-    }
-    overlay.style.display="block";
-    refreshBetaShop();
-  }
-
-  function activateBeta(){
-    if(betaActive)return;
-    betaActive=true;
-    sessionStorage.setItem(STORAGE_KEY,"1");
-    showBetaUI();
-    try{ if(typeof pmRenderShop==="function")pmRenderShop(); }catch(e){}
-    try{ if(typeof pmRenderCollection==="function")pmRenderCollection(); }catch(e){}
-    try{ if(typeof pmRenderExtraShop==="function")pmRenderExtraShop(); }catch(e){}
-    alert("BETA TESTER MODE ENABLED\\nAll shop items are available for UI testing. Gameplay and account-changing controls are disabled.");
-  }
-
-  function refreshBetaShop(){
-    if(!betaActive)return;
-    document.querySelectorAll('[data-pm-new-item]').forEach(el=>{
-      if(el.dataset.pmNewItem)el.style.display="";
-    });
-    document.querySelectorAll('#pmShopPage button, #shopPage button, #pmShopPage .pmShopCard button').forEach(btn=>{
-      if(!btn.classList.contains('backButton')){
-        const txt=(btn.textContent||"").toUpperCase();
-        if(txt.includes("BUY")||txt.includes("OWNED")){
-          btn.textContent="OWNED • BETA";
-        }
-      }
-    });
-  }
-
-  // Override ownership checks without changing the real Firestore ownership.
-  // Existing functions continue to work, but beta mode makes every cosmetic/UI
-  // look owned locally for preview purposes only.
-  const oldPmOwn=window.pmOwn;
-  window.pmOwn=function(id){
-    if(betaActive)return true;
-    return typeof oldPmOwn==="function"?oldPmOwn.apply(this,arguments):false;
-  };
-  const oldPmIsOwnedCosmetic=window.pmIsOwnedCosmetic;
-  window.pmIsOwnedCosmetic=function(id){
-    if(betaActive)return true;
-    return typeof oldPmIsOwnedCosmetic==="function"?oldPmIsOwnedCosmetic.apply(this,arguments):false;
-  };
-
-  // Make the profanity filter effectively OFF during beta preview so every
-  // cosmetic remains visible for testing. The user's saved setting is untouched.
-  const oldProfanity=window.pmProfanityFilterEnabled;
-  window.pmProfanityFilterEnabled=function(){
-    if(betaActive)return false;
-    return typeof oldProfanity==="function"?oldProfanity.apply(this,arguments):false;
-  };
-
-  // Detect the secret code when typed anywhere, without adding a visible code box.
-  document.addEventListener("keydown",function(e){
-    if(e.ctrlKey||e.altKey||e.metaKey)return;
-    const k=String(e.key||"").toLowerCase();
-    if(k.length!==1)return;
-    buffer=(buffer+k).slice(-CODE.length);
-    if(buffer===CODE)activateBeta();
-  },true);
-
-  // Also recognize a pasted/typed code in any normal text field.
-  document.addEventListener("input",function(e){
-    const t=e.target;
-    if(!t||typeof t.value!=="string")return;
-    const normalized=t.value.toLowerCase().replace(/[\\_*\s]/g,"");
-    if(normalized===CODE || normalized.endsWith(CODE))activateBeta();
-  },true);
-
-  // Beta mode survives page navigation in this tab, but never changes the account.
-  if(betaActive)showBetaUI();
-
-  // Re-apply after dynamic shop/collection renders.
-  setInterval(function(){
-    if(!betaActive)return;
-    try{refreshBetaShop();}catch(e){}
-  },700);
-})();
-</script>
-
-
-<!-- =========================================================
-     BETA TESTER FINAL CONTROLS
-     Code ON:  imabetatester
-     Code OFF: off
-     Beta ownership/equipment is LOCAL ONLY and never writes to Firebase.
-========================================================= -->
-<style id="pmBetaTesterFinalControlsStyles">
-  /* Beta testers may use Shop + My UI/Avatars equipment controls,
-     while gameplay/account-changing controls remain disabled. */
-  body.pmBetaTesterMode #shopPage .pmActionButton,
-  body.pmBetaTesterMode #shopPage .pmShopCard button,
-  body.pmBetaTesterMode #shopPage .pmShopActions,
-  body.pmBetaTesterMode #myUIPage .pmActionButton,
-  body.pmBetaTesterMode #myAvatarsPage .pmActionButton,
-  body.pmBetaTesterMode #shopCheckoutPage .backButton,
-  body.pmBetaTesterMode #shopCheckoutPage .pmActionButton,
-  body.pmBetaTesterMode #shopCheckoutPage button {
-    pointer-events:auto!important;
-    opacity:1!important;
-  }
-  body.pmBetaTesterMode #shopPage a,
-  body.pmBetaTesterMode #myUIPage a,
-  body.pmBetaTesterMode #myAvatarsPage a { pointer-events:auto!important; opacity:1!important; }
-</style>
-<script id="pmBetaTesterFinalControlsScript">
-(function(){
-  const ON_CODE="imabetatester";
-  const OFF_CODE="off";
-  const KEY="promouserBetaTesterMode";
-  let betaBuffer="";
-  let offBuffer="";
-  let betaActive=sessionStorage.getItem(KEY)==="1";
-
-  function isBeta(){return betaActive;}
-
-  function refreshVisuals(){
-    try{if(typeof pmApplyEquippedUI==="function")pmApplyEquippedUI();}catch(e){}
-    try{if(typeof pmApplyRetroArcade==="function")pmApplyRetroArcade();}catch(e){}
-    try{if(typeof pmRefreshFluffVisibility==="function")pmRefreshFluffVisibility();}catch(e){}
-    try{if(typeof pmRenderNewShopItems==="function")pmRenderNewShopItems();}catch(e){}
-    try{if(typeof pmEnsureNewShopCards==="function")pmEnsureNewShopCards();}catch(e){}
-    try{if(typeof pmRenderExtraShop==="function")pmRenderExtraShop();}catch(e){}
-    try{if(typeof pmRenderCollection==="function")pmRenderCollection();}catch(e){}
-  }
-
-  function activate(){
-    betaActive=true;
-    sessionStorage.setItem(KEY,"1");
-    document.body.classList.add("pmBetaTesterMode");
-    try{if(typeof showBetaUI==="function")showBetaUI();}catch(e){}
-    refreshVisuals();
-  }
-
-  function deactivate(){
-    betaActive=false;
-    sessionStorage.removeItem(KEY);
-    document.body.classList.remove("pmBetaTesterMode");
-    const badge=document.getElementById("pmBetaTesterBadge");
-    const overlay=document.getElementById("pmBetaTesterOverlay");
-    if(badge)badge.style.display="none";
-    if(overlay)overlay.style.display="none";
-    /* Restore persisted account cosmetics/themes after beta mode ends. */
-    try{if(typeof pmLoadOwnProfile==="function")pmLoadOwnProfile().then(()=>refreshVisuals());else refreshVisuals();}catch(e){refreshVisuals();}
-  }
-
-  /* Local-only UI equip: no Firestore write while beta mode is active. */
-  const realEquipUI=window.pmEquipUI;
-  window.pmEquipUI=async function(id){
-    if(!betaActive)return typeof realEquipUI==="function"?realEquipUI.apply(this,arguments):undefined;
-    if(!window.pmUserData)return alert("Your online account is not connected yet.");
-    const current=pmUserData.equippedUI||"default";
-    pmUserData.equippedUI=(current===id?"default":id);
-    refreshVisuals();
-  };
-
-  /* Local-only FLUFF YOU equip. */
-  const realEquipFluff=window.pmEquipFluffBorder;
-  window.pmEquipFluffBorder=async function(){
-    if(!betaActive)return typeof realEquipFluff==="function"?realEquipFluff.apply(this,arguments):undefined;
-    if(!window.pmUserData)return alert("Your online account is not connected yet.");
-    const current=pmUserData.equippedBorder||"";
-    pmUserData.equippedBorder=(current==="border_fluff_you"?"":"border_fluff_you");
-    refreshVisuals();
-  };
-
-  /* Local-only 67 equip. */
-  const realEquip67=window.equip67Border;
-  window.equip67Border=async function(){
-    if(!betaActive)return typeof realEquip67==="function"?realEquip67.apply(this,arguments):undefined;
-    if(!window.pmUserData)return alert("Your online account is not connected yet.");
-    pmUserData.equippedBorder=(pmUserData.equippedBorder==="border_67"?"":"border_67");
-    refreshVisuals();
-  };
-
-  /* Local-only Retro equip. */
-  const realEquipRetro=window.pmEquipRetroArcade;
-  window.pmEquipRetroArcade=async function(){
-    if(!betaActive)return typeof realEquipRetro==="function"?realEquipRetro.apply(this,arguments):undefined;
-    if(!window.pmUserData)return alert("Your online account is not connected yet.");
-    pmUserData.equippedUI=(pmUserData.equippedUI==="ui_retro_arcade"?"default":"ui_retro_arcade");
-    refreshVisuals();
-  };
-
-  /* During beta, opening a shop action for a known cosmetic acts as an
-     equip/preview action instead of charging coins or writing ownership. */
-  const realCheckout=window.openShopCheckout;
-  window.openShopCheckout=function(id){
-    if(!betaActive)return typeof realCheckout==="function"?realCheckout.apply(this,arguments):undefined;
-    if(id==="border_67")return window.equip67Border();
-    if(id==="border_fluff_you")return window.pmEquipFluffBorder();
-    if(id==="ui_glitch_pop"||id==="ui_void_matrix")return window.pmEquipUI(id);
-    if(id==="ui_retro_arcade")return window.pmEquipRetroArcade();
-    /* Unknown future cosmetics: show checkout for viewing, but never allow
-       the purchase itself to write to the account in beta mode. */
-    return typeof realCheckout==="function"?realCheckout.apply(this,arguments):undefined;
-  };
-
-  /* Make beta-owned shop cards explicitly show an EQUIP action. */
-  function refreshBetaEquipButtons(){
-    if(!betaActive)return;
-    const mappings={
-      "pm67EquipButton":"67",
-      "pmFluffEquipButton":"fluff",
-      "pmGlitchEquipButton":"glitch",
-      "pmRetroFinalEquip":"retro",
-      "pmRetroEquipButton":"retro"
-    };
-    Object.keys(mappings).forEach(id=>{
-      const b=document.getElementById(id);
-      if(!b)return;
-      b.style.display="inline-block";
-      b.disabled=false;
-      const kind=mappings[id];
-      let eq=false;
-      if(kind==="67")eq=pmUserData?.equippedBorder==="border_67";
-      if(kind==="fluff")eq=pmUserData?.equippedBorder==="border_fluff_you";
-      if(kind==="glitch")eq=pmUserData?.equippedUI==="ui_glitch_pop";
-      if(kind==="retro")eq=pmUserData?.equippedUI==="ui_retro_arcade";
-      b.textContent=eq?"UNEQUIP":"EQUIP";
-    });
-    document.querySelectorAll('#shopPage [data-pm-new-item] .pmActionButton').forEach(b=>{
-      b.disabled=false;b.style.opacity="1";
-    });
-  }
-
-  /* Secret OFF command. It can be typed anywhere, just like the activation code. */
-  document.addEventListener("keydown",function(e){
-    if(e.ctrlKey||e.altKey||e.metaKey)return;
-    const k=String(e.key||"").toLowerCase();
-    if(k.length!==1)return;
-    betaBuffer=(betaBuffer+k).slice(-ON_CODE.length);
-    offBuffer=(offBuffer+k).slice(-OFF_CODE.length);
-    if(betaBuffer===ON_CODE){activate();betaBuffer="";offBuffer="";}
-    if(offBuffer===OFF_CODE){deactivate();betaBuffer="";offBuffer="";}
-  },true);
-
-  /* Also accept the codes in text inputs / pasted text. */
-  document.addEventListener("input",function(e){
-    const t=e.target;if(!t||typeof t.value!=="string")return;
-    const normalized=t.value.toLowerCase().replace(/[\\_\\*\\s]/g,"");
-    if(normalized===ON_CODE||normalized.endsWith(ON_CODE)){activate();t.value="";}
-    else if(normalized===OFF_CODE||normalized.endsWith(OFF_CODE)){deactivate();t.value="";}
-  },true);
-
-  if(betaActive){
-    document.body.classList.add("pmBetaTesterMode");
-    setTimeout(refreshVisuals,0);
-    setTimeout(refreshBetaEquipButtons,250);
-    setTimeout(refreshBetaEquipButtons,900);
-  }
-
-  setInterval(function(){
-    if(!betaActive)return;
-    try{refreshBetaEquipButtons();}catch(e){}
-  },500);
-})();
-</script>
 
 </body>
 </html>
-
-<!-- =========================================================
-     BETA SHOP TESTING — FINAL SIMPLE OVERRIDE
-     Beta mode: every shop item can be previewed/equipped locally.
-     Normal mode: original shop behavior is untouched.
-========================================================= -->
-<style id="pmBetaShopTestingStyles">
-body.pmBetaTesterMode #shopPage,
-body.pmBetaTesterMode #shopPage *,
-body.pmBetaTesterMode #shopCheckoutPage,
-body.pmBetaTesterMode #shopCheckoutPage *{
-  pointer-events:auto!important;
-}
-body.pmBetaTesterMode #shopPage button,
-body.pmBetaTesterMode #shopCheckoutPage button,
-body.pmBetaTesterMode #shopPage .pmShopCard,
-body.pmBetaTesterMode #shopCheckoutPage .pmCheckoutChoice{
-  opacity:1!important;
-}
-</style>
-<script id="pmBetaShopTestingFinal">
-(function(){
-  const KEY="promouserBetaTesterMode";
-  const isBeta=()=>sessionStorage.getItem(KEY)==="1";
-
-  function previewShopItem(id){
-    if(!isBeta()) return false;
-    try{
-      if(id==="border_67"){
-        if(typeof window.equip67Border==="function") window.equip67Border();
-        return true;
-      }
-      if(id==="border_fluff_you"){
-        if(typeof window.pmEquipFluffBorder==="function") window.pmEquipFluffBorder();
-        return true;
-      }
-      if(id==="ui_glitch_pop" || id==="ui_void_matrix"){
-        if(typeof window.pmEquipUI==="function") window.pmEquipUI(id);
-        return true;
-      }
-      if(id==="ui_retro_arcade"){
-        if(typeof window.pmEquipRetroArcade==="function") window.pmEquipRetroArcade();
-        else if(typeof window.pmEquipUI==="function") window.pmEquipUI(id);
-        return true;
-      }
-    }catch(e){ console.warn("Beta shop preview:",e); }
-    return false;
-  }
-
-  function refresh(){
-    if(!isBeta()) return;
-    const ids=["pm67BuyButton","pmVoidBuyButton","pmFluffBuyButton","pmGlitchBuyButton","pmRetroBuyButton","pmRetroFinalBuy"];
-    ids.forEach(id=>{
-      const b=document.getElementById(id);
-      if(!b)return;
-      b.disabled=false;
-      b.style.display="inline-block";
-      b.style.pointerEvents="auto";
-      b.textContent="TEST / EQUIP";
-    });
-    document.querySelectorAll('#shopPage .pmShopCard button').forEach(b=>{
-      b.disabled=false;
-      b.style.pointerEvents="auto";
-      b.style.opacity="1";
-    });
-  }
-
-  // Capture clicks on shop purchase buttons before their normal purchase handlers.
-  document.addEventListener("click",function(e){
-    if(!isBeta()) return;
-    const el=e.target.closest("button,.pmCheckoutChoice");
-    if(!el) return;
-
-    const inShop=el.closest("#shopPage");
-    const inCheckout=el.closest("#shopCheckoutPage");
-    if(!inShop && !inCheckout) return;
-
-    let id=null;
-    const inline=el.getAttribute("onclick")||"";
-    const m=inline.match(/(?:openShopCheckout|pmEquipUI|equip67Border|pmEquipFluffBorder|pmEquipRetroArcade)\s*\(\s*[\"']([^\"']+)[\"']/);
-    if(m) id=m[1];
-
-    // Existing dedicated shop buttons.
-    const map={
-      pm67BuyButton:"border_67",
-      pm67EquipButton:"border_67",
-      pmVoidBuyButton:"ui_void_matrix",
-      pmVoidEquipButton:"ui_void_matrix",
-      pmFluffBuyButton:"border_fluff_you",
-      pmFluffEquipButton:"border_fluff_you",
-      pmGlitchBuyButton:"ui_glitch_pop",
-      pmGlitchEquipButton:"ui_glitch_pop",
-      pmRetroBuyButton:"ui_retro_arcade",
-      pmRetroFinalBuy:"ui_retro_arcade",
-      pmRetroEquipButton:"ui_retro_arcade",
-      pmRetroFinalEquip:"ui_retro_arcade"
-    };
-    if(!id && map[el.id]) id=map[el.id];
-
-    // Checkout page uses the currently selected shop item.
-    if(inCheckout && !id && window.pmCheckoutItemId) id=window.pmCheckoutItemId;
-
-    if(!id) return;
-
-    // In beta, shop actions are previews/equips only. Never purchase, deduct coins,
-    // generate gift codes, or write ownership to Firebase.
-    if(previewShopItem(id)){
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      setTimeout(refresh,50);
-    }
-  },true);
-
-  // Also make the current checkout controls explicitly preview-only in beta.
-  const realBuyNow=window.pmCheckoutBuyNow;
-  window.pmCheckoutBuyNow=async function(){
-    if(!isBeta()) return typeof realBuyNow==="function" ? realBuyNow.apply(this,arguments) : undefined;
-    const id=window.pmCheckoutItemId;
-    if(id) previewShopItem(id);
-  };
-  const realGift=window.pmCheckoutGift;
-  window.pmCheckoutGift=async function(){
-    if(!isBeta()) return typeof realGift==="function" ? realGift.apply(this,arguments) : undefined;
-    const id=window.pmCheckoutItemId;
-    if(id) previewShopItem(id);
-  };
-
-  setInterval(refresh,600);
-  refresh();
-})();
-</script>
