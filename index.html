@@ -7130,7 +7130,12 @@ function pmAdminShowTab(tab){
 function pmAdminRenderTests(box,data){
     const tests=Array.isArray(data.publicTestHistory)?data.publicTestHistory:[];
     if(!tests.length){box.innerHTML='<div class="pmEmpty">No stored CPS results.</div>';return;}
-    box.innerHTML='<div class="pmAdminList">'+tests.map((t,i)=>`<div class="pmAdminRow"><div class="pmAdminRowInfo"><div class="pmAdminRowTitle">#${i+1} • ${Number(t.score||0).toFixed(2)} CPS</div><div class="pmAdminRowSub">${escapeHtml(t.time||t.id||"")}</div></div><button class="pmActionButton pmAdminDanger" onclick="pmAdminDeleteTest('${escapeHtml(String(t.id||""))}')">DELETE</button></div>`).join('')+'</div>';
+    box.innerHTML='<div class="pmAdminList">'+tests.map((t,i)=>{
+        const id=String(t?.id||"");
+        const safeId=escapeHtml(id).replace(/'/g,"&#39;");
+        const label=escapeHtml(t?.time||id||`Result ${i+1}`);
+        return `<div class="pmAdminRow"><div class="pmAdminRowInfo"><div class="pmAdminRowTitle">#${i+1} • ${Number(t.score||0).toFixed(2)} CPS</div><div class="pmAdminRowSub">${label}</div></div><button class="pmActionButton pmAdminDanger" onclick="pmAdminDeleteTest('${safeId}',${i})">DELETE</button></div>`;
+    }).join('')+'</div>';
 }
 function pmAdminRenderItems(box,data){
     const owned=Array.isArray(data.ownedCosmetics)?data.ownedCosmetics:[];
@@ -7153,31 +7158,37 @@ async function pmAdminRenderMessages(box){
     chats.sort((a,b)=>(a.createdAt?.toMillis?a.createdAt.toMillis():0)-(b.createdAt?.toMillis?b.createdAt.toMillis():0));
     box.innerHTML=chats.length?'<div class="pmAdminList">'+chats.map(m=>`<div class="pmAdminRow"><div class="pmAdminRowInfo"><div class="pmAdminRowTitle">${m.sender===pmAdminTargetId?'TARGET':'OTHER'}</div><div class="pmAdminRowSub">${escapeHtml(m.text||"")} ${m.replyTo?.text?'<br>↪ '+escapeHtml(m.replyTo.text):''}</div></div><button class="pmActionButton pmAdminDanger" onclick="pmAdminDeleteMessage('${escapeHtml(m.chatId)}','${escapeHtml(m.id)}')">DELETE</button></div>`).join('')+'</div>':'<div class="pmEmpty">No messages found.</div>';
 }
-async function pmAdminDeleteTest(testId){
+async function pmAdminDeleteTest(testId,rowIndex){
     if(!confirm("Delete this CPS result permanently?"))return;
     if(!pmFirebaseReady||!pmAdminTargetId)return alert("Admin account data is not connected.");
     const db=firebase.firestore(),ref=db.collection("users").doc(pmAdminTargetId);
     try{
-        // Read the latest document first, then perform a normal document write.
-        // This avoids transaction retry/locking problems when the account is being
-        // viewed while other profile/stat updates are happening.
         const snap=await ref.get();
         if(!snap.exists)throw new Error("MISSING_ACCOUNT");
         const d=snap.data()||{};
         const records=Array.isArray(d.publicTestHistory)?d.publicTestHistory.slice():[];
-        const wanted=String(testId);
-        const remaining=records.filter(x=>String(x?.id||"")!==wanted);
-        if(remaining.length===records.length){
-            // Older records can exist without the generated id. If the admin
-            // clicked a displayed row whose id is missing, use its row index
-            // as a safe fallback rather than silently failing.
-            const rendered=records.findIndex(x=>String(x?.id||"")===wanted);
-            if(rendered<0)throw new Error("RESULT_NOT_FOUND");
+        const wanted=String(testId||"");
+        const idx=Number.isInteger(rowIndex)?rowIndex:-1;
+        let deleteIndex=-1;
+
+        // Prefer the unique stored ID. Older results may not have an ID, so
+        // the admin row index is used as a safe fallback for those records.
+        if(wanted) deleteIndex=records.findIndex(x=>String(x?.id||"")===wanted);
+        if(deleteIndex<0 && idx>=0 && idx<records.length){
+            const row=records[idx];
+            if(!wanted || String(row?.id||"")===wanted) deleteIndex=idx;
         }
+        if(deleteIndex<0)throw new Error("RESULT_NOT_FOUND");
+
+        const deleted=records[deleteIndex];
+        const remaining=records.filter((_,i)=>i!==deleteIndex);
         const scores=remaining.map(x=>Number(x?.score)).filter(Number.isFinite);
         const tests=scores.length;
         const avg=tests?scores.reduce((a,b)=>a+b,0)/tests:0;
         const high=tests?Math.max(...scores):0;
+
+        // Recalculate BOTH the public leaderboard stats and the account's
+        // normal CPS stats from the remaining stored results.
         await ref.set({
             publicTestHistory:remaining,
             publicTests:tests,
@@ -7188,11 +7199,21 @@ async function pmAdminDeleteTest(testId){
             highestCPS:high,
             updatedAt:firebase.firestore.FieldValue.serverTimestamp()
         },{merge:true});
+
         const verify=await ref.get();
-        const verifyHistory=Array.isArray(verify.data()?.publicTestHistory)?verify.data().publicTestHistory:[];
-        if(verifyHistory.some(x=>String(x?.id||"")===wanted))throw new Error("DELETE_NOT_VERIFIED");
-        pmAdminTargetData=verify.data();
+        const verifyData=verify.data()||{};
+        const verifyHistory=Array.isArray(verifyData.publicTestHistory)?verifyData.publicTestHistory:[];
+        if(verifyHistory.length!==remaining.length)throw new Error("DELETE_NOT_VERIFIED");
+        if(wanted && verifyHistory.some(x=>String(x?.id||"")===wanted))throw new Error("DELETE_NOT_VERIFIED");
+
+        pmAdminTargetData=verifyData;
         pmAdminShowTab("tests");
+        // Refresh the live leaderboard immediately as well as through its
+        // Firestore listener, so the deleted result disappears without delay.
+        if(typeof loadGlobalLeaderboard==="function" && document.getElementById("globalPage")?.classList.contains("active")){
+            try{loadGlobalLeaderboard();}catch(_){ }
+        }
+        alert(`Deleted ${Number(deleted?.score||0).toFixed(2)} CPS result. Stats were recalculated from the remaining tests.`);
     }catch(e){
         console.error("Admin CPS delete failed:",e);
         const code=e?.code||"unknown";
