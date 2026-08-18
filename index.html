@@ -9059,5 +9059,255 @@ body.glitchPop .pmCoinPill{
 })();
 </script>
 
+
+<!-- FINAL FIX: RETRO ARCADE SHOP + TRUE IN-PROFILE FLUFF YOU FIT -->
+<style id="pmFinalRetroFluffFix">
+/* FLUFF YOU: keep the effect exactly inside the actual avatar, including the larger public-profile header. */
+.pmAvatarWrap .pmFluffBorderImage{
+  left:0!important;top:0!important;right:auto!important;bottom:auto!important;
+  width:104px!important;height:104px!important;transform:none!important;
+  object-fit:fill!important;clip-path:none!important;border-radius:50%!important;
+}
+.pmPublicAvatarStage .pmFluffBorderImage{
+  left:0!important;top:0!important;right:auto!important;bottom:auto!important;
+  width:115px!important;height:115px!important;transform:none!important;
+  object-fit:fill!important;clip-path:none!important;border-radius:50%!important;
+}
+.pmPublicTop > .pmPublicAvatarStage .pmFluffBorderImage{
+  left:15px!important;top:15px!important;width:115px!important;height:115px!important;
+}
+.pmLeaderboardAvatarBox .pmFluffBorderImage{
+  left:0!important;top:0!important;width:40px!important;height:40px!important;
+  transform:none!important;object-fit:fill!important;clip-path:none!important;border-radius:50%!important;
+}
+.pmCosmeticPreview .pmFluffBorderImage{
+  left:0!important;top:0!important;width:100%!important;height:100%!important;
+  transform:none!important;object-fit:fill!important;clip-path:none!important;border-radius:50%!important;
+}
+/* Never let the border itself push outside the avatar stage. */
+.pmAvatarWrap,.pmPublicAvatarStage,.pmLeaderboardAvatarBox,.pmCosmeticPreview{overflow:hidden!important;}
+</style>
+<script id="pmFinalRetroFluffFixScript">
+(function(){
+  const RETRO_ID="ui_retro_arcade", RETRO_PRICE=3000;
+
+  /* Ensure Retro Arcade exists in the same purchase database as every other shop item. */
+  if(typeof PM_SHOP_ITEMS!=="undefined"){
+    PM_SHOP_ITEMS[RETRO_ID]={
+      id:RETRO_ID,
+      name:"RETRO ARCADE UI",
+      price:RETRO_PRICE,
+      description:"A complete old-school arcade overhaul: CRT scanlines, pixel typography, chunky cabinet panels, arcade buttons and a different layout.",
+      type:"ui"
+    };
+  }
+
+  function retroOwned(){return typeof pmOwn==="function"&&pmOwn(RETRO_ID);}
+  function retroEquipped(){return pmUserData?.equippedUI===RETRO_ID;}
+
+  function retroCard(){
+    const c=document.createElement("div");
+    c.className="pmShopCard pmRetroShopCard";
+    c.dataset.pmNewItem=RETRO_ID;
+    c.innerHTML=`
+      <div class="pmShopPreview pmRetroShopPreview"><div style="font:1000 34px/0.9 'Courier New',monospace;text-align:center;color:#ff8b2c;text-shadow:4px 4px 0 #4a253c">RETRO<br><span style="font-size:16px;color:#57e7d0;letter-spacing:5px">ARCADE</span></div></div>
+      <div class="pmShopName">RETRO ARCADE UI</div>
+      <div class="pmShopMeta"><span>FULL UI THEME</span><span class="pmShopPrice">🪙 3,000</span></div>
+      <div class="pmShopDescription">CRT scanlines, pixel typography, chunky arcade panels, cabinet-style buttons and a completely different retro layout.</div>
+      <div class="pmShopActions"><button class="pmActionButton" id="pmRetroFinalBuy">BUY • 3,000 🪙</button><button class="pmActionButton pmSecondaryButton" id="pmRetroFinalEquip" style="display:none">EQUIP</button></div>
+      <div class="pmShopOwnedNote" id="pmRetroFinalNote"></div>`;
+    c.querySelector("#pmRetroFinalBuy").onclick=()=>openShopCheckout(RETRO_ID);
+    c.querySelector("#pmRetroFinalEquip").onclick=toggleRetro;
+    return c;
+  }
+
+  function ensureRetroShop(){
+    const grid=document.querySelector("#shopPage .pmShopGrid");
+    if(!grid)return;
+    let card=grid.querySelector('[data-pm-new-item="'+RETRO_ID+'"]');
+    if(!card){card=retroCard();grid.appendChild(card);}
+    const buy=card.querySelector("#pmRetroFinalBuy"), eq=card.querySelector("#pmRetroFinalEquip"), note=card.querySelector("#pmRetroFinalNote");
+    const owned=retroOwned(), equipped=retroEquipped();
+    if(buy){buy.textContent=owned?"GIFT CODE • 3,000 🪙":"BUY • 3,000 🪙";buy.disabled=false;}
+    if(eq){eq.style.display=owned?"inline-block":"none";eq.textContent=equipped?"UNEQUIP":"EQUIP";}
+    if(note)note.textContent=owned?(equipped?"RETRO ARCADE UI is equipped.":"You own this UI."):"";
+  }
+
+  async function toggleRetro(){
+    if(!pmFirebaseReady||!pmAuthUser||!pmUserData)return alert("Your online account is not connected yet.");
+    if(!retroOwned())return alert("Buy the Retro Arcade UI from the Shop first.");
+    const next=retroEquipped()?"default":RETRO_ID;
+    try{
+      pmUserData.equippedUI=next;
+      document.body.classList.remove("retroArcade");
+      if(next===RETRO_ID)document.body.classList.add("retroArcade");
+      await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({equippedUI:next,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      if(typeof pmLoadOwnProfile==="function")await pmLoadOwnProfile();
+      document.body.classList.remove("retroArcade");
+      if(pmUserData?.equippedUI===RETRO_ID)document.body.classList.add("retroArcade");
+      if(typeof pmRenderCollection==="function")pmRenderCollection();
+      ensureRetroShop();
+    }catch(e){console.error(e);alert("Could not change your UI.");}
+  }
+  window.pmEquipRetroArcade=toggleRetro;
+
+  /* Make Retro appear even if another shop-render wrapper replaces the earlier patch. */
+  const oldOpen=window.openShop;
+  if(typeof oldOpen==="function"&&!oldOpen.__retroFinalWrapped){
+    const wrapped=function(){oldOpen.apply(this,arguments);setTimeout(ensureRetroShop,80);setTimeout(ensureRetroShop,350);};
+    wrapped.__retroFinalWrapped=true;window.openShop=wrapped;
+  }
+
+  /* Add Retro to My UI, independently of the existing collection renderer. */
+  const oldCollection=window.pmRenderCollection;
+  if(typeof oldCollection==="function"&&!oldCollection.__retroFinalWrapped){
+    const wrappedCollection=function(){
+      oldCollection.apply(this,arguments);
+      const box=document.getElementById("pmMyUIList");
+      if(!box||box.querySelector('[data-pm-final-ui="'+RETRO_ID+'"]'))return;
+      const owned=retroOwned(),eq=retroEquipped();
+      const card=document.createElement("div");card.className="pmCollectionItem"+(eq?" equipped":"");card.dataset.pmFinalUi=RETRO_ID;
+      card.innerHTML='<div class="pmCollectionPreview" style="background:#21172a;border:3px solid #ff8b2c;color:#ff8b2c;font:1000 20px Courier New,monospace;text-align:center">RETRO<br><span style="color:#57e7d0;font-size:10px;letter-spacing:3px">ARCADE</span></div><div class="pmCollectionItemTitle">RETRO ARCADE UI</div><div class="pmCollectionItemSub">FULL UI OVERHAUL • 3,000 COINS</div>';
+      const b=document.createElement("button");b.className="pmActionButton"+(eq?" pmSecondaryButton":"");b.textContent=eq?"UNEQUIP":owned?"EQUIP":"NOT OWNED";b.disabled=!owned;b.onclick=toggleRetro;
+      const st=document.createElement("div");st.className="pmCollectionStatus"+(eq?" equippedText":"");st.textContent=eq?"EQUIPPED":owned?"AVAILABLE":"NOT OWNED";card.append(b,st);box.appendChild(card);
+    };
+    wrappedCollection.__retroFinalWrapped=true;window.pmRenderCollection=wrappedCollection;
+  }
+
+  /* Keep FLUFF YOU hidden/shown according to the existing profanity toggle. */
+  function refreshFluff(){
+    const hidden=typeof window.pmProfanityFilterEnabled==="function"&&window.pmProfanityFilterEnabled();
+    document.querySelectorAll('[data-pm-new-item="border_fluff_you"]').forEach(el=>el.style.display=hidden?"none":"");
+    document.querySelectorAll(".pmFluffBorderImage").forEach(el=>{
+      if(el.closest(".pmFluffShopPreview"))return;
+      const data=pmUserData;
+      if(data?.equippedBorder==="border_fluff_you")el.style.display=hidden?"none":"";
+    });
+  }
+
+  setTimeout(function(){
+    ensureRetroShop();
+    if(typeof pmRenderCollection==="function")pmRenderCollection();
+    document.body.classList.toggle("retroArcade",retroEquipped());
+    refreshFluff();
+  },150);
+})();
+</script>
+
+
+
+<!-- =========================================================
+     FINAL ADMIN SECURITY LOCK
+     ONLY UID WtQ6Vaz7a1Ogt3A0KTYYmFkCU132 MAY USE ADMIN TOOLS
+     Additive guard: existing site systems remain untouched.
+========================================================= -->
+<script>
+(function(){
+    const PM_SOLE_ADMIN_UID = "WtQ6Vaz7a1Ogt3A0KTYYmFkCU132";
+
+    window.pmIsSoleAdmin = function(){
+        return !!(window.pmAuthUser && window.pmAuthUser.uid === PM_SOLE_ADMIN_UID);
+    };
+
+    function pmAdminDenied(){
+        alert("Admin access is restricted to the ProMouser owner account.");
+        return false;
+    }
+
+    // Any attempt to show/unlock the Admin UI is ignored for every other UID.
+    const oldShowAdminButton = window.pmShowAdminButton;
+    window.pmShowAdminButton = function(show){
+        const allowed = !!show && window.pmIsSoleAdmin();
+        if(typeof oldShowAdminButton === "function") oldShowAdminButton(allowed);
+        const b=document.getElementById("pmAdminNavButton");
+        if(b) b.style.display=allowed ? "inline-block" : "none";
+        const card=document.getElementById("pmAdminUnlockCard");
+        if(card) card.classList.toggle("show",allowed);
+    };
+
+    // Admin panel itself is UID-locked; the old redeem/admin code is no longer
+    // sufficient to enter the panel.
+    window.openAdmin = function(){
+        if(window.running||window.cooldown)return;
+        if(!window.pmIsSoleAdmin()) return pmAdminDenied();
+        if(typeof oldShowAdminButton === "function") oldShowAdminButton(true);
+        const page=document.getElementById("adminPage");
+        if(!page)return;
+        hideAllPages();
+        page.classList.add("active");
+        const card=document.getElementById("pmAdminAccountCard");
+        if(card)card.style.display="none";
+    };
+
+    // Every admin action is guarded, including destructive actions and coin tools.
+    const guarded = [
+        "pmAdminLookup",
+        "pmAdminShowTab",
+        "pmAdminDeleteTest",
+        "pmAdminDeleteMessage",
+        "pmAdminRemoveFriend",
+        "pmAdminClearItems",
+        "pmAdminDeleteCoinsOnly",
+        "pmAdminDeleteFriendsOnly",
+        "pmAdminDeleteAllTestsOnly",
+        "pmAdminDeleteMessagesOnly",
+        "pmAdminUnequipOnly",
+        "pmAdminDeleteAccountData",
+        "pmAdminGiveCoins",
+        "pmAdminTakeCoins",
+        "pmAdminGiftCoins"
+    ];
+
+    guarded.forEach(name=>{
+        const original=window[name];
+        if(typeof original!=="function")return;
+        window[name]=function(...args){
+            if(!window.pmIsSoleAdmin()) return pmAdminDenied();
+            return original.apply(this,args);
+        };
+    });
+
+    // Prevent admin-code entry from exposing the panel to non-admin accounts.
+    const oldCheckAdminCode = window.pmCheckAdminCode;
+    window.pmCheckAdminCode = function(){
+        if(!window.pmIsSoleAdmin()){
+            window.pmShowAdminButton(false);
+            return false;
+        }
+        return typeof oldCheckAdminCode === "function" ? oldCheckAdminCode.apply(this,arguments) : false;
+    };
+
+    // Redeeming normal shop codes continues to work. If the entered value is the
+    // old admin code, only the sole UID can unlock anything.
+    const oldRedeemShopCode = window.redeemShopCode;
+    if(typeof oldRedeemShopCode === "function"){
+        window.redeemShopCode = async function(...args){
+            if(!window.pmIsSoleAdmin()){
+                const input=document.getElementById("pmRedeemCodeInput");
+                const code=String(input?.value||"").trim();
+                if(code===String(window.PM_ADMIN_CODE||"cool@321321")){
+                    window.pmShowAdminButton(false);
+                    return pmAdminDenied();
+                }
+            }
+            return oldRedeemShopCode.apply(this,args);
+        };
+    }
+
+    // Force the final visible state after Firebase/account initialization.
+    function enforceAdminVisibility(){
+        if(!window.pmIsSoleAdmin()){
+            window.pmShowAdminButton(false);
+            const page=document.getElementById("adminPage");
+            if(page && page.classList.contains("active")){
+                hideAllPages();
+            }
+        }
+    }
+    setTimeout(enforceAdminVisibility,300);
+    setTimeout(enforceAdminVisibility,1200);
+    setInterval(enforceAdminVisibility,5000);
+})();
+</script>
 </body>
 </html>
