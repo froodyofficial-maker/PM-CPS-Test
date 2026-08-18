@@ -9658,3 +9658,134 @@ body.glitchPop .pmCoinPill{
 
 </body>
 </html>
+
+<!-- =========================================================
+     BETA SHOP TESTING — FINAL SIMPLE OVERRIDE
+     Beta mode: every shop item can be previewed/equipped locally.
+     Normal mode: original shop behavior is untouched.
+========================================================= -->
+<style id="pmBetaShopTestingStyles">
+body.pmBetaTesterMode #shopPage,
+body.pmBetaTesterMode #shopPage *,
+body.pmBetaTesterMode #shopCheckoutPage,
+body.pmBetaTesterMode #shopCheckoutPage *{
+  pointer-events:auto!important;
+}
+body.pmBetaTesterMode #shopPage button,
+body.pmBetaTesterMode #shopCheckoutPage button,
+body.pmBetaTesterMode #shopPage .pmShopCard,
+body.pmBetaTesterMode #shopCheckoutPage .pmCheckoutChoice{
+  opacity:1!important;
+}
+</style>
+<script id="pmBetaShopTestingFinal">
+(function(){
+  const KEY="promouserBetaTesterMode";
+  const isBeta=()=>sessionStorage.getItem(KEY)==="1";
+
+  function previewShopItem(id){
+    if(!isBeta()) return false;
+    try{
+      if(id==="border_67"){
+        if(typeof window.equip67Border==="function") window.equip67Border();
+        return true;
+      }
+      if(id==="border_fluff_you"){
+        if(typeof window.pmEquipFluffBorder==="function") window.pmEquipFluffBorder();
+        return true;
+      }
+      if(id==="ui_glitch_pop" || id==="ui_void_matrix"){
+        if(typeof window.pmEquipUI==="function") window.pmEquipUI(id);
+        return true;
+      }
+      if(id==="ui_retro_arcade"){
+        if(typeof window.pmEquipRetroArcade==="function") window.pmEquipRetroArcade();
+        else if(typeof window.pmEquipUI==="function") window.pmEquipUI(id);
+        return true;
+      }
+    }catch(e){ console.warn("Beta shop preview:",e); }
+    return false;
+  }
+
+  function refresh(){
+    if(!isBeta()) return;
+    const ids=["pm67BuyButton","pmVoidBuyButton","pmFluffBuyButton","pmGlitchBuyButton","pmRetroBuyButton","pmRetroFinalBuy"];
+    ids.forEach(id=>{
+      const b=document.getElementById(id);
+      if(!b)return;
+      b.disabled=false;
+      b.style.display="inline-block";
+      b.style.pointerEvents="auto";
+      b.textContent="TEST / EQUIP";
+    });
+    document.querySelectorAll('#shopPage .pmShopCard button').forEach(b=>{
+      b.disabled=false;
+      b.style.pointerEvents="auto";
+      b.style.opacity="1";
+    });
+  }
+
+  // Capture clicks on shop purchase buttons before their normal purchase handlers.
+  document.addEventListener("click",function(e){
+    if(!isBeta()) return;
+    const el=e.target.closest("button,.pmCheckoutChoice");
+    if(!el) return;
+
+    const inShop=el.closest("#shopPage");
+    const inCheckout=el.closest("#shopCheckoutPage");
+    if(!inShop && !inCheckout) return;
+
+    let id=null;
+    const inline=el.getAttribute("onclick")||"";
+    const m=inline.match(/(?:openShopCheckout|pmEquipUI|equip67Border|pmEquipFluffBorder|pmEquipRetroArcade)\s*\(\s*[\"']([^\"']+)[\"']/);
+    if(m) id=m[1];
+
+    // Existing dedicated shop buttons.
+    const map={
+      pm67BuyButton:"border_67",
+      pm67EquipButton:"border_67",
+      pmVoidBuyButton:"ui_void_matrix",
+      pmVoidEquipButton:"ui_void_matrix",
+      pmFluffBuyButton:"border_fluff_you",
+      pmFluffEquipButton:"border_fluff_you",
+      pmGlitchBuyButton:"ui_glitch_pop",
+      pmGlitchEquipButton:"ui_glitch_pop",
+      pmRetroBuyButton:"ui_retro_arcade",
+      pmRetroFinalBuy:"ui_retro_arcade",
+      pmRetroEquipButton:"ui_retro_arcade",
+      pmRetroFinalEquip:"ui_retro_arcade"
+    };
+    if(!id && map[el.id]) id=map[el.id];
+
+    // Checkout page uses the currently selected shop item.
+    if(inCheckout && !id && window.pmCheckoutItemId) id=window.pmCheckoutItemId;
+
+    if(!id) return;
+
+    // In beta, shop actions are previews/equips only. Never purchase, deduct coins,
+    // generate gift codes, or write ownership to Firebase.
+    if(previewShopItem(id)){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      setTimeout(refresh,50);
+    }
+  },true);
+
+  // Also make the current checkout controls explicitly preview-only in beta.
+  const realBuyNow=window.pmCheckoutBuyNow;
+  window.pmCheckoutBuyNow=async function(){
+    if(!isBeta()) return typeof realBuyNow==="function" ? realBuyNow.apply(this,arguments) : undefined;
+    const id=window.pmCheckoutItemId;
+    if(id) previewShopItem(id);
+  };
+  const realGift=window.pmCheckoutGift;
+  window.pmCheckoutGift=async function(){
+    if(!isBeta()) return typeof realGift==="function" ? realGift.apply(this,arguments) : undefined;
+    const id=window.pmCheckoutItemId;
+    if(id) previewShopItem(id);
+  };
+
+  setInterval(refresh,600);
+  refresh();
+})();
+</script>
