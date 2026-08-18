@@ -5896,11 +5896,31 @@ async function loadGlobalLeaderboard(){
     box.innerHTML='<div class="pmLoading">Loading global leaderboard...</div>';
     try{
         if(pmGlobalUnsubscribe)pmGlobalUnsubscribe();
-        pmGlobalUnsubscribe=firebase.firestore().collection("users").orderBy("publicHighestCPS","desc").limit(100).onSnapshot(snapshot=>{
-            const rows=[];snapshot.forEach(doc=>{
+        const OWNER_UID="WtQ6Vaz7a1Ogt3A0KTYYmFkCU132";
+        pmGlobalUnsubscribe=firebase.firestore().collection("users").orderBy("publicHighestCPS","desc").limit(100).onSnapshot(async snapshot=>{
+            const rows=[];
+            snapshot.forEach(doc=>{
                 const data=doc.data();
                 if(Number(data.publicTests||0)>0) rows.push({id:doc.id,...data});
             });
+
+            // Always include the owner account, even if its public CPS fields are
+            // currently zero/missing or it falls outside the top-100 query.
+            // Fall back to the account's normal CPS stats so the owner is visible.
+            try{
+                if(!rows.some(player=>player.id===OWNER_UID)){
+                    const ownerSnap=await firebase.firestore().collection("users").doc(OWNER_UID).get();
+                    if(ownerSnap.exists){
+                        const data=ownerSnap.data();
+                        const publicTests=Number(data.publicTests||data.tests||0);
+                        const publicAverageCPS=Number(data.publicAverageCPS||data.averageCPS||0);
+                        const publicHighestCPS=Number(data.publicHighestCPS||data.highestCPS||0);
+                        rows.push({id:OWNER_UID,...data,publicTests,publicAverageCPS,publicHighestCPS});
+                    }
+                }
+            }catch(ownerErr){console.warn("Could not load owner leaderboard entry:",ownerErr);}
+
+            rows.sort((a,b)=>Number(b.publicHighestCPS||0)-Number(a.publicHighestCPS||0));
             renderGlobalLeaderboard(rows);
         },err=>{console.error(err);box.innerHTML='<div class="pmLoading">Could not load the global leaderboard.</div>';});
     }catch(err){console.error(err);box.innerHTML='<div class="pmLoading">Could not load the global leaderboard.</div>';}
