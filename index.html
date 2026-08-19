@@ -2407,149 +2407,6 @@ body.jawsOcean .page.active::before{
 </style>
 
 
-<style id="pmBetaAndGlassFeaturesCSS">
-/* =========================================================
-   ADMIN-GRANTED BETA TESTER MODE
-========================================================= */
-#pmBetaAccessCard{
-  margin-top:14px;padding:16px;border:1px solid rgba(0,229,255,.24);
-  border-radius:14px;background:rgba(5,12,18,.72)
-}
-#pmBetaAccessCard .pmBetaAccessState{font-weight:900;letter-spacing:1px}
-#pmBetaTesterBadge{
-  position:fixed;top:14px;right:18px;z-index:99999;
-  padding:8px 12px;border-radius:999px;
-  background:rgba(4,12,18,.84);border:1px solid rgba(0,229,255,.45);
-  color:#6eefff;font:900 11px/1 Arial;letter-spacing:1.4px;
-  box-shadow:0 8px 30px rgba(0,0,0,.35);display:none
-}
-body.pmBetaTesterMode #pmBetaTesterBadge{display:block}
-#pmBetaOffButton{
-  position:fixed;top:14px;right:18px;z-index:100000;
-  margin-top:42px;display:none
-}
-body.pmBetaTesterMode #pmBetaOffButton{display:block}
-.pmBetaPreviewTag{
-  display:inline-flex;align-items:center;gap:6px;
-  margin-top:8px;padding:5px 8px;border-radius:999px;
-  background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.2);
-  color:#6eefff;font:800 10px/1 Arial;letter-spacing:1px
-}
-
-/* =========================================================
-   SHOP UI PREVIEW
-========================================================= */
-#pmUiPreviewModal{
-  position:fixed;inset:0;z-index:100000;
-  display:none;align-items:center;justify-content:center;
-  padding:24px;background:rgba(0,0,0,.72);backdrop-filter:blur(8px)
-}
-#pmUiPreviewModal.show{display:flex}
-.pmUiPreviewCard{
-  width:min(820px,94vw);max-height:88vh;overflow:auto;
-  border:1px solid rgba(255,255,255,.14);border-radius:22px;
-  background:#0b1015;box-shadow:0 30px 100px rgba(0,0,0,.7);padding:22px
-}
-.pmUiPreviewHeader{display:flex;justify-content:space-between;align-items:center;gap:15px}
-.pmUiPreviewTitle{font-size:25px;font-weight:950;letter-spacing:2px}
-.pmUiPreviewClose{font-size:20px;min-width:42px}
-.pmUiPreviewViewport{
-  position:relative;min-height:330px;margin:18px 0;padding:28px;
-  overflow:hidden;border-radius:18px;border:1px solid rgba(255,255,255,.12)
-}
-.pmUiPreviewViewport.pmPreviewVoid{
-  background:radial-gradient(circle at 70% 20%,rgba(130,70,255,.22),transparent 30%),linear-gradient(145deg,#090711,#171126);
-  color:#eee
-}
-.pmUiPreviewViewport.pmPreviewJaws{
-  background:radial-gradient(circle at 50% -10%,rgba(110,180,210,.14),transparent 30%),linear-gradient(#02060d 0%,#063748 48%,#01151d 100%);
-  color:#e9f7fa
-}
-.pmUiPreviewViewport.pmPreviewNeon{
-  background:radial-gradient(circle at 50% 20%,rgba(0,229,255,.2),transparent 35%),#05090c;
-  color:#00e5ff
-}
-.pmPreviewMockBar{
-  height:42px;border-radius:12px;margin-bottom:18px;
-  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13)
-}
-.pmPreviewMockGrid{display:grid;grid-template-columns:1.5fr 1fr;gap:14px}
-.pmPreviewMockBox{
-  min-height:125px;border-radius:16px;
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
-  padding:18px
-}
-.pmPreviewMockButton{
-  display:inline-block;padding:11px 16px;border-radius:10px;
-  margin-top:12px;background:rgba(255,255,255,.09);
-  border:1px solid rgba(255,255,255,.16)
-}
-.pmPreviewShark{
-  position:absolute;right:8%;bottom:25px;width:150px;height:35px;
-  border-radius:60%;background:#001017;opacity:.55;
-  animation:pmPreviewShark 7s linear infinite
-}
-.pmPreviewShark:before{
-  content:"";position:absolute;left:55px;top:-35px;
-  border-left:18px solid transparent;border-right:7px solid transparent;
-  border-bottom:43px solid #001017
-}
-@keyframes pmPreviewShark{from{transform:translateX(170px)}to{transform:translateX(-500px)}}
-.pmPreviewGlass{
-  background:rgba(255,255,255,.13)!important;
-  border:1px solid rgba(255,255,255,.25)!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 12px 35px rgba(0,0,0,.18)
-}
-
-/* =========================================================
-   GLASS TEXTURE — INDEPENDENT OVERLAY, COMBINABLE WITH UI
-========================================================= */
-body.pmGlassTexture .page.active .card,
-body.pmGlassTexture .page.active .panel,
-body.pmGlassTexture .page.active .box,
-body.pmGlassTexture .page.active .stat,
-body.pmGlassTexture .page.active .pmShopCard,
-body.pmGlassTexture .page.active .pmCollectionItem,
-body.pmGlassTexture .page.active .pmCheckoutCard,
-body.pmGlassTexture .page.active .pmAdminCard,
-body.pmGlassTexture .page.active .pmAdminRow,
-body.pmGlassTexture .page.active .pmAdminStat,
-body.pmGlassTexture .page.active .pmFriendCard,
-body.pmGlassTexture .page.active .pmProfileCard{
-  background:rgba(255,255,255,.075)!important;
-  border-color:rgba(255,255,255,.20)!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 14px 40px rgba(0,0,0,.20)!important;
-  backdrop-filter:blur(18px) saturate(140%);
-  -webkit-backdrop-filter:blur(18px) saturate(140%)
-}
-body.pmGlassTexture .page.active button:not(.backButton),
-body.pmGlassTexture .page.active input,
-body.pmGlassTexture .page.active select,
-body.pmGlassTexture .page.active textarea,
-body.pmGlassTexture .page.active .timeBtn,
-body.pmGlassTexture .page.active .mouseOption,
-body.pmGlassTexture .page.active .uiOption{
-  background:rgba(255,255,255,.09)!important;
-  border:1px solid rgba(255,255,255,.22)!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 8px 24px rgba(0,0,0,.16)!important;
-  backdrop-filter:blur(16px) saturate(145%);
-  -webkit-backdrop-filter:blur(16px) saturate(145%)
-}
-body.pmGlassTexture .page.active input,
-body.pmGlassTexture .page.active select,
-body.pmGlassTexture .page.active textarea{
-  border-radius:999px!important
-}
-body.pmGlassTexture .page.active button:not(.backButton),
-body.pmGlassTexture .page.active .timeBtn,
-body.pmGlassTexture .page.active .mouseOption,
-body.pmGlassTexture .page.active .uiOption{
-  border-radius:999px!important
-}
-body.pmGlassTexture .page.active .pmGlassCard{
-  background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.045))!important
-}
-</style>
 
 </head>
 
@@ -3018,6 +2875,21 @@ body.pmGlassTexture .page.active .pmGlassCard{
                     <button class="pmActionButton pmSecondaryButton" id="pmVoidEquipButton" onclick="toggleVoidUI()" style="display:none;">EQUIP</button>
                 </div>
                 <div class="pmShopOwnedNote" id="pmVoidOwnedNote"></div>
+            </div>
+
+            <div class="pmShopCard" id="pmGlassTextureShopCard">
+                <div class="pmShopPreview" style="background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.04));backdrop-filter:blur(14px);">
+                    <div style="height:70px;margin:14px;border-radius:18px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 12px 30px rgba(0,0,0,.22)"></div>
+                    <div style="height:22px;width:65%;margin:0 auto;border-radius:999px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25)"></div>
+                </div>
+                <div class="pmShopName">GLASS TEXTURE</div>
+                <div class="pmShopMeta"><span>COMBINABLE OVER ANY UI</span><span class="pmShopPrice">🪙 1000</span></div>
+                <div class="pmShopDescription">Frosted glass buttons, boxes, cards and round glossy search bars. Works alongside any UI theme.</div>
+                <div class="pmShopActions">
+                    <button class="pmActionButton" id="pmGlassBuyButton" onclick="openShopCheckout('texture_glass')">BUY • 1000 🪙</button>
+                    <button class="pmActionButton pmSecondaryButton" id="pmGlassEquipButton" onclick="pmToggleGlassTexture()" style="display:none;">EQUIP</button>
+                </div>
+                <div class="pmShopOwnedNote" id="pmGlassOwnedNote"></div>
             </div>
         </div>
     </div>
@@ -6627,7 +6499,8 @@ pmInitFirebase();
 const PM_ADMIN_CODE="cool@321321";
 const PM_SHOP_ITEMS={
     border_67:{id:"border_67",name:"67 BORDER EFFECT",price:300,description:"A looping animated 67 profile border.",type:"border"},
-    ui_void_matrix:{id:"ui_void_matrix",name:"VOID MATRIX UI",price:1500,description:"A dark futuristic interface theme.",type:"ui"}
+    ui_void_matrix:{id:"ui_void_matrix",name:"VOID MATRIX UI",price:1500,description:"A dark futuristic interface theme.",type:"ui"},
+    texture_glass:{id:"texture_glass",name:"GLASS TEXTURE",price:1000,description:"Frosted glass texture for buttons, cards, boxes and search bars. Combines with any UI.",type:"texture"}
 };
 let pmCheckoutItemId=null;
 let pmAdminTargetId=null;
@@ -9928,332 +9801,392 @@ body.glitchPop .pmCoinPill{
 })();
 </script>
 
-<script id="pmBetaGlassAndPreviewFeatures">
+
+<script id="pmBetaGlassFinalFix">
 (function(){
-"use strict";
+  "use strict";
+  const BETA_ACCESS="betaTesterAccess";
+  const BETA_MODE="betaTesterMode";
+  const GLASS_ID="texture_glass";
+  const ADMIN_UID="WtQ6Vaz7a1Ogt3A0KTYYmFkCU132";
 
-const BETA_FIELD="betaTesterAccess";
-const GLASS_ID="texture_glass";
-const GLASS_PRICE=1000;
-const BETA_BADGE_ID="pmBetaTesterBadge";
-const BETA_OFF_ID="pmBetaOffButton";
-
-/* ---------- helpers ---------- */
-function pmBetaHasAccess(data=pmUserData){
-  return data?.[BETA_FIELD]===true;
-}
-function pmGlassEquipped(data=pmUserData){
-  return data?.equippedGlassTexture===true;
-}
-function pmSetBetaVisual(on){
-  document.body.classList.toggle("pmBetaTesterMode",!!on);
-  if(on){
-    let b=document.getElementById(BETA_BADGE_ID);
-    if(!b){
-      b=document.createElement("div");
-      b.id=BETA_BADGE_ID;
-      b.textContent="BETA TESTER MODE";
-      document.body.appendChild(b);
-    }
-    let off=document.getElementById(BETA_OFF_ID);
-    if(!off){
-      off=document.createElement("button");
-      off.id=BETA_OFF_ID;
-      off.className="pmActionButton";
-      off.textContent="TURN OFF BETA MODE";
-      off.onclick=window.pmDisableBetaTesterMode;
-      document.body.appendChild(off);
-    }
+  function betaAccess(d=pmUserData){ return d?.[BETA_ACCESS]===true; }
+  function betaMode(d=pmUserData){ return betaAccess(d) && d?.[BETA_MODE]===true; }
+  function glassOn(d=pmUserData){ return d?.equippedGlassTexture===true; }
+  function renderCoins(){
+    if(typeof pmRenderCoinBalance==='function')pmRenderCoinBalance();
+    const n=Math.max(0,Number(pmUserData?.coins||0)).toLocaleString();
+    ['pmCoinBalance','pmShopCoinBalance','pmProfileCoins','pmGiftYourBalance','pmWheelBalance'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=n;});
   }
-  try{ if(typeof pmRenderShop==="function")pmRenderShop(); }catch(e){}
-  try{ if(typeof pmRenderCollection==="function")pmRenderCollection(); }catch(e){}
-}
-function pmApplyGlassTexture(){
-  document.body.classList.toggle("pmGlassTexture",pmGlassEquipped());
-}
-function pmSyncCosmeticVisuals(){
-  pmSetBetaVisual(pmBetaHasAccess());
-  pmApplyGlassTexture();
-}
+  function renderGlass(){
+    document.body.classList.toggle('pmGlassTexture',glassOn());
+    const buy=document.getElementById('pmGlassBuyButton');
+    const eq=document.getElementById('pmGlassEquipButton');
+    const note=document.getElementById('pmGlassOwnedNote');
+    const owned=betaMode() || (Array.isArray(pmUserData?.ownedCosmetics)&&pmUserData.ownedCosmetics.includes(GLASS_ID));
+    if(buy){ buy.disabled=false; buy.textContent=betaMode()?'BETA • USE':'BUY • 1000 🪙'; }
+    if(eq){ eq.style.display=owned?'inline-block':'none'; eq.textContent=glassOn()?'UNEQUIP':'EQUIP'; eq.disabled=false; }
+    if(note)note.textContent=betaMode()?"Beta Tester access • free use":"";
+  }
 
-/* ---------- beta access ---------- */
-window.pmDisableBetaTesterMode=async function(){
-  if(!pmBetaHasAccess())return;
-  try{
-    await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
-      betaTesterMode:false,
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    },{merge:true});
-    // Access remains granted; this simply turns the mode off.
-    document.body.classList.remove("pmBetaTesterMode");
-    const b=document.getElementById(BETA_BADGE_ID);if(b)b.remove();
-    const off=document.getElementById(BETA_OFF_ID);if(off)off.remove();
-    alert("Beta Tester Mode turned off. You can turn it back on from your account options.");
-  }catch(e){console.error(e);alert("Could not turn off Beta Tester Mode.");}
-};
-window.pmEnableBetaTesterMode=async function(){
-  if(!pmBetaHasAccess())return alert("You do not currently have Beta Tester access.");
-  try{
-    await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
-      betaTesterMode:true,
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    },{merge:true});
-    pmSetBetaVisual(true);
-  }catch(e){console.error(e);alert("Could not enable Beta Tester Mode.");}
-};
-
-/* Keep the user's local mode switch separate from the access grant. */
-function pmBetaModeOn(data=pmUserData){
-  return pmBetaHasAccess(data) && data?.betaTesterMode!==false;
-}
-
-/* ---------- virtual ownership + free beta purchases ---------- */
-const oldPmOwn=window.pmOwn;
-window.pmOwn=function(id){
-  if(pmBetaModeOn())return true;
-  return typeof oldPmOwn==="function" ? oldPmOwn(id) : false;
-};
-if(typeof window.pmIsOwnedCosmetic==="function"){
-  const oldOwned=window.pmIsOwnedCosmetic;
-  window.pmIsOwnedCosmetic=function(id){
-    if(pmBetaModeOn())return true;
-    return oldOwned(id);
+  // Virtual ownership for beta testers only.
+  const basePmOwn=window.pmOwn;
+  window.pmOwn=function(id){
+    if(betaMode())return true;
+    return typeof basePmOwn==='function'?basePmOwn(id):false;
   };
-}
-if(typeof window.dbRunPurchase==="function"){
-  const oldPurchase=window.dbRunPurchase;
-  window.dbRunPurchase=async function(itemId){
-    if(pmBetaModeOn())return true;
-    return oldPurchase.apply(this,arguments);
-  };
-}
-if(typeof window.pmPurchaseItem==="function"){
-  const oldPurchaseItem=window.pmPurchaseItem;
+  if(typeof window.pmIsOwnedCosmetic==='function'){
+    const baseOwned=window.pmIsOwnedCosmetic;
+    window.pmIsOwnedCosmetic=function(id){return betaMode()?true:baseOwned(id);};
+  }
+
+  // Buying an item in beta mode should never spend coins or write ownership.
+  const basePurchase=window.pmPurchaseItem;
   window.pmPurchaseItem=async function(itemId,asGift=false){
-    if(pmBetaModeOn() && !asGift){
-      try{
-        if(typeof pmEquipUI==="function" && PM_SHOP_ITEMS[itemId]?.type==="ui"){
-          await pmEquipUI(itemId);
-        }
-      }catch(e){console.error(e);}
+    if(betaMode() && !asGift){
+      const item=PM_SHOP_ITEMS?.[itemId];
+      if(!item)return false;
+      if(itemId===GLASS_ID){await window.pmToggleGlassTexture(true);return true;}
+      if(item.type==='ui' && typeof window.pmEquipUI==='function'){await window.pmEquipUI(itemId);return true;}
+      if(itemId==='border_67' && typeof window.equip67Border==='function'){await window.equip67Border();return true;}
+      if(itemId==='border_fluff_you' && typeof window.pmEquipFluff==='function'){await window.pmEquipFluff();return true;}
+      if(itemId==='border_jaws_ocean' && typeof window.pmEquipJawsProfileEffect==='function'){await window.pmEquipJawsProfileEffect();return true;}
       return true;
     }
-    return oldPurchaseItem.apply(this,arguments);
+    const result=await basePurchase.apply(this,arguments);
+    try{renderCoins();renderGlass();}catch(e){}
+    return result;
   };
-}
 
-/* ---------- Glass Texture shop item ---------- */
-if(typeof PM_SHOP_ITEMS!=="undefined"){
-  PM_SHOP_ITEMS[GLASS_ID]={
-    id:GLASS_ID,name:"GLASS TEXTURE",price:GLASS_PRICE,
-    description:"A frosted glass overlay for buttons, cards, boxes and rounded search bars. Works with any UI.",
-    type:"texture"
+  window.pmToggleGlassTexture=async function(forceOn){
+    if(!pmFirebaseReady||!pmAuthUser||!pmUserData){alert('Your online account is not connected yet.');return false;}
+    const owned=betaMode() || (Array.isArray(pmUserData.ownedCosmetics)&&pmUserData.ownedCosmetics.includes(GLASS_ID));
+    if(!owned){alert('Buy Glass Texture for 1,000 coins first.');return false;}
+    try{
+      const next=typeof forceOn==='boolean'?forceOn:!glassOn();
+      if(betaMode() && next!==glassOn()){
+        pmUserData={...pmUserData,equippedGlassTexture:next};
+        document.body.classList.toggle('pmGlassTexture',next);renderGlass();return true;
+      }
+      await firebase.firestore().collection('users').doc(pmAuthUser.uid).set({equippedGlassTexture:next,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      await pmLoadOwnProfile();renderGlass();return true;
+    }catch(e){console.error(e);alert('Could not change Glass Texture.');return false;}
   };
-}
-window.pmEquipGlassTexture=async function(){
-  if(!pmFirebaseReady||!pmAuthUser||!pmUserData)return alert("Your online account is not connected yet.");
-  const owned=pmBetaModeOn() || (typeof pmOwn==="function"&&pmOwn(GLASS_ID));
-  if(!owned)return alert("Buy Glass Texture first.");
-  try{
-    const next=!pmGlassEquipped();
-    await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
-      equippedGlassTexture:next,
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    },{merge:true});
-    await pmLoadOwnProfile();
-    pmApplyGlassTexture();
-  }catch(e){console.error(e);alert("Could not change Glass Texture.");}
-};
 
-/* ---------- UI preview ---------- */
-function pmPreviewKind(item){
-  const id=String(item?.id||"").toLowerCase();
-  if(id.includes("jaws"))return "jaws";
-  if(id.includes("void"))return "void";
-  if(id.includes("neon"))return "neon";
-  return "default";
-}
-function pmBuildPreview(item){
-  let m=document.getElementById("pmUiPreviewModal");
-  if(!m){
-    m=document.createElement("div");m.id="pmUiPreviewModal";
-    m.innerHTML=`
-      <div class="pmUiPreviewCard">
-        <div class="pmUiPreviewHeader">
-          <div><div id="pmUiPreviewTitle" class="pmUiPreviewTitle"></div><div id="pmUiPreviewPrice" class="pmAuthHint"></div></div>
-          <button id="pmUiPreviewClose" class="pmActionButton pmUiPreviewClose">×</button>
-        </div>
-        <div id="pmUiPreviewViewport" class="pmUiPreviewViewport"></div>
-        <div id="pmUiPreviewDescription" class="pmAuthHint"></div>
-        <div id="pmUiPreviewActions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px"></div>
-      </div>`;
-    document.body.appendChild(m);
-    document.getElementById("pmUiPreviewClose").onclick=()=>m.classList.remove("show");
-    m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("show");});
-  }
-  const kind=pmPreviewKind(item);
-  const v=document.getElementById("pmUiPreviewViewport");
-  v.className="pmUiPreviewViewport pmPreview"+kind[0].toUpperCase()+kind.slice(1);
-  v.innerHTML=`
-    <div class="pmPreviewMockBar"></div>
-    <div class="pmPreviewMockGrid">
-      <div class="pmPreviewMockBox"><strong>${item.name}</strong><br><span style="opacity:.7">LIVE UI PREVIEW</span><div class="pmPreviewMockButton">BUTTON</div></div>
-      <div class="pmPreviewMockBox"><strong>PROFILE</strong><br><span style="opacity:.7">Cards • Stats • Search</span></div>
-    </div>
-    ${kind==="jaws"?'<div class="pmPreviewShark"></div>':""}
-    ${item.id===GLASS_ID?'<div class="pmPreviewGlass" style="position:absolute;left:35%;right:35%;bottom:28px;height:42px;border-radius:999px"></div>':""}`;
-  document.getElementById("pmUiPreviewTitle").textContent=item.name;
-  document.getElementById("pmUiPreviewPrice").textContent=pmBetaModeOn()?"BETA TESTER • FREE":"🪙 "+Number(item.price||0).toLocaleString();
-  document.getElementById("pmUiPreviewDescription").textContent=item.description||"";
-  const actions=document.getElementById("pmUiPreviewActions");actions.innerHTML="";
-  const close=document.createElement("button");close.className="pmActionButton";close.textContent="BACK";
-  close.onclick=()=>m.classList.remove("show");actions.appendChild(close);
-  if(item.type==="texture"){
-    const b=document.createElement("button");b.className="pmActionButton";
-    b.textContent=pmGlassEquipped()?"UNEQUIP":"EQUIP"+(pmBetaModeOn()?" FREE":" • 1,000 🪙");
-    b.onclick=()=>window.pmEquipGlassTexture();actions.appendChild(b);
-  }else{
-    const b=document.createElement("button");b.className="pmActionButton";
-    b.textContent=pmBetaModeOn()?"EQUIP FREE (BETA)":"BUY / GIVE • "+Number(item.price||0).toLocaleString()+" 🪙";
-    b.onclick=()=>{m.classList.remove("show"); if(typeof openShopCheckout==="function")openShopCheckout(item.id);};actions.appendChild(b);
-  }
-  m.classList.add("show");
-}
+  // Keep the Glass card visible and update it whenever shop/profile data refreshes.
+  const baseRenderShop=window.pmRenderShop;
+  window.pmRenderShop=function(){
+    if(typeof baseRenderShop==='function')baseRenderShop.apply(this,arguments);
+    renderGlass();renderCoins();
+  };
 
-/* Change shop-home purchase buttons to SEE. We preserve the existing item ID
-   by reading the original onclick attribute once. */
-function pmConvertShopButtons(){
-  const roots=document.querySelectorAll("#shopPage, #pmShopPage");
-  roots.forEach(root=>{
-    root.querySelectorAll("button").forEach(btn=>{
-      const txt=(btn.textContent||"").trim().toUpperCase();
-      if(!/^BUY\b|^BUY •|^GIFT CODE/.test(txt))return;
-      if(btn.dataset.pmPreviewButton==="1")return;
-      const attr=btn.getAttribute("onclick")||"";
-      const m=attr.match(/(?:openShopCheckout|pmPurchaseItem)\(\s*['"]([^'"]+)['"]/);
-      if(!m)return;
-      const id=m[1],item=PM_SHOP_ITEMS?.[id];
-      if(!item)return;
-      btn.dataset.pmPreviewButton="1";
-      btn.removeAttribute("onclick");
-      btn.textContent="SEE";
-      btn.disabled=false;
-      btn.onclick=()=>pmBuildPreview(item);
+  // Ensure the new shop item is present even if another renderer rebuilds the grid.
+  function ensureGlassCard(){
+    const grid=document.querySelector('#shopPage .pmShopGrid'); if(!grid)return;
+    if(!document.getElementById('pmGlassTextureShopCard')){
+      const card=document.createElement('div');card.className='pmShopCard';card.id='pmGlassTextureShopCard';
+      card.innerHTML=`<div class="pmShopPreview" style="background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.04));backdrop-filter:blur(14px)"><div style="height:70px;margin:14px;border-radius:18px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28)"></div><div style="height:22px;width:65%;margin:0 auto;border-radius:999px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25)"></div></div><div class="pmShopName">GLASS TEXTURE</div><div class="pmShopMeta"><span>COMBINABLE OVER ANY UI</span><span class="pmShopPrice">🪙 1000</span></div><div class="pmShopDescription">Frosted glass buttons, boxes, cards and round glossy search bars. Works alongside any UI theme.</div><div class="pmShopActions"><button class="pmActionButton" id="pmGlassBuyButton" onclick="openShopCheckout('texture_glass')">BUY • 1000 🪙</button><button class="pmActionButton pmSecondaryButton" id="pmGlassEquipButton" onclick="pmToggleGlassTexture()" style="display:none">EQUIP</button></div><div class="pmShopOwnedNote" id="pmGlassOwnedNote"></div>`;
+      grid.appendChild(card);
+    }
+    renderGlass();
+  }
+
+  const oldOpenShop=window.openShop;
+  window.openShop=function(){
+    const r=oldOpenShop.apply(this,arguments);
+    setTimeout(()=>{ensureGlassCard();renderGlass();renderCoins();},80);
+    return r;
+  };
+
+  // Beta controls in the user's account/options area.
+  function renderBetaSelfControl(){
+    const page=document.getElementById('accountPage')||document.getElementById('optionsPage');
+    if(!page||!pmUserData)return;
+    if(!betaAccess())return;
+    let card=document.getElementById('pmBetaSelfControl');
+    if(!card){
+      card=document.createElement('div');card.id='pmBetaSelfControl';card.className='optionSection';
+      card.innerHTML='<div class="optionSectionTitle">🧪 BETA TESTER MODE</div><div class="pmAuthHint">You have Beta Tester access. Shop items can be tested for free. Turning this off does not remove your access.</div><button class="pmActionButton" id="pmBetaToggleButton"></button>';
+      page.appendChild(card);
+    }
+    const b=document.getElementById('pmBetaToggleButton');
+    if(b){b.textContent=betaMode()?'TURN OFF BETA TESTER MODE':'TURN ON BETA TESTER MODE';b.onclick=async()=>{try{await firebase.firestore().collection('users').doc(pmAuthUser.uid).set({betaTesterMode:!betaMode(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});await pmLoadOwnProfile();syncAll();}catch(e){console.error(e);alert('Could not change Beta Tester Mode.');}};}
+  }
+
+  function ensureAdminBetaControl(){
+    const box=document.getElementById('pmAdminContent');
+    if(!box||!pmAdminTargetData)return;
+    let card=document.getElementById('pmAdminBetaAccessCard');
+    if(!card){
+      card=document.createElement('div');card.id='pmAdminBetaAccessCard';card.className='pmAdminRow';card.style.marginTop='14px';
+      card.innerHTML='<div class="pmAdminRowInfo"><div class="pmAdminRowTitle">🧪 BETA TESTER ACCESS</div><div class="pmAdminRowSub">Grant free access to all current shop items for this player. Removing access immediately revokes beta-only virtual ownership.</div></div><button class="pmActionButton" id="pmAdminBetaToggle"></button>';
+      box.appendChild(card);
+    }
+    const granted=pmAdminTargetData[BETA_ACCESS]===true;
+    const b=document.getElementById('pmAdminBetaToggle');
+    if(b){b.textContent=granted?'REMOVE ACCESS':'GRANT ACCESS';b.className='pmActionButton '+(granted?'pmAdminDanger':'');b.onclick=async()=>{try{await firebase.firestore().collection('users').doc(pmAdminTargetId).set({betaTesterAccess:!granted,betaTesterMode:!granted,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});pmAdminTargetData=(await firebase.firestore().collection('users').doc(pmAdminTargetId).get()).data();pmAdminShowTab('overview');}catch(e){console.error(e);alert('Could not change Beta Tester access.');}};}
+  }
+
+  function syncAll(){
+    renderCoins();renderGlass();ensureGlassCard();renderBetaSelfControl();
+    if(typeof pmAdminShowTab==='function'&&pmAdminTargetData&&pmAdminCurrentTab==='overview')ensureAdminBetaControl();
+  }
+
+  // Ensure coins update immediately after a test result sync.
+  if(typeof window.promouserSyncTestResult==='function'){
+    const oldSync=window.promouserSyncTestResult;
+    window.promouserSyncTestResult=async function(){const r=await oldSync.apply(this,arguments);setTimeout(syncAll,50);return r;};
+  }
+
+  // Observe the user's own account. Admin revocation instantly removes beta virtual access.
+  let unsub=null;
+  function startWatch(){
+    if(unsub)unsub();
+    if(!pmFirebaseReady||!pmAuthUser)return;
+    unsub=firebase.firestore().collection('users').doc(pmAuthUser.uid).onSnapshot(s=>{
+      if(!s.exists)return;
+      pmUserData=s.data();
+      if(!betaAccess()||pmUserData[BETA_MODE]!==true){document.body.classList.remove('pmBetaTesterMode');}
+      else document.body.classList.add('pmBetaTesterMode');
+      renderGlass();renderCoins();renderBetaSelfControl();
     });
-  });
+  }
+  setTimeout(()=>{startWatch();syncAll();},1300);
+  setInterval(()=>{if(document.querySelector('#shopPage.active'))ensureGlassCard();},1200);
+
+  // Keep admin tab tracker current.
+  const baseAdminShow=window.pmAdminShowTab;
+  window.pmAdminShowTab=async function(tab){pmAdminCurrentTab=tab;const r=await baseAdminShow.apply(this,arguments);if(tab==='overview')setTimeout(ensureAdminBetaControl,30);return r;};
+})();
+</script>
+<style>
+/* Glass Texture global overlay */
+body.pmGlassTexture .page.active .stat,
+body.pmGlassTexture .page.active .pmShopCard,
+body.pmGlassTexture .page.active .pmCheckoutCard,
+body.pmGlassTexture .page.active .secondaryPage,
+body.pmGlassTexture .page.active .panel,
+body.pmGlassTexture .page.active .box,
+body.pmGlassTexture .page.active .card,
+body.pmGlassTexture .page.active input,
+body.pmGlassTexture .page.active textarea,
+body.pmGlassTexture .page.active select,
+body.pmGlassTexture .page.active button:not(.backButton){
+  background:rgba(255,255,255,.075)!important;
+  border-color:rgba(255,255,255,.22)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 10px 30px rgba(0,0,0,.18)!important;
+  backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);
 }
+body.pmGlassTexture .page.active input,
+body.pmGlassTexture .page.active textarea,
+body.pmGlassTexture .page.active select,
+body.pmGlassTexture .page.active button:not(.backButton){border-radius:999px!important}
+body.pmBetaTesterMode .pmShopPrice{color:#6eefff!important}
+</style>
 
-/* Add preview to the actual self/gift checkout page too. */
-const oldCheckout=window.openShopCheckout;
-window.openShopCheckout=function(itemId){
-  oldCheckout.apply(this,arguments);
-  setTimeout(()=>{
-    const item=PM_SHOP_ITEMS?.[itemId];if(!item)return;
-    let host=document.getElementById("pmCheckoutPreviewHost");
-    const page=document.getElementById("shopCheckoutPage");
-    if(!page)return;
-    if(!host){
-      host=document.createElement("div");host.id="pmCheckoutPreviewHost";
-      const first=page.querySelector(".pmCheckoutCard")||page.firstElementChild;
-      if(first)first.parentNode.insertBefore(host,first);
+<style id="pmFinalAdminFix">
+#pmFinalBetaAccessCard{margin-top:14px;padding:16px;border:1px solid rgba(0,229,255,.24);border-radius:14px;background:rgba(5,12,18,.72)}
+#pmFinalBetaAccessCard .pmAdminRowSub{margin:6px 0 12px;color:#9aa9b0}
+#pmFinalCoinTools{margin-top:14px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:800px){#pmFinalCoinTools{grid-template-columns:1fr}}
+#pmFinalCoinTools .pmAdminCoinTool{padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:12px;background:rgba(255,255,255,.03)}
+</style>
+
+<script id="pmFinalAdminRepair">
+(function(){
+  "use strict";
+
+  const ADMIN="WtQ6Vaz7a1Ogt3A0KTYYmFkCU132";
+  const isAdmin=()=>typeof window.pmIsSoleAdmin==="function" ? window.pmIsSoleAdmin() :
+    (typeof pmAuthUser!=="undefined" && pmAuthUser && pmAuthUser.uid===ADMIN);
+
+  function targetRef(){
+    if(!pmAdminTargetId)throw new Error("NO_TARGET");
+    return firebase.firestore().collection("users").doc(pmAdminTargetId);
+  }
+
+  async function writeCoins(delta){
+    if(!isAdmin())throw new Error("NOT_ADMIN");
+    const ref=targetRef();
+    await firebase.firestore().runTransaction(async tx=>{
+      const snap=await tx.get(ref);
+      if(!snap.exists)throw new Error("ACCOUNT_NOT_FOUND");
+      const data=snap.data()||{};
+      const current=Math.max(0,Number(data.coins||0));
+      const next=Math.max(0,current+delta);
+      tx.update(ref,{
+        coins:next,
+        lastAdminCoinChange:{
+          by:ADMIN,
+          delta:Math.trunc(delta),
+          at:firebase.firestore.FieldValue.serverTimestamp()
+        },
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    const fresh=await ref.get();
+    pmAdminTargetData=fresh.data()||{};
+    if(pmAuthUser?.uid===pmAdminTargetId){
+      pmUserData=pmAdminTargetData;
+      if(typeof pmRenderCoinBalance==="function")pmRenderCoinBalance();
     }
-    host.innerHTML="";
-    const button=document.createElement("button");
-    button.className="pmActionButton";
-    button.textContent="👁️ PREVIEW "+item.name;
-    button.onclick=()=>pmBuildPreview(item);
-    host.appendChild(button);
-  },0);
-};
+    return pmAdminTargetData.coins||0;
+  }
 
-/* ---------- My UI collection additions ---------- */
-const oldCollection=window.pmRenderCollection;
-window.pmRenderCollection=function(){
-  oldCollection.apply(this,arguments);
-  const box=document.getElementById("pmMyUIList");
-  if(!box)return;
-  const owned=pmBetaModeOn() || (typeof pmOwn==="function"&&pmOwn(GLASS_ID));
-  const card=document.createElement("div");
-  card.className="pmCollectionItem"+(pmGlassEquipped()?" equipped":"");
-  card.innerHTML=`<div class="pmCollectionPreview pmPreviewGlass">GLASS</div>
-    <div class="pmCollectionItemTitle">GLASS TEXTURE</div>
-    <div class="pmCollectionItemSub">1,000 COINS • COMBINABLE WITH ANY UI</div>`;
-  const b=document.createElement("button");b.className="pmActionButton"+(pmGlassEquipped()?" pmSecondaryButton":"");
-  b.textContent=pmGlassEquipped()?"UNEQUIP":owned?"EQUIP":"NOT OWNED";b.disabled=!owned;b.onclick=window.pmEquipGlassTexture;
-  card.appendChild(b);box.appendChild(card);
-};
+  window.pmAdminGiveCoins=async function(){
+    if(!isAdmin())return alert("Admin access is restricted to the ProMouser owner account.");
+    const el=document.getElementById("pmAdminGiveAmount");
+    const amount=Math.floor(Number(el?.value));
+    if(!Number.isFinite(amount)||amount<1)return alert("Enter a valid amount.");
+    if(amount>1000000000)return alert("That amount is too large.");
+    try{
+      const balance=await writeCoins(amount);
+      if(typeof pmAdminShowTab==="function")await pmAdminShowTab("overview");
+      alert("Gave "+amount.toLocaleString()+" coins. New player balance: "+Number(balance).toLocaleString()+".");
+    }catch(e){
+      console.error("ADMIN GIVE COINS FAILED",e);
+      alert("Could not give coins: "+(e?.message||e));
+    }
+  };
 
-/* ---------- Admin beta access ---------- */
-window.pmAdminSetBetaAccess=async function(enabled){
-  if(!window.pmIsSoleAdmin || !window.pmIsSoleAdmin())return alert("Admin access is restricted to the ProMouser owner account.");
-  if(!pmAdminTargetId)return;
-  try{
-    const ref=firebase.firestore().collection("users").doc(pmAdminTargetId);
-    await ref.set({
-      betaTesterAccess:!!enabled,
-      betaTesterMode:!!enabled,
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    },{merge:true});
-    pmAdminTargetData=(await ref.get()).data();
-    pmAdminShowTab("overview");
-    alert(enabled?"Beta Tester access granted.":"Beta Tester access removed. All beta-only access is now disabled for this account.");
-  }catch(e){console.error(e);alert("Could not change Beta Tester access.");}
-};
+  window.pmAdminTakeCoins=async function(){
+    if(!isAdmin())return alert("Admin access is restricted to the ProMouser owner account.");
+    const amount=Math.floor(Number(document.getElementById("pmAdminTakeAmount")?.value));
+    if(!Number.isFinite(amount)||amount<1)return alert("Enter a valid amount.");
+    try{
+      const balance=await writeCoins(-amount);
+      if(typeof pmAdminShowTab==="function")await pmAdminShowTab("overview");
+      alert("Deducted "+amount.toLocaleString()+" coins. New player balance: "+Number(balance).toLocaleString()+".");
+    }catch(e){
+      console.error("ADMIN TAKE COINS FAILED",e);
+      alert("Could not deduct coins: "+(e?.message||e));
+    }
+  };
 
-/* Inject admin control into the target overview. */
-const oldAdminShowTab=window.pmAdminShowTab;
-window.pmAdminShowTab=async function(tab){
-  await oldAdminShowTab.apply(this,arguments);
-  if(tab!=="overview"||!pmAdminTargetData)return;
-  const box=document.getElementById("pmAdminTabContent");
-  if(!box)return;
-  const active=pmAdminTargetData.betaTesterAccess===true;
-  const card=document.createElement("div");
-  card.id="pmBetaAccessCard";
-  card.innerHTML=`<div class="pmAdminRowTitle">🧪 BETA TESTER ACCESS</div>
-    <div class="pmAdminRowSub" style="margin:6px 0 12px">Give this user temporary access to every shop item for free. They can turn Beta Tester Mode on/off themselves. Removing access immediately removes their virtual beta ownership.</div>
-    <div class="pmBetaAccessState">${active?"ACCESS GRANTED":"ACCESS NOT GRANTED"}</div>`;
-  const b=document.createElement("button");b.className="pmActionButton "+(active?"pmAdminDanger":"");
-  b.style.marginTop="10px";b.textContent=active?"REMOVE BETA ACCESS":"GRANT BETA ACCESS";
-  b.onclick=()=>window.pmAdminSetBetaAccess(!active);
-  card.appendChild(b);box.appendChild(card);
-};
+  window.pmAdminGiftCoins=async function(){
+    if(!isAdmin())return alert("Admin access is restricted to the ProMouser owner account.");
+    const amount=Math.floor(Number(document.getElementById("pmAdminGiftAmount")?.value));
+    if(!Number.isFinite(amount)||amount<1)return alert("Enter a valid amount.");
+    if(amount>1000000000)return alert("That amount is too large.");
+    try{
+      const balance=await writeCoins(amount);
+      if(typeof pmAdminShowTab==="function")await pmAdminShowTab("overview");
+      alert("Gifted "+amount.toLocaleString()+" coins. New player balance: "+Number(balance).toLocaleString()+".");
+    }catch(e){
+      console.error("ADMIN GIFT COINS FAILED",e);
+      alert("Could not gift coins: "+(e?.message||e));
+    }
+  };
 
-/* ---------- Live account listener: admin revocation instantly removes beta access ---------- */
-let pmBetaUnsub=null;
-function pmStartBetaWatcher(){
-  if(pmBetaUnsub)pmBetaUnsub();
-  if(!pmFirebaseReady||!pmAuthUser)return;
-  pmBetaUnsub=firebase.firestore().collection("users").doc(pmAuthUser.uid).onSnapshot(snap=>{
+  function ensureFinalAdminBeta(){
+    if(!isAdmin()||!pmAdminTargetId||!pmAdminTargetData)return;
+    const box=document.getElementById("pmAdminContent");
+    if(!box)return;
+    let card=document.getElementById("pmFinalBetaAccessCard");
+    if(!card){
+      card=document.createElement("div");
+      card.id="pmFinalBetaAccessCard";
+      box.appendChild(card);
+    }
+    const granted=pmAdminTargetData.betaTesterAccess===true;
+    const mode=pmAdminTargetData.betaTesterMode===true;
+    card.innerHTML=`
+      <div class="pmAdminRowTitle">🧪 BETA TESTER ACCESS</div>
+      <div class="pmAdminRowSub">
+        Grant access to all shop items for free testing. The player can turn Beta Tester Mode on/off.
+        Removing access immediately disables the mode and virtual shop access.
+      </div>
+      <div class="pmAdminRowSub"><strong>Access:</strong> ${granted?"GRANTED":"NOT GRANTED"} &nbsp; • &nbsp; <strong>Mode:</strong> ${mode?"ON":"OFF"}</div>
+      <button id="pmFinalBetaToggle" class="pmActionButton ${granted?"pmAdminDanger":""}">
+        ${granted?"REMOVE BETA ACCESS":"GRANT BETA ACCESS"}
+      </button>`;
+    document.getElementById("pmFinalBetaToggle").onclick=async()=>{
+      try{
+        if(!isAdmin())throw new Error("NOT_ADMIN");
+        const next=!granted;
+        await firebase.firestore().collection("users").doc(pmAdminTargetId).set({
+          betaTesterAccess:next,
+          betaTesterMode:next ? (mode||true) : false,
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+        pmAdminTargetData=(await firebase.firestore().collection("users").doc(pmAdminTargetId).get()).data()||{};
+        await pmAdminShowTab("overview");
+        alert(next?"Beta Tester access granted.":"Beta Tester access removed. Beta Tester Mode is now disabled and beta-only shop access is gone.");
+      }catch(e){
+        console.error("BETA ACCESS CHANGE FAILED",e);
+        alert("Could not change Beta Tester access: "+(e?.message||e));
+      }
+    };
+  }
+
+  function ensureFinalAdminCoinTools(){
+    if(!isAdmin()||!pmAdminTargetId)return;
+    const box=document.getElementById("pmAdminContent");
+    if(!box)return;
+    let tools=document.getElementById("pmFinalCoinTools");
+    if(tools)return;
+    tools=document.createElement("div");
+    tools.id="pmFinalCoinTools";
+    tools.innerHTML=`
+      <div class="pmAdminCoinTool">
+        <div class="pmAdminRowTitle">🪙 GIVE COINS</div>
+        <input id="pmAdminGiveAmount" class="pmTextInput" type="number" min="1" max="1000000000" placeholder="Amount">
+        <button class="pmActionButton" style="margin-top:8px">GIVE</button>
+      </div>
+      <div class="pmAdminCoinTool">
+        <div class="pmAdminRowTitle">🎁 GIFT COINS</div>
+        <input id="pmAdminGiftAmount" class="pmTextInput" type="number" min="1" max="1000000000" placeholder="Amount">
+        <button class="pmActionButton" style="margin-top:8px">GIFT</button>
+      </div>
+      <div class="pmAdminCoinTool">
+        <div class="pmAdminRowTitle">🗑️ DEDUCT COINS</div>
+        <input id="pmAdminTakeAmount" class="pmTextInput" type="number" min="1" max="1000000000" placeholder="Amount">
+        <button class="pmActionButton pmAdminDanger" style="margin-top:8px">DEDUCT</button>
+      </div>`;
+    const bs=tools.querySelectorAll("button");
+    bs[0].onclick=window.pmAdminGiveCoins;
+    bs[1].onclick=window.pmAdminGiftCoins;
+    bs[2].onclick=window.pmAdminTakeCoins;
+    box.appendChild(tools);
+  }
+
+  async function refreshAdminOverview(){
+    if(!isAdmin()||!pmAdminTargetId)return;
+    const ref=targetRef();
+    const snap=await ref.get();
     if(!snap.exists)return;
-    const d=snap.data()||{};
-    pmUserData=d;
-    if(!d[BETA_FIELD]){
-      document.body.classList.remove("pmBetaTesterMode");
-      const b=document.getElementById(BETA_BADGE_ID);if(b)b.remove();
-      const off=document.getElementById(BETA_OFF_ID);if(off)off.remove();
-    }else if(d.betaTesterMode!==false){
-      pmSetBetaVisual(true);
-    }else{
-      document.body.classList.remove("pmBetaTesterMode");
-      const b=document.getElementById(BETA_BADGE_ID);if(b)b.remove();
-      const off=document.getElementById(BETA_OFF_ID);if(off)off.remove();
+    pmAdminTargetData=snap.data()||{};
+    ensureFinalAdminBeta();
+    ensureFinalAdminCoinTools();
+  }
+
+  const oldShow=window.pmAdminShowTab;
+  window.pmAdminShowTab=async function(tab){
+    const result=await oldShow.apply(this,arguments);
+    if(tab==="overview"){
+      setTimeout(()=>refreshAdminOverview().catch(console.error),25);
+      setTimeout(()=>refreshAdminOverview().catch(console.error),150);
     }
-    pmApplyGlassTexture();
-  },err=>console.warn("Beta watcher:",err));
-}
+    return result;
+  };
 
-/* Run after Firebase/account initialization and on navigation. */
-setTimeout(()=>{
-  pmStartBetaWatcher();
-  pmSyncCosmeticVisuals();
-  pmConvertShopButtons();
-},1200);
-setInterval(()=>{
-  pmConvertShopButtons();
-  pmApplyGlassTexture();
-},1200);
+  // Keep the admin controls visible even if another renderer replaces pmAdminContent.
+  setInterval(()=>{
+    if(document.getElementById("adminPage")?.classList.contains("active") && pmAdminTargetId){
+      ensureFinalAdminBeta();
+      ensureFinalAdminCoinTools();
+    }
+  },700);
 
+  // Restore the admin's own coin display from Firebase after admin changes.
+  setInterval(()=>{
+    if(typeof pmAuthUser!=="undefined"&&pmAuthUser?.uid===ADMIN&&typeof pmUserData!=="undefined"&&pmUserData){
+      const n=Math.max(0,Number(pmUserData.coins||0));
+      ["pmCoinBalance","pmShopCoinBalance","pmProfileCoins","pmGiftYourBalance","pmWheelBalance"].forEach(id=>{
+        const e=document.getElementById(id);if(e)e.textContent=n.toLocaleString();
+      });
+    }
+  },900);
 })();
 </script>
 
