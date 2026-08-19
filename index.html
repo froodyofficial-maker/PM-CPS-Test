@@ -9635,42 +9635,6 @@ body.glitchPop .pmCoinPill{
 })();
 </script>
 
-<style id="pmFinalFluffBetaFixStyles">
-/* The 210px shop preview contains a 128px PFP. Keep FLUFF YOU exactly on that PFP. */
-.pmCosmeticPreview .pmFluffBorderImage{
-  position:absolute!important;
-  left:41px!important;
-  top:41px!important;
-  width:128px!important;
-  height:128px!important;
-  transform:none!important;
-  object-fit:fill!important;
-  border-radius:10px!important;
-  clip-path:inset(0 round 10px)!important;
-  overflow:hidden!important;
-}
-.pmCosmeticPreview{
-  position:relative!important;
-  overflow:hidden!important;
-}
-
-/* Keep FLUFF YOU on the real 104px/115px avatar frames everywhere else. */
-.pmAvatarWrap .pmFluffBorderImage{
-  left:0!important;top:0!important;width:104px!important;height:104px!important;
-  transform:none!important;object-fit:fill!important;
-  clip-path:inset(0 round 10px)!important;border-radius:10px!important;
-}
-.pmPublicAvatarStage .pmFluffBorderImage{
-  left:0!important;top:0!important;width:115px!important;height:115px!important;
-  transform:none!important;object-fit:fill!important;
-  clip-path:inset(0 round 10px)!important;border-radius:10px!important;
-}
-.pmPublicTop > .pmPublicAvatarStage .pmFluffBorderImage{
-  left:15px!important;top:15px!important;width:115px!important;height:115px!important;
-}
-</style>
-
-
 <script id="pmJawsOceanThemeScript">
 (function(){
   const JAWS_ID="ui_jaws_ocean";
@@ -9802,163 +9766,6 @@ body.glitchPop .pmCoinPill{
 </script>
 
 
-<script id="pmBetaGlassFinalFix">
-(function(){
-  "use strict";
-  const BETA_ACCESS="betaTesterAccess";
-  const BETA_MODE="betaTesterMode";
-  const GLASS_ID="texture_glass";
-  const ADMIN_UID="WtQ6Vaz7a1Ogt3A0KTYYmFkCU132";
-
-  function betaAccess(d=pmUserData){ return d?.[BETA_ACCESS]===true; }
-  function betaMode(d=pmUserData){ return betaAccess(d) && d?.[BETA_MODE]===true; }
-  function glassOn(d=pmUserData){ return d?.equippedGlassTexture===true; }
-  function renderCoins(){
-    if(typeof pmRenderCoinBalance==='function')pmRenderCoinBalance();
-    const n=Math.max(0,Number(pmUserData?.coins||0)).toLocaleString();
-    ['pmCoinBalance','pmShopCoinBalance','pmProfileCoins','pmGiftYourBalance','pmWheelBalance'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=n;});
-  }
-  function renderGlass(){
-    document.body.classList.toggle('pmGlassTexture',glassOn());
-    const buy=document.getElementById('pmGlassBuyButton');
-    const eq=document.getElementById('pmGlassEquipButton');
-    const note=document.getElementById('pmGlassOwnedNote');
-    const owned=betaMode() || (Array.isArray(pmUserData?.ownedCosmetics)&&pmUserData.ownedCosmetics.includes(GLASS_ID));
-    if(buy){ buy.disabled=false; buy.textContent=betaMode()?'BETA • USE':'BUY • 1000 🪙'; }
-    if(eq){ eq.style.display=owned?'inline-block':'none'; eq.textContent=glassOn()?'UNEQUIP':'EQUIP'; eq.disabled=false; }
-    if(note)note.textContent=betaMode()?"Beta Tester access • free use":"";
-  }
-
-  // Virtual ownership for beta testers only.
-  const basePmOwn=window.pmOwn;
-  window.pmOwn=function(id){
-    if(betaMode())return true;
-    return typeof basePmOwn==='function'?basePmOwn(id):false;
-  };
-  if(typeof window.pmIsOwnedCosmetic==='function'){
-    const baseOwned=window.pmIsOwnedCosmetic;
-    window.pmIsOwnedCosmetic=function(id){return betaMode()?true:baseOwned(id);};
-  }
-
-  // Buying an item in beta mode should never spend coins or write ownership.
-  const basePurchase=window.pmPurchaseItem;
-  window.pmPurchaseItem=async function(itemId,asGift=false){
-    if(betaMode() && !asGift){
-      const item=PM_SHOP_ITEMS?.[itemId];
-      if(!item)return false;
-      if(itemId===GLASS_ID){await window.pmToggleGlassTexture(true);return true;}
-      if(item.type==='ui' && typeof window.pmEquipUI==='function'){await window.pmEquipUI(itemId);return true;}
-      if(itemId==='border_67' && typeof window.equip67Border==='function'){await window.equip67Border();return true;}
-      if(itemId==='border_fluff_you' && typeof window.pmEquipFluff==='function'){await window.pmEquipFluff();return true;}
-      if(itemId==='border_jaws_ocean' && typeof window.pmEquipJawsProfileEffect==='function'){await window.pmEquipJawsProfileEffect();return true;}
-      return true;
-    }
-    const result=await basePurchase.apply(this,arguments);
-    try{renderCoins();renderGlass();}catch(e){}
-    return result;
-  };
-
-  window.pmToggleGlassTexture=async function(forceOn){
-    if(!pmFirebaseReady||!pmAuthUser||!pmUserData){alert('Your online account is not connected yet.');return false;}
-    const owned=betaMode() || (Array.isArray(pmUserData.ownedCosmetics)&&pmUserData.ownedCosmetics.includes(GLASS_ID));
-    if(!owned){alert('Buy Glass Texture for 1,000 coins first.');return false;}
-    try{
-      const next=typeof forceOn==='boolean'?forceOn:!glassOn();
-      if(betaMode() && next!==glassOn()){
-        pmUserData={...pmUserData,equippedGlassTexture:next};
-        document.body.classList.toggle('pmGlassTexture',next);renderGlass();return true;
-      }
-      await firebase.firestore().collection('users').doc(pmAuthUser.uid).set({equippedGlassTexture:next,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-      await pmLoadOwnProfile();renderGlass();return true;
-    }catch(e){console.error(e);alert('Could not change Glass Texture.');return false;}
-  };
-
-  // Keep the Glass card visible and update it whenever shop/profile data refreshes.
-  const baseRenderShop=window.pmRenderShop;
-  window.pmRenderShop=function(){
-    if(typeof baseRenderShop==='function')baseRenderShop.apply(this,arguments);
-    renderGlass();renderCoins();
-  };
-
-  // Ensure the new shop item is present even if another renderer rebuilds the grid.
-  function ensureGlassCard(){
-    const grid=document.querySelector('#shopPage .pmShopGrid'); if(!grid)return;
-    if(!document.getElementById('pmGlassTextureShopCard')){
-      const card=document.createElement('div');card.className='pmShopCard';card.id='pmGlassTextureShopCard';
-      card.innerHTML=`<div class="pmShopPreview" style="background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.04));backdrop-filter:blur(14px)"><div style="height:70px;margin:14px;border-radius:18px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28)"></div><div style="height:22px;width:65%;margin:0 auto;border-radius:999px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25)"></div></div><div class="pmShopName">GLASS TEXTURE</div><div class="pmShopMeta"><span>COMBINABLE OVER ANY UI</span><span class="pmShopPrice">🪙 1000</span></div><div class="pmShopDescription">Frosted glass buttons, boxes, cards and round glossy search bars. Works alongside any UI theme.</div><div class="pmShopActions"><button class="pmActionButton" id="pmGlassBuyButton" onclick="openShopCheckout('texture_glass')">BUY • 1000 🪙</button><button class="pmActionButton pmSecondaryButton" id="pmGlassEquipButton" onclick="pmToggleGlassTexture()" style="display:none">EQUIP</button></div><div class="pmShopOwnedNote" id="pmGlassOwnedNote"></div>`;
-      grid.appendChild(card);
-    }
-    renderGlass();
-  }
-
-  const oldOpenShop=window.openShop;
-  window.openShop=function(){
-    const r=oldOpenShop.apply(this,arguments);
-    setTimeout(()=>{ensureGlassCard();renderGlass();renderCoins();},80);
-    return r;
-  };
-
-  // Beta controls in the user's account/options area.
-  function renderBetaSelfControl(){
-    const page=document.getElementById('accountPage')||document.getElementById('optionsPage');
-    if(!page||!pmUserData)return;
-    if(!betaAccess())return;
-    let card=document.getElementById('pmBetaSelfControl');
-    if(!card){
-      card=document.createElement('div');card.id='pmBetaSelfControl';card.className='optionSection';
-      card.innerHTML='<div class="optionSectionTitle">🧪 BETA TESTER MODE</div><div class="pmAuthHint">You have Beta Tester access. Shop items can be tested for free. Turning this off does not remove your access.</div><button class="pmActionButton" id="pmBetaToggleButton"></button>';
-      page.appendChild(card);
-    }
-    const b=document.getElementById('pmBetaToggleButton');
-    if(b){b.textContent=betaMode()?'TURN OFF BETA TESTER MODE':'TURN ON BETA TESTER MODE';b.onclick=async()=>{try{await firebase.firestore().collection('users').doc(pmAuthUser.uid).set({betaTesterMode:!betaMode(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});await pmLoadOwnProfile();syncAll();}catch(e){console.error(e);alert('Could not change Beta Tester Mode.');}};}
-  }
-
-  function ensureAdminBetaControl(){
-    const box=document.getElementById('pmAdminContent');
-    if(!box||!pmAdminTargetData)return;
-    let card=document.getElementById('pmAdminBetaAccessCard');
-    if(!card){
-      card=document.createElement('div');card.id='pmAdminBetaAccessCard';card.className='pmAdminRow';card.style.marginTop='14px';
-      card.innerHTML='<div class="pmAdminRowInfo"><div class="pmAdminRowTitle">🧪 BETA TESTER ACCESS</div><div class="pmAdminRowSub">Grant free access to all current shop items for this player. Removing access immediately revokes beta-only virtual ownership.</div></div><button class="pmActionButton" id="pmAdminBetaToggle"></button>';
-      box.appendChild(card);
-    }
-    const granted=pmAdminTargetData[BETA_ACCESS]===true;
-    const b=document.getElementById('pmAdminBetaToggle');
-    if(b){b.textContent=granted?'REMOVE ACCESS':'GRANT ACCESS';b.className='pmActionButton '+(granted?'pmAdminDanger':'');b.onclick=async()=>{try{await firebase.firestore().collection('users').doc(pmAdminTargetId).set({betaTesterAccess:!granted,betaTesterMode:!granted,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});pmAdminTargetData=(await firebase.firestore().collection('users').doc(pmAdminTargetId).get()).data();pmAdminShowTab('overview');}catch(e){console.error(e);alert('Could not change Beta Tester access.');}};}
-  }
-
-  function syncAll(){
-    renderCoins();renderGlass();ensureGlassCard();renderBetaSelfControl();
-    if(typeof pmAdminShowTab==='function'&&pmAdminTargetData&&pmAdminCurrentTab==='overview')ensureAdminBetaControl();
-  }
-
-  // Ensure coins update immediately after a test result sync.
-  if(typeof window.promouserSyncTestResult==='function'){
-    const oldSync=window.promouserSyncTestResult;
-    window.promouserSyncTestResult=async function(){const r=await oldSync.apply(this,arguments);setTimeout(syncAll,50);return r;};
-  }
-
-  // Observe the user's own account. Admin revocation instantly removes beta virtual access.
-  let unsub=null;
-  function startWatch(){
-    if(unsub)unsub();
-    if(!pmFirebaseReady||!pmAuthUser)return;
-    unsub=firebase.firestore().collection('users').doc(pmAuthUser.uid).onSnapshot(s=>{
-      if(!s.exists)return;
-      pmUserData=s.data();
-      if(!betaAccess()||pmUserData[BETA_MODE]!==true){document.body.classList.remove('pmBetaTesterMode');}
-      else document.body.classList.add('pmBetaTesterMode');
-      renderGlass();renderCoins();renderBetaSelfControl();
-    });
-  }
-  setTimeout(()=>{startWatch();syncAll();},1300);
-  setInterval(()=>{if(document.querySelector('#shopPage.active'))ensureGlassCard();},1200);
-
-  // Keep admin tab tracker current.
-  const baseAdminShow=window.pmAdminShowTab;
-  window.pmAdminShowTab=async function(tab){pmAdminCurrentTab=tab;const r=await baseAdminShow.apply(this,arguments);if(tab==='overview')setTimeout(ensureAdminBetaControl,30);return r;};
-})();
-</script>
 <style>
 /* Glass Texture global overlay */
 body.pmGlassTexture .page.active .stat,
@@ -9980,491 +9787,7 @@ body.pmGlassTexture .page.active button:not(.backButton){
 body.pmGlassTexture .page.active input,
 body.pmGlassTexture .page.active textarea,
 body.pmGlassTexture .page.active select,
-body.pmGlassTexture .page.active button:not(.backButton){border-radius:999px!important}
-body.pmBetaTesterMode .pmShopPrice{color:#6eefff!important}
-</style>
-
-<style id="pmFinalAdminFix">
-#pmFinalBetaAccessCard{margin-top:14px;padding:16px;border:1px solid rgba(0,229,255,.24);border-radius:14px;background:rgba(5,12,18,.72)}
-#pmFinalBetaAccessCard .pmAdminRowSub{margin:6px 0 12px;color:#9aa9b0}
-#pmFinalCoinTools{margin-top:14px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-@media(max-width:800px){#pmFinalCoinTools{grid-template-columns:1fr}}
-#pmFinalCoinTools .pmAdminCoinTool{padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:12px;background:rgba(255,255,255,.03)}
-</style>
-
-<script id="pmFinalAdminRepair">
-(function(){
-  "use strict";
-
-  const ADMIN="WtQ6Vaz7a1Ogt3A0KTYYmFkCU132";
-  const isAdmin=()=>typeof window.pmIsSoleAdmin==="function" ? window.pmIsSoleAdmin() :
-    (typeof pmAuthUser!=="undefined" && pmAuthUser && pmAuthUser.uid===ADMIN);
-
-  function targetRef(){
-    if(!pmAdminTargetId)throw new Error("NO_TARGET");
-    return firebase.firestore().collection("users").doc(pmAdminTargetId);
-  }
-
-  async function writeCoins(delta){
-    if(!isAdmin())throw new Error("NOT_ADMIN");
-    const ref=targetRef();
-    await firebase.firestore().runTransaction(async tx=>{
-      const snap=await tx.get(ref);
-      if(!snap.exists)throw new Error("ACCOUNT_NOT_FOUND");
-      const data=snap.data()||{};
-      const current=Math.max(0,Number(data.coins||0));
-      const next=Math.max(0,current+delta);
-      tx.update(ref,{
-        coins:next,
-        lastAdminCoinChange:{
-          by:ADMIN,
-          delta:Math.trunc(delta),
-          at:firebase.firestore.FieldValue.serverTimestamp()
-        },
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
-    });
-    const fresh=await ref.get();
-    pmAdminTargetData=fresh.data()||{};
-    if(pmAuthUser?.uid===pmAdminTargetId){
-      pmUserData=pmAdminTargetData;
-      if(typeof pmRenderCoinBalance==="function")pmRenderCoinBalance();
-    }
-    return pmAdminTargetData.coins||0;
-  }
-
-  window.pmAdminGiveCoins=async function(){
-    if(!isAdmin())return alert("Admin access is restricted to the ProMouser owner account.");
-    const el=document.getElementById("pmAdminGiveAmount");
-    const amount=Math.floor(Number(el?.value));
-    if(!Number.isFinite(amount)||amount<1)return alert("Enter a valid amount.");
-    if(amount>1000000000)return alert("That amount is too large.");
-    try{
-      const balance=await writeCoins(amount);
-      if(typeof pmAdminShowTab==="function")await pmAdminShowTab("overview");
-      alert("Gave "+amount.toLocaleString()+" coins. New player balance: "+Number(balance).toLocaleString()+".");
-    }catch(e){
-      console.error("ADMIN GIVE COINS FAILED",e);
-      alert("Could not give coins: "+(e?.message||e));
-    }
-  };
-
-  window.pmAdminTakeCoins=async function(){
-    if(!isAdmin())return alert("Admin access is restricted to the ProMouser owner account.");
-    const amount=Math.floor(Number(document.getElementById("pmAdminTakeAmount")?.value));
-    if(!Number.isFinite(amount)||amount<1)return alert("Enter a valid amount.");
-    try{
-      const balance=await writeCoins(-amount);
-      if(typeof pmAdminShowTab==="function")await pmAdminShowTab("overview");
-      alert("Deducted "+amount.toLocaleString()+" coins. New player balance: "+Number(balance).toLocaleString()+".");
-    }catch(e){
-      console.error("ADMIN TAKE COINS FAILED",e);
-      alert("Could not deduct coins: "+(e?.message||e));
-    }
-  };
-
-  window.pmAdminGiftCoins=async function(){
-    if(!isAdmin())return alert("Admin access is restricted to the ProMouser owner account.");
-    const amount=Math.floor(Number(document.getElementById("pmAdminGiftAmount")?.value));
-    if(!Number.isFinite(amount)||amount<1)return alert("Enter a valid amount.");
-    if(amount>1000000000)return alert("That amount is too large.");
-    try{
-      const balance=await writeCoins(amount);
-      if(typeof pmAdminShowTab==="function")await pmAdminShowTab("overview");
-      alert("Gifted "+amount.toLocaleString()+" coins. New player balance: "+Number(balance).toLocaleString()+".");
-    }catch(e){
-      console.error("ADMIN GIFT COINS FAILED",e);
-      alert("Could not gift coins: "+(e?.message||e));
-    }
-  };
-
-  function ensureFinalAdminBeta(){
-    if(!isAdmin()||!pmAdminTargetId||!pmAdminTargetData)return;
-    const box=document.getElementById("pmAdminContent");
-    if(!box)return;
-    let card=document.getElementById("pmFinalBetaAccessCard");
-    if(!card){
-      card=document.createElement("div");
-      card.id="pmFinalBetaAccessCard";
-      box.appendChild(card);
-    }
-    const granted=pmAdminTargetData.betaTesterAccess===true;
-    const mode=pmAdminTargetData.betaTesterMode===true;
-    card.innerHTML=`
-      <div class="pmAdminRowTitle">🧪 BETA TESTER ACCESS</div>
-      <div class="pmAdminRowSub">
-        Grant access to all shop items for free testing. The player can turn Beta Tester Mode on/off.
-        Removing access immediately disables the mode and virtual shop access.
-      </div>
-      <div class="pmAdminRowSub"><strong>Access:</strong> ${granted?"GRANTED":"NOT GRANTED"} &nbsp; • &nbsp; <strong>Mode:</strong> ${mode?"ON":"OFF"}</div>
-      <button id="pmFinalBetaToggle" class="pmActionButton ${granted?"pmAdminDanger":""}">
-        ${granted?"REMOVE BETA ACCESS":"GRANT BETA ACCESS"}
-      </button>`;
-    document.getElementById("pmFinalBetaToggle").onclick=async()=>{
-      try{
-        if(!isAdmin())throw new Error("NOT_ADMIN");
-        const next=!granted;
-        await firebase.firestore().collection("users").doc(pmAdminTargetId).set({
-          betaTesterAccess:next,
-          betaTesterMode:next ? (mode||true) : false,
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true});
-        pmAdminTargetData=(await firebase.firestore().collection("users").doc(pmAdminTargetId).get()).data()||{};
-        await pmAdminShowTab("overview");
-        alert(next?"Beta Tester access granted.":"Beta Tester access removed. Beta Tester Mode is now disabled and beta-only shop access is gone.");
-      }catch(e){
-        console.error("BETA ACCESS CHANGE FAILED",e);
-        alert("Could not change Beta Tester access: "+(e?.message||e));
-      }
-    };
-  }
-
-  function ensureFinalAdminCoinTools(){
-    if(!isAdmin()||!pmAdminTargetId)return;
-    const box=document.getElementById("pmAdminContent");
-    if(!box)return;
-    let tools=document.getElementById("pmFinalCoinTools");
-    if(tools)return;
-    tools=document.createElement("div");
-    tools.id="pmFinalCoinTools";
-    tools.innerHTML=`
-      <div class="pmAdminCoinTool">
-        <div class="pmAdminRowTitle">🪙 GIVE COINS</div>
-        <input id="pmAdminGiveAmount" class="pmTextInput" type="number" min="1" max="1000000000" placeholder="Amount">
-        <button class="pmActionButton" style="margin-top:8px">GIVE</button>
-      </div>
-      <div class="pmAdminCoinTool">
-        <div class="pmAdminRowTitle">🎁 GIFT COINS</div>
-        <input id="pmAdminGiftAmount" class="pmTextInput" type="number" min="1" max="1000000000" placeholder="Amount">
-        <button class="pmActionButton" style="margin-top:8px">GIFT</button>
-      </div>
-      <div class="pmAdminCoinTool">
-        <div class="pmAdminRowTitle">🗑️ DEDUCT COINS</div>
-        <input id="pmAdminTakeAmount" class="pmTextInput" type="number" min="1" max="1000000000" placeholder="Amount">
-        <button class="pmActionButton pmAdminDanger" style="margin-top:8px">DEDUCT</button>
-      </div>`;
-    const bs=tools.querySelectorAll("button");
-    bs[0].onclick=window.pmAdminGiveCoins;
-    bs[1].onclick=window.pmAdminGiftCoins;
-    bs[2].onclick=window.pmAdminTakeCoins;
-    box.appendChild(tools);
-  }
-
-  async function refreshAdminOverview(){
-    if(!isAdmin()||!pmAdminTargetId)return;
-    const ref=targetRef();
-    const snap=await ref.get();
-    if(!snap.exists)return;
-    pmAdminTargetData=snap.data()||{};
-    ensureFinalAdminBeta();
-    ensureFinalAdminCoinTools();
-  }
-
-  const oldShow=window.pmAdminShowTab;
-  window.pmAdminShowTab=async function(tab){
-    const result=await oldShow.apply(this,arguments);
-    if(tab==="overview"){
-      setTimeout(()=>refreshAdminOverview().catch(console.error),25);
-      setTimeout(()=>refreshAdminOverview().catch(console.error),150);
-    }
-    return result;
-  };
-
-  // Keep the admin controls visible even if another renderer replaces pmAdminContent.
-  setInterval(()=>{
-    if(document.getElementById("adminPage")?.classList.contains("active") && pmAdminTargetId){
-      ensureFinalAdminBeta();
-      ensureFinalAdminCoinTools();
-    }
-  },700);
-
-  // Restore the admin's own coin display from Firebase after admin changes.
-  setInterval(()=>{
-    if(typeof pmAuthUser!=="undefined"&&pmAuthUser?.uid===ADMIN&&typeof pmUserData!=="undefined"&&pmUserData){
-      const n=Math.max(0,Number(pmUserData.coins||0));
-      ["pmCoinBalance","pmShopCoinBalance","pmProfileCoins","pmGiftYourBalance","pmWheelBalance"].forEach(id=>{
-        const e=document.getElementById(id);if(e)e.textContent=n.toLocaleString();
-      });
-    }
-  },900);
-})();
-</script>
-
-
-<style id="pmBetaCoinsNoticeFix">
-#pmBetaModePanel{
-  position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
-  z-index:99990;display:none;min-width:min(520px,90vw);
-  padding:14px 18px;border-radius:16px;
-  background:rgba(3,12,18,.90);border:1px solid rgba(0,229,255,.30);
-  box-shadow:0 18px 55px rgba(0,0,0,.42);backdrop-filter:blur(16px);
-  color:#e8fbff;font-family:Arial,sans-serif
-}
-#pmBetaModePanel.show{display:flex;align-items:center;justify-content:space-between;gap:14px}
-#pmBetaModePanel .pmBetaPanelText{font-size:12px;line-height:1.45}
-#pmBetaModePanel strong{display:block;color:#6eefff;letter-spacing:1.5px;margin-bottom:3px}
-#pmBetaModePanel .pmBetaPanelActions{display:flex;gap:8px;flex-wrap:wrap}
-#pmBetaModePanel button{white-space:nowrap}
-#pmCoinsTemporaryNotice{
-  position:fixed;top:0;left:0;right:0;z-index:100001;
-  background:linear-gradient(90deg,#4a170f,#6a2415,#4a170f);
-  border-bottom:1px solid rgba(255,184,120,.35);
-  color:#fff3e8;padding:9px 46px 9px 18px;
-  font:800 12px/1.35 Arial,sans-serif;text-align:center;
-  display:block;box-shadow:0 6px 25px rgba(0,0,0,.28)
-}
-#pmCoinsTemporaryNotice button{
-  position:absolute;right:12px;top:7px;border:0;background:transparent;
-  color:#fff;font-size:19px;cursor:pointer;line-height:1
-}
-</style>
-<script id="pmBetaCoinsNoticeFixScript">
-(function(){
-  "use strict";
-  const BETA_ACCESS="betaTesterAccess";
-  const BETA_MODE="betaTesterMode";
-  const NOTICE_KEY="promouser_coins_temp_notice_v1";
-
-  function hasAccess(){
-    return !!(window.pmUserData && window.pmUserData[BETA_ACCESS]===true);
-  }
-  function modeOn(){
-    return hasAccess() && window.pmUserData?.[BETA_MODE]===true;
-  }
-
-  function ensureBetaPanel(){
-    if(!hasAccess()){
-      const old=document.getElementById("pmBetaModePanel"); if(old)old.remove();
-      return;
-    }
-    let panel=document.getElementById("pmBetaModePanel");
-    if(!panel){
-      panel=document.createElement("div");
-      panel.id="pmBetaModePanel";
-      panel.innerHTML=`
-        <div class="pmBetaPanelText">
-          <strong>🧪 BETA TESTER ACCESS</strong>
-          All shop items are available for free testing while Beta Tester Mode is on.
-        </div>
-        <div class="pmBetaPanelActions">
-          <button id="pmBetaPanelToggle" class="pmActionButton"></button>
-          <button id="pmBetaPanelOptions" class="pmActionButton">OPTIONS</button>
-        </div>`;
-      document.body.appendChild(panel);
-      panel.querySelector("#pmBetaPanelToggle").onclick=toggleBeta;
-      panel.querySelector("#pmBetaPanelOptions").onclick=()=>{
-        if(typeof openOptions==="function")openOptions();
-      };
-    }
-    panel.classList.toggle("show",hasAccess());
-    const b=panel.querySelector("#pmBetaPanelToggle");
-    if(b)b.textContent=modeOn()?"TURN OFF":"TURN ON";
-  }
-
-  async function toggleBeta(){
-    if(!hasAccess())return;
-    if(!window.pmFirebaseReady||!window.pmAuthUser)return alert("Your online account is not connected yet.");
-    try{
-      const next=!modeOn();
-      await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
-        betaTesterMode:next,
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      },{merge:true});
-      // Refresh local state immediately so the UI responds even before the snapshot.
-      window.pmUserData={...(window.pmUserData||{}),betaTesterMode:next};
-      document.body.classList.toggle("pmBetaTesterMode",next);
-      ensureBetaPanel();
-      if(typeof pmRenderShop==="function")pmRenderShop();
-      if(typeof pmRenderCollection==="function")pmRenderCollection();
-    }catch(e){
-      console.error("BETA TOGGLE FAILED",e);
-      alert("Could not change Beta Tester Mode: "+(e?.message||e));
-    }
-  }
-
-  // Make Beta Tester Mode visible in Options too, regardless of whether the
-  // original Options renderer has an account/options card ready.
-  function ensureOptionsBeta(){
-    if(!hasAccess())return;
-    const page=document.getElementById("optionsPage");
-    if(!page)return;
-    let card=document.getElementById("pmBetaOptionsCard");
-    if(!card){
-      card=document.createElement("div");
-      card.id="pmBetaOptionsCard";
-      card.className="optionSection";
-      card.innerHTML=`
-        <div class="optionSectionTitle">🧪 BETA TESTER MODE</div>
-        <div class="pmAuthHint">Admin-granted access. Turn this on to test every shop item for free. Turn it off whenever you want.</div>
-        <button id="pmBetaOptionsToggle" class="pmActionButton"></button>`;
-      page.appendChild(card);
-      card.querySelector("#pmBetaOptionsToggle").onclick=toggleBeta;
-    }
-    card.querySelector("#pmBetaOptionsToggle").textContent=modeOn()?"TURN OFF BETA TESTER MODE":"TURN ON BETA TESTER MODE";
-  }
-
-  function ensureTempCoinNotice(){
-    if(localStorage.getItem(NOTICE_KEY)==="dismissed")return;
-    if(document.getElementById("pmCoinsTemporaryNotice"))return;
-    const n=document.createElement("div");
-    n.id="pmCoinsTemporaryNotice";
-    n.innerHTML=`🪙 <strong>Temporary notice:</strong> Coin balances are currently unavailable due to a Firebase quota issue. Your existing balance and purchases are not being intentionally reset.
-      <button aria-label="Dismiss">×</button>`;
-    n.querySelector("button").onclick=()=>{
-      localStorage.setItem(NOTICE_KEY,"dismissed");
-      n.remove();
-    };
-    document.body.appendChild(n);
-  }
-
-  function sync(){
-    ensureBetaPanel();
-    ensureOptionsBeta();
-    ensureTempCoinNotice();
-  }
-
-  // Wrap the account snapshot so revocation immediately removes the Beta UI.
-  if(typeof firebase!=="undefined" && firebase.firestore && window.pmAuthUser){
-    try{
-      firebase.firestore().collection("users").doc(pmAuthUser.uid).onSnapshot(s=>{
-        if(!s.exists)return;
-        window.pmUserData=s.data()||{};
-        sync();
-      });
-    }catch(e){ console.warn("Beta notice listener:",e); }
-  }
-
-  setTimeout(sync,800);
-  setInterval(sync,1200);
-})();
-</script>
-
-
-<script id="pmBetaUIEquipFinalFix">
-(function(){
-  "use strict";
-
-  const BETA_ACCESS="betaTesterAccess";
-  const BETA_MODE="betaTesterMode";
-
-  function betaOn(){
-    return !!(window.pmUserData &&
-      window.pmUserData[BETA_ACCESS]===true &&
-      window.pmUserData[BETA_MODE]===true);
-  }
-
-  /*
-    Final Beta Tester UI override.
-    The old UI system checks real ownedCosmetics in several places, so
-    virtual pmOwn() alone is not enough. In Beta Mode this wrapper lets the
-    user equip ANY registered UI without permanently granting ownership.
-  */
-  const baseEquipUI=window.pmEquipUI;
-  window.pmEquipUI=async function(id){
-    if(!betaOn()){
-      return baseEquipUI.apply(this,arguments);
-    }
-
-    if(!window.pmFirebaseReady || !window.pmAuthUser || !window.pmUserData){
-      alert("Your online account is not connected yet.");
-      return false;
-    }
-
-    const item=window.PM_SHOP_ITEMS?.[id];
-    if(id==="default" || id==="neon"){
-      // Built-in themes are always available.
-    }else if(!item || item.type!=="ui"){
-      alert("That item is not a UI theme.");
-      return false;
-    }
-
-    try{
-      const current=window.pmUserData.equippedUI||"default";
-      const next=current===id ? "default" : id;
-
-      // Beta access is a testing permission, not a purchase. Do not modify
-      // ownedCosmetics or coins. Keep the selected UI in the live account
-      // document so navigation/refresh continues to show the chosen test UI.
-      await firebase.firestore()
-        .collection("users")
-        .doc(pmAuthUser.uid)
-        .set({
-          equippedUI: next,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true});
-
-      window.pmUserData={
-        ...(window.pmUserData||{}),
-        equippedUI:next
-      };
-
-      if(typeof window.pmApplyEquippedUI==="function"){
-        window.pmApplyEquippedUI();
-      }
-      if(typeof window.pmRenderCollection==="function"){
-        window.pmRenderCollection();
-      }
-      if(typeof window.pmRenderShop==="function"){
-        window.pmRenderShop();
-      }
-      return true;
-    }catch(e){
-      console.error("BETA UI EQUIP FAILED",e);
-      alert("Could not equip this UI: "+(e?.message||e));
-      return false;
-    }
-  };
-
-  /* Make every UI owned in Beta mode when collection cards render. */
-  const baseCollection=window.pmRenderCollection;
-  if(typeof baseCollection==="function"){
-    window.pmRenderCollection=function(){
-      baseCollection.apply(this,arguments);
-      if(!betaOn())return;
-      document.querySelectorAll("#pmMyUIList .pmCollectionItem").forEach(card=>{
-        const button=card.querySelector("button");
-        if(!button)return;
-        if(button.textContent.trim().toUpperCase()==="NOT OWNED"){
-          button.disabled=false;
-          button.textContent=(card.classList.contains("equipped")?"UNEQUIP":"EQUIP");
-          const title=(card.querySelector(".pmCollectionItemTitle")?.textContent||"").toUpperCase();
-          if(title && !["PRO MOUSER","NEON PULSE"].includes(title)){
-            const id=[...(window.PM_SHOP_ITEMS?Object.values(window.PM_SHOP_ITEMS):[])].find(x=>String(x?.name||"").toUpperCase()===title)?.id;
-            if(id)button.onclick=()=>window.pmEquipUI(id);
-          }
-        }
-      });
-    };
-  }
-
-  /*
-    If the admin revokes Beta access, never leave a beta UI equipped.
-    This is handled locally as well as by the Firebase listener.
-  */
-  function enforceRevocation(){
-    const d=window.pmUserData||{};
-    if(d[BETA_ACCESS]!==true && d.equippedUI && window.PM_SHOP_ITEMS?.[d.equippedUI]){
-      window.pmUserData={...d,equippedUI:"default"};
-      if(window.pmAuthUser && window.pmFirebaseReady){
-        firebase.firestore().collection("users").doc(window.pmAuthUser.uid).set({
-          equippedUI:"default",
-          betaTesterMode:false,
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true}).catch(e=>console.warn("Beta UI revoke sync:",e));
-      }
-      if(typeof window.pmApplyEquippedUI==="function")window.pmApplyEquippedUI();
-    }
-  }
-
-  setInterval(enforceRevocation,1000);
-  setTimeout(()=>{
-    if(betaOn()){
-      if(typeof window.pmRenderCollection==="function")window.pmRenderCollection();
-      if(typeof window.pmRenderShop==="function")window.pmRenderShop();
-    }
-  },1200);
-})();
-</script>
+body.pmGlassTexture .page.active button:not(.backButton){border-radius:999px!important}</style>
 
 </body>
 </html>
@@ -10997,298 +10320,6 @@ body.auroraFlow .pmAuroraShopPreview{
   setInterval(()=>{expireJawsIfNeeded();decorateJawsUICard();addEffectToCollection();},30000);
   setTimeout(()=>{ensureJawsBundled();addJawsBanner();},300);
   setTimeout(()=>{ensureJawsBundled();addJawsBanner();},1200);
-})();
-</script>
-
-
-<style id="pmBetaMyUIButtonOverride">
-/* Final override: older Beta CSS disabled controls on preview pages.
-   My UI must remain fully interactive for Beta Testers. */
-body.pmBetaTesterMode #pmMyUIList button,
-body.pmBetaTesterMode #pmMyUIList .pmActionButton,
-body.pmBetaTesterMode #myUIPage button,
-body.pmBetaTesterMode #myUIPage .pmActionButton{
-  pointer-events:auto!important;
-  opacity:1!important;
-  cursor:pointer!important;
-}
-body.pmBetaTesterMode #pmMyUIList button:disabled,
-body.pmBetaTesterMode #myUIPage button:disabled{
-  pointer-events:auto!important;
-  opacity:1!important;
-  cursor:pointer!important;
-}
-</style>
-
-<script id="pmBetaMyUIButtonFinalFix">
-(function(){
-  "use strict";
-
-  const A="betaTesterAccess", M="betaTesterMode";
-
-  function betaOn(){
-    return !!(window.pmUserData && window.pmUserData[A]===true && window.pmUserData[M]===true);
-  }
-
-  function findUIId(card){
-    const title=(card.querySelector(".pmCollectionItemTitle")?.textContent||"").trim();
-    if(!title)return null;
-    const wanted=title.toUpperCase();
-    if(wanted==="PRO MOUSER")return "default";
-    if(wanted==="NEON PULSE")return "neon";
-
-    if(window.PM_SHOP_ITEMS){
-      const item=Object.values(window.PM_SHOP_ITEMS).find(x=>
-        String(x?.name||"").trim().toUpperCase()===wanted &&
-        x?.type==="ui"
-      );
-      if(item)return item.id;
-    }
-    return null;
-  }
-
-  function unlockMyUIButtons(){
-    if(!betaOn())return;
-    const box=document.getElementById("pmMyUIList");
-    if(!box)return;
-
-    box.querySelectorAll(".pmCollectionItem").forEach(card=>{
-      const btn=card.querySelector("button");
-      if(!btn)return;
-
-      const id=findUIId(card);
-      if(!id)return;
-
-      /* Critical fix: remove the actual disabled state from the DOM. */
-      btn.disabled=false;
-      btn.removeAttribute("disabled");
-      btn.style.pointerEvents="auto";
-      btn.style.opacity="1";
-      btn.style.cursor="pointer";
-
-      const equipped=window.pmUserData?.equippedUI===id;
-      btn.textContent=equipped ? "UNEQUIP" : "EQUIP";
-      btn.classList.toggle("pmSecondaryButton",equipped);
-
-      /* Replace the old click handler that only worked for owned items. */
-      btn.onclick=function(ev){
-        ev.preventDefault();
-        ev.stopPropagation();
-        if(typeof window.pmEquipUI==="function"){
-          window.pmEquipUI(id);
-        }
-        return false;
-      };
-
-      card.classList.toggle("equipped",equipped);
-      const status=card.querySelector(".pmCollectionStatus");
-      if(status){
-        status.textContent=equipped ? "EQUIPPED" : "AVAILABLE • BETA";
-        status.classList.toggle("equippedText",equipped);
-      }
-    });
-  }
-
-  /* Run after every My UI render, including renders triggered by navigation. */
-  function hookCollection(){
-    if(typeof window.pmRenderCollection!=="function")return;
-    if(window.pmBetaMyUIHooked)return;
-    const base=window.pmRenderCollection;
-    const wrapped=function(){
-      const result=base.apply(this,arguments);
-      setTimeout(unlockMyUIButtons,0);
-      setTimeout(unlockMyUIButtons,120);
-      return result;
-    };
-    wrapped.__pmBetaMyUIHooked=true;
-    window.pmRenderCollection=wrapped;
-    window.pmBetaMyUIHooked=true;
-  }
-
-  hookCollection();
-
-  /* Catch collections rendered before this final patch runs. */
-  setInterval(()=>{
-    if(betaOn()){
-      hookCollection();
-      unlockMyUIButtons();
-    }
-  },250);
-
-})();
-</script>
-
-
-<style id="pmBetaFullMyUIFinalCSS">
-body.pmBetaTesterMode #pmMyUIList .pmActionButton{
-  pointer-events:auto!important;
-  cursor:pointer!important;
-  opacity:1!important;
-}
-</style>
-
-<script id="pmBetaFullMyUIFinal">
-(function(){
-  "use strict";
-
-  const ACCESS="betaTesterAccess";
-  const MODE="betaTesterMode";
-
-  function betaOn(){
-    return !!(window.pmUserData &&
-      window.pmUserData[ACCESS]===true &&
-      window.pmUserData[MODE]===true);
-  }
-
-  function getUIItems(){
-    const out=[
-      {id:"default",name:"PRO MOUSER",sub:"ORIGINAL UI • ALWAYS AVAILABLE",preview:"PRO MOUSER",owned:true},
-      {id:"neon",name:"NEON PULSE",sub:"CYAN GLOW UI • EXISTING THEME",preview:"NEON PULSE",owned:true}
-    ];
-
-    if(window.PM_SHOP_ITEMS){
-      Object.values(window.PM_SHOP_ITEMS).forEach(item=>{
-        if(!item || item.type!=="ui")return;
-        if(out.some(x=>x.id===item.id))return;
-        out.push({
-          id:item.id,
-          name:item.name||item.id,
-          sub:(item.description||"SHOP UI THEME")+" • BETA TEST",
-          preview:item.name||"UI",
-          owned:true
-        });
-      });
-    }
-    return out;
-  }
-
-  async function betaEquip(id){
-    if(!betaOn()){
-      if(typeof window.pmEquipUI==="function")return window.pmEquipUI(id);
-      return;
-    }
-
-    if(id!=="default" && id!=="neon" && !window.PM_SHOP_ITEMS?.[id]){
-      alert("UI item could not be found.");
-      return;
-    }
-
-    try{
-      if(!window.pmFirebaseReady || !window.pmAuthUser){
-        alert("Your online account is not connected yet.");
-        return;
-      }
-
-      const current=window.pmUserData?.equippedUI||"default";
-      const next=current===id ? "default" : id;
-
-      // Beta testing changes only equippedUI. It NEVER adds ownership or spends coins.
-      window.pmUserData={...(window.pmUserData||{}),equippedUI:next};
-
-      if(typeof window.pmApplyEquippedUI==="function")window.pmApplyEquippedUI();
-
-      await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
-        equippedUI:next,
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      },{merge:true});
-
-      renderBetaMyUI();
-    }catch(e){
-      console.error("BETA MY UI EQUIP FAILED",e);
-      alert("Could not equip this UI: "+(e?.message||e));
-    }
-  }
-
-  function renderBetaMyUI(){
-    if(!betaOn())return;
-    const box=document.getElementById("pmMyUIList");
-    if(!box)return;
-
-    const equipped=window.pmUserData?.equippedUI||"default";
-    box.innerHTML="";
-
-    getUIItems().forEach(item=>{
-      const card=document.createElement("div");
-      card.className="pmCollectionItem"+(equipped===item.id?" equipped":"");
-
-      const preview=document.createElement("div");
-      preview.className="pmCollectionPreview";
-
-      if(String(item.id).includes("jaws")){
-        preview.style.cssText="background:linear-gradient(#02060d,#063748,#01151d);color:#e9f7fa;overflow:hidden";
-        preview.innerHTML='<div style="font-weight:900;letter-spacing:2px;position:relative;z-index:2">JAWS<br><span style="font-size:10px;opacity:.7">OCEAN</span></div><div style="position:absolute;right:10%;bottom:22px;width:70px;height:17px;border-radius:50%;background:#001017;opacity:.55"></div>';
-      }else if(String(item.id).includes("void")){
-        preview.classList.add("pmVoidShopPreview");
-        preview.innerHTML='<div class="pmVoidPreviewText">VOID<br><span>MATRIX</span></div>';
-      }else{
-        preview.textContent=item.preview;
-        preview.style.fontWeight="900";
-        preview.style.fontStyle="italic";
-        preview.style.letterSpacing="2px";
-        preview.style.color=item.id==="neon"?"#00e5ff":"#ff1717";
-      }
-
-      const title=document.createElement("div");
-      title.className="pmCollectionItemTitle";
-      title.textContent=item.name;
-
-      const sub=document.createElement("div");
-      sub.className="pmCollectionItemSub";
-      sub.textContent=item.sub;
-
-      const action=document.createElement("button");
-      action.className="pmActionButton "+(equipped===item.id?"pmSecondaryButton":"");
-      action.disabled=false;
-      action.removeAttribute("disabled");
-      action.style.pointerEvents="auto";
-      action.style.opacity="1";
-      action.style.cursor="pointer";
-      action.textContent=equipped===item.id?"UNEQUIP":"EQUIP • BETA";
-      action.addEventListener("click",function(ev){
-        ev.preventDefault();
-        ev.stopPropagation();
-        betaEquip(item.id);
-      });
-
-      const status=document.createElement("div");
-      status.className="pmCollectionStatus"+(equipped===item.id?" equippedText":"");
-      status.textContent=equipped===item.id?"EQUIPPED":"AVAILABLE • BETA";
-
-      card.append(preview,title,sub,action,status);
-      box.appendChild(card);
-    });
-  }
-
-  // In Beta mode completely replace the old My UI renderer for this page.
-  // This avoids the old renderer's real-ownership/disabled-button logic.
-  const oldOpenMyUI=window.openMyUI;
-  window.openMyUI=function(){
-    if(typeof oldOpenMyUI==="function")oldOpenMyUI.apply(this,arguments);
-    setTimeout(renderBetaMyUI,0);
-    setTimeout(renderBetaMyUI,100);
-  };
-
-  // Hook the page renderer after every normal render.
-  document.addEventListener("click",function(e){
-    const btn=e.target.closest?.("#myUIPage .backButton");
-    if(btn)return;
-    if(betaOn() && document.getElementById("myUIPage")?.classList.contains("active")){
-      setTimeout(renderBetaMyUI,0);
-    }
-  },true);
-
-  // Keep it updated when Beta mode/account state changes.
-  setInterval(()=>{
-    if(betaOn() && document.getElementById("myUIPage")?.classList.contains("active")){
-      renderBetaMyUI();
-    }
-  },800);
-
-  setTimeout(()=>{
-    if(betaOn() && document.getElementById("myUIPage")?.classList.contains("active")){
-      renderBetaMyUI();
-    }
-  },500);
 })();
 </script>
 
@@ -11924,129 +10955,6 @@ body.jawsOcean .pageHeader p{
 </script>
 
 
-<style id="pmAdminBetaGrantFinalFix">
-#pmAdminBetaAccessCard,#pmFinalBetaAccessCard{
-  width:100%;
-  box-sizing:border-box;
-}
-</style>
-<script id="pmAdminBetaGrantFinalFixScript">
-(function(){
-  "use strict";
-
-  const OWNER_UID="WtQ6Vaz7a1Ogt3A0KTYYmFkCU132";
-  const ACCESS="betaTesterAccess";
-  const MODE="betaTesterMode";
-
-  function realAdmin(){
-    return !!(window.pmAuthUser && window.pmAuthUser.uid===OWNER_UID);
-  }
-
-  async function setBetaForTarget(enabled){
-    if(!realAdmin()){
-      throw new Error("ADMIN_ONLY");
-    }
-    if(!window.pmAdminTargetId){
-      throw new Error("NO_TARGET");
-    }
-    if(!window.firebase || !firebase.firestore){
-      throw new Error("FIREBASE_UNAVAILABLE");
-    }
-
-    const db=firebase.firestore();
-    const ref=db.collection("users").doc(window.pmAdminTargetId);
-    const snap=await ref.get();
-
-    if(!snap.exists){
-      throw new Error("TARGET_ACCOUNT_NOT_FOUND");
-    }
-
-    await ref.update({
-      [ACCESS]:!!enabled,
-      [MODE]:!!enabled,
-      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    const verify=await ref.get();
-    const data=verify.data()||{};
-
-    if(data[ACCESS]!==!!enabled || data[MODE]!==!!enabled){
-      throw new Error("BETA_CHANGE_NOT_VERIFIED");
-    }
-
-    window.pmAdminTargetData=data;
-
-    return data;
-  }
-
-  window.pmGrantBetaTesterAccess=async function(){
-    try{
-      await setBetaForTarget(true);
-      if(typeof window.pmAdminShowTab==="function")window.pmAdminShowTab("overview");
-      alert("✅ Beta Tester access granted.");
-    }catch(e){
-      console.error("GRANT BETA FAILED:",e);
-      const code=e?.code||"";
-      if(code==="resource-exhausted" || /quota|resource.?exhausted/i.test(e?.message||"")){
-        alert("Firebase quota is currently exceeded, so Beta Tester access cannot be saved right now. Wait for the quota to reset, then try again.");
-      }else if(code==="permission-denied"){
-        alert("Firebase rejected the admin write. Make sure the published Firestore rules contain your admin UID: WtQ6Vaz7a1Ogt3A0KTYYmFkCU132");
-      }else{
-        alert("Could not grant Beta Tester access: "+(e?.message||code||"Unknown error"));
-      }
-    }
-  };
-
-  window.pmRemoveBetaTesterAccess=async function(){
-    try{
-      await setBetaForTarget(false);
-      if(typeof window.pmAdminShowTab==="function")window.pmAdminShowTab("overview");
-      alert("Beta Tester access removed.");
-    }catch(e){
-      console.error("REMOVE BETA FAILED:",e);
-      const code=e?.code||"";
-      if(code==="resource-exhausted" || /quota|resource.?exhausted/i.test(e?.message||"")){
-        alert("Firebase quota is currently exceeded, so the change cannot be saved right now.");
-      }else if(code==="permission-denied"){
-        alert("Firebase rejected the admin write. Check the published Firestore rules.");
-      }else{
-        alert("Could not remove Beta Tester access: "+(e?.message||code||"Unknown error"));
-      }
-    }
-  };
-
-  function installFinalBetaButton(){
-    if(!realAdmin() || !window.pmAdminTargetId)return;
-
-    const ids=["pmAdminBetaToggle","pmFinalBetaToggle"];
-    ids.forEach(id=>{
-      const b=document.getElementById(id);
-      if(!b)return;
-
-      const granted=window.pmAdminTargetData?.[ACCESS]===true;
-      b.disabled=false;
-      b.removeAttribute("disabled");
-      b.style.pointerEvents="auto";
-      b.style.cursor="pointer";
-      b.textContent=granted?"REMOVE ACCESS":"GRANT ACCESS";
-      b.className="pmActionButton "+(granted?"pmAdminDanger":"");
-
-      /* Remove every earlier inline handler by assigning one authoritative handler. */
-      b.onclick=granted
-        ? window.pmRemoveBetaTesterAccess
-        : window.pmGrantBetaTesterAccess;
-    });
-  }
-
-  /* Existing admin renderers are numerous; this final hook wins after all of them. */
-  setInterval(installFinalBetaButton,400);
-  setTimeout(installFinalBetaButton,200);
-  setTimeout(installFinalBetaButton,1000);
-  setTimeout(installFinalBetaButton,2000);
-})();
-</script>
-
-
 <style id="pmJawsLeaderboardCardEffect">
 /* JAWS profile effect belongs to the player's long leaderboard stats card,
    never the PFP. */
@@ -12248,5 +11156,492 @@ body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsYouMarker{
   setInterval(apply,1000);
   setTimeout(apply,300);
   setTimeout(apply,1200);
+})();
+</script>
+
+
+<style id="pmFinalAdminAndJawsFix">
+/* =========================================================
+   FINAL ADMIN COIN/BETA + JAWS SELF LEADERBOARD EFFECT
+========================================================= */
+
+/* Make the self leaderboard card unmistakably different. */
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard{
+  position:relative!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  min-height:92px!important;
+  border:1px solid rgba(100,225,238,.72)!important;
+  background:
+    radial-gradient(ellipse at 12% 20%,rgba(94,227,240,.25),transparent 30%),
+    radial-gradient(ellipse at 82% 90%,rgba(0,96,122,.30),transparent 40%),
+    linear-gradient(135deg,#073642,#021821 55%,#064553)!important;
+  box-shadow:0 0 0 1px rgba(89,221,234,.10),0 18px 42px rgba(0,0,0,.34),inset 0 1px 0 rgba(220,255,255,.12)!important;
+}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .pmPlayerName,
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .pmPlayerSub,
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .pmRank,
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .pmScore{
+  position:relative!important;
+  z-index:6!important;
+}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfWater{
+  position:absolute;inset:-60%;z-index:0;pointer-events:none;opacity:.52;
+  background:repeating-linear-gradient(166deg,transparent 0 28px,rgba(154,241,247,.08) 30px 33px,transparent 35px 70px);
+  animation:pmJawsSelfWater 8s linear infinite;
+}
+@keyframes pmJawsSelfWater{from{transform:translate(-3%,-4%)}to{transform:translate(10%,12%)}}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfBubbles{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(circle at 12% 80%,rgba(220,255,255,.78) 0 2px,transparent 3px),
+    radial-gradient(circle at 27% 68%,rgba(220,255,255,.52) 0 1.5px,transparent 3px),
+    radial-gradient(circle at 61% 79%,rgba(220,255,255,.62) 0 2px,transparent 3px),
+    radial-gradient(circle at 78% 58%,rgba(220,255,255,.44) 0 1.5px,transparent 3px),
+    radial-gradient(circle at 92% 76%,rgba(220,255,255,.62) 0 2px,transparent 3px);
+  animation:pmJawsSelfBubbles 6.5s ease-in-out infinite;
+}
+@keyframes pmJawsSelfBubbles{
+  0%,100%{background-position:0 12px,0 10px,0 8px,0 14px,0 12px;opacity:.50}
+  50%{background-position:0 -18px,3px -25px,-2px -18px,2px -28px,-4px -20px;opacity:.95}
+}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfShark{
+  position:absolute;left:-180px;top:55%;width:145px;height:40px;z-index:3;pointer-events:none;
+  border-radius:58% 45% 48% 52%;
+  background:linear-gradient(90deg,#01090e,#091d24 58%,#031016);
+  opacity:0;box-shadow:0 2px 15px rgba(0,0,0,.3);
+  animation:pmJawsSelfShark 10.5s linear infinite;
+}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfShark::before{
+  content:"";position:absolute;left:48px;top:-32px;width:0;height:0;
+  border-left:13px solid transparent;border-right:8px solid transparent;border-bottom:38px solid #07171d;
+}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfShark::after{
+  content:"";position:absolute;left:-22px;top:4px;width:29px;height:29px;background:#07171d;
+  clip-path:polygon(0 50%,100% 0,72% 50%,100% 100%);
+}
+@keyframes pmJawsSelfShark{
+  0%,12%{left:-190px;opacity:0;transform:translateY(-50%) scale(.68)}
+  18%{opacity:.84}
+  45%{left:32%;opacity:.82;transform:translateY(-53%) scale(.83)}
+  68%{left:66%;opacity:.58;transform:translateY(-48%) scale(.74)}
+  82%,100%{left:115%;opacity:0;transform:translateY(-50%) scale(.62)}
+}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfMarker{
+  position:relative;z-index:7;display:inline-block;margin-left:8px;
+  padding:3px 7px;border-radius:999px;border:1px solid rgba(118,231,240,.38);
+  color:#9cecf2;background:rgba(90,222,235,.08);
+  font:900 8px/1 Arial,sans-serif;letter-spacing:1.2px;vertical-align:middle;
+}
+
+/* Admin controls: prevent accidental disabling and make the final handler authoritative. */
+#pmAdminBetaAccessCard button,
+#pmFinalBetaAccessCard button,
+#pmFinalCoinTools button{
+  pointer-events:auto!important;opacity:1!important;cursor:pointer!important;
+}
+</style>
+
+
+
+<style id="pmFinalCoinAndJawsOnly">
+/* ================= ADMIN COIN TOOLS ================= */
+#pmCoinAdminTools{
+  margin-top:14px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+#pmCoinAdminTools .pmCoinTool{
+  padding:14px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:12px;
+  background:rgba(255,255,255,.03);
+}
+#pmCoinAdminTools input{width:100%;box-sizing:border-box;margin-top:8px;}
+#pmCoinAdminTools button{margin-top:8px;pointer-events:auto!important;opacity:1!important;cursor:pointer!important;}
+@media(max-width:800px){#pmCoinAdminTools{grid-template-columns:1fr}}
+
+/* ================= JAWS SELF LEADERBOARD "EFFECT" ================= */
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard{
+  position:relative!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  min-height:92px!important;
+  border:1px solid rgba(100,225,238,.72)!important;
+  background:
+    radial-gradient(ellipse at 12% 20%,rgba(94,227,240,.25),transparent 30%),
+    radial-gradient(ellipse at 82% 90%,rgba(0,96,122,.30),transparent 40%),
+    linear-gradient(135deg,#073642 0%,#021821 55%,#064553 100%)!important;
+  box-shadow:
+    0 0 0 1px rgba(89,221,234,.10),
+    0 18px 42px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(220,255,255,.12)!important;
+}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfWater{
+  position:absolute;inset:-60%;z-index:0;pointer-events:none;opacity:.52;
+  background:repeating-linear-gradient(166deg,transparent 0 28px,rgba(154,241,247,.08) 30px 33px,transparent 35px 70px);
+  animation:pmJawsSelfWater 8s linear infinite;
+}
+@keyframes pmJawsSelfWater{
+  from{transform:translate(-3%,-4%)}
+  to{transform:translate(10%,12%)}
+}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfBubbles{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    radial-gradient(circle at 12% 80%,rgba(220,255,255,.78) 0 2px,transparent 3px),
+    radial-gradient(circle at 27% 68%,rgba(220,255,255,.52) 0 1.5px,transparent 3px),
+    radial-gradient(circle at 61% 79%,rgba(220,255,255,.62) 0 2px,transparent 3px),
+    radial-gradient(circle at 78% 58%,rgba(220,255,255,.44) 0 1.5px,transparent 3px),
+    radial-gradient(circle at 92% 76%,rgba(220,255,255,.62) 0 2px,transparent 3px);
+  animation:pmJawsSelfBubbles 6.5s ease-in-out infinite;
+}
+@keyframes pmJawsSelfBubbles{
+  0%,100%{background-position:0 12px,0 10px,0 8px,0 14px,0 12px;opacity:.50}
+  50%{background-position:0 -18px,3px -25px,-2px -18px,2px -28px,-4px -20px;opacity:.95}
+}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfShark{
+  position:absolute;left:-180px;top:55%;width:145px;height:40px;z-index:3;pointer-events:none;
+  border-radius:58% 45% 48% 52%;
+  background:linear-gradient(90deg,#01090e,#091d24 58%,#031016);
+  opacity:0;box-shadow:0 2px 15px rgba(0,0,0,.3);
+  animation:pmJawsSelfShark 10.5s linear infinite;
+}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfShark::before{
+  content:"";position:absolute;left:48px;top:-32px;width:0;height:0;
+  border-left:13px solid transparent;border-right:8px solid transparent;border-bottom:38px solid #07171d;
+}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfShark::after{
+  content:"";position:absolute;left:-22px;top:4px;width:29px;height:29px;background:#07171d;
+  clip-path:polygon(0 50%,100% 0,72% 50%,100% 100%);
+}
+@keyframes pmJawsSelfShark{
+  0%,12%{left:-190px;opacity:0;transform:translateY(-50%) scale(.68)}
+  18%{opacity:.84}
+  45%{left:32%;opacity:.82;transform:translateY(-53%) scale(.83)}
+  68%{left:66%;opacity:.58;transform:translateY(-48%) scale(.74)}
+  82%,100%{left:115%;opacity:0;transform:translateY(-50%) scale(.62)}
+}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard > *{
+  position:relative!important;
+  z-index:5!important;
+}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfMarker{
+  display:inline-block;margin-left:8px;padding:3px 7px;border-radius:999px;
+  border:1px solid rgba(118,231,240,.38);
+  color:#9cecf2;background:rgba(90,222,235,.08);
+  font:900 8px/1 Arial,sans-serif;letter-spacing:1.2px;vertical-align:middle;
+}
+</style>
+
+<script id="pmFinalCoinAndJawsOnlyScript">
+(function(){
+  "use strict";
+
+  const OWNER_UID="WtQ6Vaz7a1Ogt3A0KTYYmFkCU132";
+
+  /* ---------- Admin coin tools ---------- */
+  function adminReady(){
+    return !!(
+      window.pmAuthUser &&
+      window.pmAuthUser.uid===OWNER_UID &&
+      window.pmFirebaseReady &&
+      window.firebase &&
+      firebase.firestore
+    );
+  }
+
+  async function adminCoinDelta(delta){
+    if(!adminReady())throw new Error("ADMIN_ONLY_OR_FIREBASE_OFFLINE");
+    if(!window.pmAdminTargetId)throw new Error("NO_TARGET");
+
+    const ref=firebase.firestore().collection("users").doc(pmAdminTargetId);
+
+    // One write. No transaction/read-before-write.
+    await ref.update({
+      coins:firebase.firestore.FieldValue.increment(Math.trunc(delta)),
+      lastAdminCoinChange:{
+        by:OWNER_UID,
+        delta:Math.trunc(delta),
+        at:firebase.firestore.FieldValue.serverTimestamp()
+      },
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    const snap=await ref.get();
+    if(!snap.exists)throw new Error("TARGET_NOT_FOUND");
+
+    pmAdminTargetData=snap.data()||{};
+    return Math.max(0,Number(pmAdminTargetData.coins||0));
+  }
+
+  window.pmAdminGiveCoins=async function(){
+    const amount=Math.floor(Number(document.getElementById("pmAdminGiveAmount")?.value));
+    if(!Number.isFinite(amount)||amount<1)return alert("Enter a valid whole coin amount.");
+    try{
+      const balance=await adminCoinDelta(amount);
+      if(typeof pmAdminShowTab==="function")pmAdminShowTab("overview");
+      alert("Gave "+amount.toLocaleString()+" coins. New balance: "+balance.toLocaleString()+".");
+    }catch(e){
+      console.error("ADMIN GIVE COINS:",e);
+      const msg=e?.code||e?.message||String(e);
+      alert("Could not give coins: "+msg);
+    }
+  };
+
+  /* Keep one label for the old admin UI if it calls gift instead of give. */
+  window.pmAdminGiftCoins=window.pmAdminGiveCoins;
+
+  window.pmAdminTakeCoins=async function(){
+    const amount=Math.floor(Number(document.getElementById("pmAdminTakeAmount")?.value));
+    if(!Number.isFinite(amount)||amount<1)return alert("Enter a valid whole coin amount.");
+    try{
+      const balance=await adminCoinDelta(-amount);
+      if(typeof pmAdminShowTab==="function")pmAdminShowTab("overview");
+      alert("Deducted "+amount.toLocaleString()+" coins. New balance: "+balance.toLocaleString()+".");
+    }catch(e){
+      console.error("ADMIN DEDUCT COINS:",e);
+      alert("Could not deduct coins: "+(e?.code||e?.message||String(e)));
+    }
+  };
+
+  function ensureCoinAdminTools(){
+    if(!pmAuthUser || pmAuthUser.uid!==OWNER_UID || !pmAdminTargetId)return;
+    const box=document.getElementById("pmAdminContent");
+    if(!box || pmAdminCurrentTab!=="overview")return;
+
+    let tools=document.getElementById("pmCoinAdminTools");
+    if(!tools){
+      tools=document.createElement("div");
+      tools.id="pmCoinAdminTools";
+      tools.innerHTML=`
+        <div class="pmCoinTool">
+          <div class="pmAdminRowTitle">🪙 GIVE COINS</div>
+          <input id="pmAdminGiveAmount" class="pmTextInput" type="number" min="1" placeholder="Amount">
+          <button class="pmActionButton" type="button">GIVE</button>
+        </div>
+        <div class="pmCoinTool">
+          <div class="pmAdminRowTitle">🪙 DEDUCT COINS</div>
+          <input id="pmAdminTakeAmount" class="pmTextInput" type="number" min="1" placeholder="Amount">
+          <button class="pmActionButton pmAdminDanger" type="button">DEDUCT</button>
+        </div>`;
+      tools.querySelectorAll("button")[0].onclick=window.pmAdminGiveCoins;
+      tools.querySelectorAll("button")[1].onclick=window.pmAdminTakeCoins;
+      box.appendChild(tools);
+    }
+  }
+
+  /* ---------- JAWS self leaderboard card effect ---------- */
+  function clearJawsSelfCard(){
+    document.querySelectorAll("#globalLeaderboard .jawsSelfCard").forEach(row=>{
+      row.classList.remove("jawsSelfCard");
+      row.querySelectorAll(".jawsSelfWater,.jawsSelfBubbles,.jawsSelfShark,.jawsSelfMarker").forEach(x=>x.remove());
+    });
+  }
+
+  function decorateJawsSelfCard(){
+    clearJawsSelfCard();
+
+    if(!document.body.classList.contains("jawsOcean"))return;
+
+    const box=document.getElementById("globalLeaderboard");
+    const uid=window.pmAuthUser?.uid;
+    const me=window.pmUserData||{};
+    if(!box || !uid)return;
+
+    const username=String(me.username||"").trim().toLowerCase();
+    const rows=[...box.querySelectorAll(".pmLeaderboardRow")];
+
+    let self=rows.find(r=>String(r.dataset.pmPlayerId||"")===uid);
+    if(!self && username){
+      self=rows.find(r=>{
+        const n=r.querySelector(".pmPlayerName");
+        return n && n.textContent.trim().toLowerCase().startsWith(username);
+      });
+    }
+    if(!self)return;
+
+    self.classList.add("jawsSelfCard");
+
+    const water=document.createElement("div");
+    water.className="jawsSelfWater";
+    const bubbles=document.createElement("div");
+    bubbles.className="jawsSelfBubbles";
+    const shark=document.createElement("div");
+    shark.className="jawsSelfShark";
+    water.setAttribute("aria-hidden","true");
+    bubbles.setAttribute("aria-hidden","true");
+    shark.setAttribute("aria-hidden","true");
+    self.append(water,bubbles,shark);
+
+    const name=self.querySelector(".pmPlayerName");
+    if(name && !name.querySelector(".jawsSelfMarker")){
+      const marker=document.createElement("span");
+      marker.className="jawsSelfMarker";
+      marker.textContent="YOUR STATS";
+      name.appendChild(marker);
+    }
+  }
+
+  if(typeof window.renderGlobalLeaderboard==="function" &&
+     !window.renderGlobalLeaderboard.__pmFinalJawsSelfCard){
+    const base=window.renderGlobalLeaderboard;
+    const wrapped=function(rows){
+      const result=base.apply(this,arguments);
+      requestAnimationFrame(()=>{
+        const dom=[...document.querySelectorAll("#globalLeaderboard .pmLeaderboardRow")];
+        (rows||[]).forEach((player,i)=>{
+          if(dom[i] && player?.id)dom[i].dataset.pmPlayerId=String(player.id);
+        });
+        decorateJawsSelfCard();
+      });
+      return result;
+    };
+    wrapped.__pmFinalJawsSelfCard=true;
+    window.renderGlobalLeaderboard=wrapped;
+  }
+
+  setInterval(()=>{
+    ensureCoinAdminTools();
+    decorateJawsSelfCard();
+  },900);
+
+  setTimeout(()=>{
+    ensureCoinAdminTools();
+    decorateJawsSelfCard();
+  },500);
+})();
+</script>
+
+
+<style id="pmRestoreFriendStyles">
+#pmRestoreFriendCard{
+  margin-top:14px;padding:16px;border:1px solid rgba(84,207,224,.20);
+  border-radius:14px;background:rgba(4,17,22,.68);
+}
+#pmRestoreFriendCard .pmRestoreStatus{
+  margin-top:9px;font-size:11px;line-height:1.45;color:#89aab0;
+}
+</style>
+
+<script id="pmRestoreFriendScript">
+(function(){
+  "use strict";
+
+  const FRIEND_UID="bRlcziOmrBRdwKTWXRUCGoeniCB3";
+  const OWNER_UID="WtQ6Vaz7a1Ogt3A0KTYYmFkCU132";
+
+  function isOwnerAdmin(){
+    return !!(window.pmAuthUser && window.pmAuthUser.uid===OWNER_UID);
+  }
+
+  async function restoreFriendLeaderboard(){
+    if(!isOwnerAdmin()){
+      alert("Admin access is restricted to the ProMouser owner account.");
+      return;
+    }
+    if(!window.pmFirebaseReady || !window.firebase || !firebase.firestore){
+      alert("Firebase is currently unavailable.");
+      return;
+    }
+
+    const db=firebase.firestore();
+    const ref=db.collection("users").doc(FRIEND_UID);
+
+    try{
+      const snap=await ref.get();
+      if(!snap.exists){
+        alert("The8h4pro's account was not found in Firestore.");
+        return;
+      }
+
+      const data=snap.data()||{};
+      const history=Array.isArray(data.publicTestHistory)
+        ? data.publicTestHistory.filter(x=>Number.isFinite(Number(x?.score)))
+        : [];
+
+      let publicTests=0;
+      let publicAverageCPS=0;
+      let publicHighestCPS=0;
+      let restoredFrom="";
+
+      if(history.length){
+        const scores=history.map(x=>Number(x.score)).filter(Number.isFinite);
+        publicTests=scores.length;
+        publicAverageCPS=publicTests
+          ? scores.reduce((a,b)=>a+b,0)/publicTests
+          : 0;
+        publicHighestCPS=publicTests
+          ? Math.max(...scores)
+          : 0;
+        restoredFrom="saved public CPS history";
+      }else{
+        // The exact historical individual tests are not available in the
+        // document, so use the existing aggregate stats as the safest
+        // recoverable source. We do not invent a new count or score.
+        publicTests=Math.max(0,Number(data.publicTests ?? data.tests ?? 0));
+        publicAverageCPS=Math.max(0,Number(data.publicAverageCPS ?? data.averageCPS ?? 0));
+        publicHighestCPS=Math.max(0,Number(data.publicHighestCPS ?? data.highestCPS ?? 0));
+        restoredFrom="existing aggregate CPS stats";
+      }
+
+      await ref.set({
+        publicTests,
+        publicAverageCPS,
+        publicHighestCPS,
+        privateMode:false,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true});
+
+      const verify=(await ref.get()).data()||{};
+      const status=
+        "Restored leaderboard stats for The8h4pro: "+
+        Number(verify.publicTests||0).toLocaleString()+" tests • "+
+        Number(verify.publicAverageCPS||0).toFixed(2)+" avg CPS • "+
+        Number(verify.publicHighestCPS||0).toFixed(2)+" best CPS "+
+        "("+restoredFrom+").";
+
+      const s=document.getElementById("pmRestoreFriendStatus");
+      if(s)s.textContent=status;
+
+      if(typeof loadGlobalLeaderboard==="function"){
+        try{ await loadGlobalLeaderboard(); }catch(e){}
+      }
+
+      alert(status);
+    }catch(e){
+      console.error("Restore The8h4pro failed:",e);
+      alert("Could not restore The8h4pro: "+(e?.code||e?.message||e));
+    }
+  }
+
+  window.pmRestoreThe8h4proLeaderboard=restoreFriendLeaderboard;
+
+  function ensureRestoreCard(){
+    if(!isOwnerAdmin())return;
+    const box=document.getElementById("pmAdminContent");
+    if(!box || window.pmAdminCurrentTab!=="overview")return;
+    if(document.getElementById("pmRestoreFriendCard"))return;
+
+    const card=document.createElement("div");
+    card.id="pmRestoreFriendCard";
+    card.innerHTML=`
+      <div class="pmAdminRowTitle">🔧 RESTORE THE8H4PRO LEADERBOARD</div>
+      <div class="pmAuthHint">
+        UID: <strong>${FRIEND_UID}</strong><br>
+        Rebuilds his public leaderboard values from any saved public CPS history,
+        or from the existing aggregate CPS stats if the history itself is gone.
+      </div>
+      <button class="pmActionButton" type="button" style="margin-top:10px">
+        RESTORE THE8H4PRO
+      </button>
+      <div id="pmRestoreFriendStatus" class="pmRestoreStatus"></div>`;
+    card.querySelector("button").onclick=restoreFriendLeaderboard;
+    box.appendChild(card);
+  }
+
+  setInterval(ensureRestoreCard,700);
+  setTimeout(ensureRestoreCard,400);
 })();
 </script>
