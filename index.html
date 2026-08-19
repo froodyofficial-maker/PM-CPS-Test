@@ -11922,3 +11922,331 @@ body.jawsOcean .pageHeader p{
   setTimeout(()=>{if(active())syncJawsEffect()},900);
 })();
 </script>
+
+
+<style id="pmAdminBetaGrantFinalFix">
+#pmAdminBetaAccessCard,#pmFinalBetaAccessCard{
+  width:100%;
+  box-sizing:border-box;
+}
+</style>
+<script id="pmAdminBetaGrantFinalFixScript">
+(function(){
+  "use strict";
+
+  const OWNER_UID="WtQ6Vaz7a1Ogt3A0KTYYmFkCU132";
+  const ACCESS="betaTesterAccess";
+  const MODE="betaTesterMode";
+
+  function realAdmin(){
+    return !!(window.pmAuthUser && window.pmAuthUser.uid===OWNER_UID);
+  }
+
+  async function setBetaForTarget(enabled){
+    if(!realAdmin()){
+      throw new Error("ADMIN_ONLY");
+    }
+    if(!window.pmAdminTargetId){
+      throw new Error("NO_TARGET");
+    }
+    if(!window.firebase || !firebase.firestore){
+      throw new Error("FIREBASE_UNAVAILABLE");
+    }
+
+    const db=firebase.firestore();
+    const ref=db.collection("users").doc(window.pmAdminTargetId);
+    const snap=await ref.get();
+
+    if(!snap.exists){
+      throw new Error("TARGET_ACCOUNT_NOT_FOUND");
+    }
+
+    await ref.update({
+      [ACCESS]:!!enabled,
+      [MODE]:!!enabled,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    const verify=await ref.get();
+    const data=verify.data()||{};
+
+    if(data[ACCESS]!==!!enabled || data[MODE]!==!!enabled){
+      throw new Error("BETA_CHANGE_NOT_VERIFIED");
+    }
+
+    window.pmAdminTargetData=data;
+
+    return data;
+  }
+
+  window.pmGrantBetaTesterAccess=async function(){
+    try{
+      await setBetaForTarget(true);
+      if(typeof window.pmAdminShowTab==="function")window.pmAdminShowTab("overview");
+      alert("✅ Beta Tester access granted.");
+    }catch(e){
+      console.error("GRANT BETA FAILED:",e);
+      const code=e?.code||"";
+      if(code==="resource-exhausted" || /quota|resource.?exhausted/i.test(e?.message||"")){
+        alert("Firebase quota is currently exceeded, so Beta Tester access cannot be saved right now. Wait for the quota to reset, then try again.");
+      }else if(code==="permission-denied"){
+        alert("Firebase rejected the admin write. Make sure the published Firestore rules contain your admin UID: WtQ6Vaz7a1Ogt3A0KTYYmFkCU132");
+      }else{
+        alert("Could not grant Beta Tester access: "+(e?.message||code||"Unknown error"));
+      }
+    }
+  };
+
+  window.pmRemoveBetaTesterAccess=async function(){
+    try{
+      await setBetaForTarget(false);
+      if(typeof window.pmAdminShowTab==="function")window.pmAdminShowTab("overview");
+      alert("Beta Tester access removed.");
+    }catch(e){
+      console.error("REMOVE BETA FAILED:",e);
+      const code=e?.code||"";
+      if(code==="resource-exhausted" || /quota|resource.?exhausted/i.test(e?.message||"")){
+        alert("Firebase quota is currently exceeded, so the change cannot be saved right now.");
+      }else if(code==="permission-denied"){
+        alert("Firebase rejected the admin write. Check the published Firestore rules.");
+      }else{
+        alert("Could not remove Beta Tester access: "+(e?.message||code||"Unknown error"));
+      }
+    }
+  };
+
+  function installFinalBetaButton(){
+    if(!realAdmin() || !window.pmAdminTargetId)return;
+
+    const ids=["pmAdminBetaToggle","pmFinalBetaToggle"];
+    ids.forEach(id=>{
+      const b=document.getElementById(id);
+      if(!b)return;
+
+      const granted=window.pmAdminTargetData?.[ACCESS]===true;
+      b.disabled=false;
+      b.removeAttribute("disabled");
+      b.style.pointerEvents="auto";
+      b.style.cursor="pointer";
+      b.textContent=granted?"REMOVE ACCESS":"GRANT ACCESS";
+      b.className="pmActionButton "+(granted?"pmAdminDanger":"");
+
+      /* Remove every earlier inline handler by assigning one authoritative handler. */
+      b.onclick=granted
+        ? window.pmRemoveBetaTesterAccess
+        : window.pmGrantBetaTesterAccess;
+    });
+  }
+
+  /* Existing admin renderers are numerous; this final hook wins after all of them. */
+  setInterval(installFinalBetaButton,400);
+  setTimeout(installFinalBetaButton,200);
+  setTimeout(installFinalBetaButton,1000);
+  setTimeout(installFinalBetaButton,2000);
+})();
+</script>
+
+
+<style id="pmJawsLeaderboardCardEffect">
+/* JAWS profile effect belongs to the player's long leaderboard stats card,
+   never the PFP. */
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard{
+  position:relative!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  min-height:88px!important;
+  border-color:rgba(100,225,238,.62)!important;
+  background:
+    radial-gradient(ellipse at 15% 20%,rgba(87,219,234,.22),transparent 31%),
+    radial-gradient(ellipse at 88% 84%,rgba(7,94,118,.25),transparent 37%),
+    linear-gradient(135deg,#07313d 0%,#021721 58%,#063d4a 100%)!important;
+  box-shadow:
+    0 0 0 1px rgba(89,221,234,.08),
+    0 16px 38px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(215,252,255,.10)!important;
+}
+
+/* moving water streaks */
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsCardWater{
+  position:absolute;
+  inset:-50%;
+  z-index:0;
+  pointer-events:none;
+  opacity:.45;
+  background:
+    repeating-linear-gradient(
+      168deg,
+      transparent 0 30px,
+      rgba(145,239,246,.07) 32px 34px,
+      transparent 36px 70px
+    );
+  animation:jawsCardWaterMove 8s linear infinite;
+}
+@keyframes jawsCardWaterMove{
+  from{transform:translate3d(-4%,-2%,0)}
+  to{transform:translate3d(10%,10%,0)}
+}
+
+/* bubbles */
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsCardBubbles{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 12% 77%,rgba(215,253,255,.70) 0 2px,transparent 3px),
+    radial-gradient(circle at 29% 63%,rgba(215,253,255,.45) 0 1.5px,transparent 3px),
+    radial-gradient(circle at 57% 79%,rgba(215,253,255,.56) 0 2px,transparent 3px),
+    radial-gradient(circle at 78% 57%,rgba(215,253,255,.42) 0 1.5px,transparent 3px),
+    radial-gradient(circle at 92% 73%,rgba(215,253,255,.55) 0 2px,transparent 3px);
+  animation:jawsCardBubbleRise 7s ease-in-out infinite;
+}
+@keyframes jawsCardBubbleRise{
+  0%,100%{background-position:0 10px,0 12px,0 8px,0 14px,0 11px;opacity:.48}
+  50%{background-position:0 -20px,2px -24px,-2px -20px,2px -28px,-4px -18px;opacity:.95}
+}
+
+/* shark swimming through the card */
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsCardShark{
+  position:absolute;
+  left:-190px;
+  top:52%;
+  width:150px;
+  height:44px;
+  z-index:2;
+  pointer-events:none;
+  border-radius:58% 44% 48% 52%;
+  background:linear-gradient(90deg,#01090f,#0a1d24 55%,#031016);
+  opacity:0;
+  box-shadow:0 2px 16px rgba(0,0,0,.30);
+  animation:jawsCardSharkSwim 11s linear infinite;
+}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsCardShark::before{
+  content:"";
+  position:absolute;
+  left:50px;
+  top:-34px;
+  width:0;height:0;
+  border-left:14px solid transparent;
+  border-right:8px solid transparent;
+  border-bottom:40px solid #07171d;
+}
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsCardShark::after{
+  content:"";
+  position:absolute;
+  left:-24px;
+  top:5px;
+  width:31px;height:31px;
+  background:#07171d;
+  clip-path:polygon(0 50%,100% 0,72% 50%,100% 100%);
+}
+@keyframes jawsCardSharkSwim{
+  0%,11%{left:-195px;opacity:0;transform:translateY(-50%) scale(.68)}
+  17%{opacity:.78}
+  40%{left:24%;opacity:.84;transform:translateY(-54%) scale(.82)}
+  63%{left:62%;opacity:.62;transform:translateY(-47%) scale(.75)}
+  80%{left:113%;opacity:0;transform:translateY(-50%) scale(.64)}
+  100%{left:120%;opacity:0}
+}
+
+/* put the actual stats/text above the animated effect */
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard > *{
+  position:relative!important;
+  z-index:4!important;
+}
+
+/* only a tiny marker, not a new card or PFP decoration */
+body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsYouMarker{
+  display:inline-block;
+  margin-left:8px;
+  padding:3px 7px;
+  border-radius:999px;
+  border:1px solid rgba(109,228,238,.35);
+  color:#8aeaf1;
+  background:rgba(92,222,234,.08);
+  font:900 8px/1 Arial,sans-serif;
+  letter-spacing:1.2px;
+  vertical-align:middle;
+}
+</style>
+
+<script id="pmJawsLeaderboardEffectFinalPatch">
+(function(){
+  "use strict";
+
+  function clearOld(){
+    document.querySelectorAll(".pmJawsProfileEffect").forEach(el=>el.remove());
+    document.querySelectorAll(".jawsSelfCard").forEach(row=>{
+      row.classList.remove("jawsSelfCard");
+      row.querySelectorAll(".jawsCardWater,.jawsCardBubbles,.jawsCardShark,.jawsYouMarker").forEach(el=>el.remove());
+    });
+  }
+
+  function apply(){
+    clearOld();
+
+    if(!document.body.classList.contains("jawsOcean")) return;
+
+    const uid = window.pmAuthUser?.uid;
+    const box = document.getElementById("globalLeaderboard");
+    if(!uid || !box) return;
+
+    const rows = [...box.querySelectorAll(".pmLeaderboardRow")];
+
+    // The renderer gives each row its player id through this dataset.
+    const self = rows.find(r => r.dataset.pmPlayerId === uid);
+    if(!self) return;
+
+    self.classList.add("jawsSelfCard");
+
+    const water = document.createElement("div");
+    water.className = "jawsCardWater";
+    water.setAttribute("aria-hidden","true");
+
+    const bubbles = document.createElement("div");
+    bubbles.className = "jawsCardBubbles";
+    bubbles.setAttribute("aria-hidden","true");
+
+    const shark = document.createElement("div");
+    shark.className = "jawsCardShark";
+    shark.setAttribute("aria-hidden","true");
+
+    self.append(water,bubbles,shark);
+
+    const name = self.querySelector(".pmPlayerName");
+    if(name && !name.querySelector(".jawsYouMarker")){
+      const m = document.createElement("span");
+      m.className = "jawsYouMarker";
+      m.textContent = "YOUR STATS";
+      name.appendChild(m);
+    }
+  }
+
+  // Patch the existing renderer once, without changing its normal behavior.
+  if(typeof window.renderGlobalLeaderboard === "function" &&
+     !window.renderGlobalLeaderboard.__pmJawsSelfCard){
+    const base = window.renderGlobalLeaderboard;
+    const wrapped = function(rows){
+      const result = base.apply(this, arguments);
+
+      requestAnimationFrame(()=>{
+        const domRows = [...document.querySelectorAll("#globalLeaderboard .pmLeaderboardRow")];
+        (rows || []).forEach((player,i)=>{
+          const row = domRows[i];
+          if(row && player?.id) row.dataset.pmPlayerId = String(player.id);
+        });
+        apply();
+      });
+
+      return result;
+    };
+    wrapped.__pmJawsSelfCard = true;
+    window.renderGlobalLeaderboard = wrapped;
+  }
+
+  // Reapply after navigation/async leaderboard updates.
+  setInterval(apply,1000);
+  setTimeout(apply,300);
+  setTimeout(apply,1200);
+})();
+</script>
