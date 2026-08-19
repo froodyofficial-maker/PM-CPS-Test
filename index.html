@@ -10999,3 +10999,121 @@ body.auroraFlow .pmAuroraShopPreview{
   setTimeout(()=>{ensureJawsBundled();addJawsBanner();},1200);
 })();
 </script>
+
+
+<style id="pmBetaMyUIButtonOverride">
+/* Final override: older Beta CSS disabled controls on preview pages.
+   My UI must remain fully interactive for Beta Testers. */
+body.pmBetaTesterMode #pmMyUIList button,
+body.pmBetaTesterMode #pmMyUIList .pmActionButton,
+body.pmBetaTesterMode #myUIPage button,
+body.pmBetaTesterMode #myUIPage .pmActionButton{
+  pointer-events:auto!important;
+  opacity:1!important;
+  cursor:pointer!important;
+}
+body.pmBetaTesterMode #pmMyUIList button:disabled,
+body.pmBetaTesterMode #myUIPage button:disabled{
+  pointer-events:auto!important;
+  opacity:1!important;
+  cursor:pointer!important;
+}
+</style>
+
+<script id="pmBetaMyUIButtonFinalFix">
+(function(){
+  "use strict";
+
+  const A="betaTesterAccess", M="betaTesterMode";
+
+  function betaOn(){
+    return !!(window.pmUserData && window.pmUserData[A]===true && window.pmUserData[M]===true);
+  }
+
+  function findUIId(card){
+    const title=(card.querySelector(".pmCollectionItemTitle")?.textContent||"").trim();
+    if(!title)return null;
+    const wanted=title.toUpperCase();
+    if(wanted==="PRO MOUSER")return "default";
+    if(wanted==="NEON PULSE")return "neon";
+
+    if(window.PM_SHOP_ITEMS){
+      const item=Object.values(window.PM_SHOP_ITEMS).find(x=>
+        String(x?.name||"").trim().toUpperCase()===wanted &&
+        x?.type==="ui"
+      );
+      if(item)return item.id;
+    }
+    return null;
+  }
+
+  function unlockMyUIButtons(){
+    if(!betaOn())return;
+    const box=document.getElementById("pmMyUIList");
+    if(!box)return;
+
+    box.querySelectorAll(".pmCollectionItem").forEach(card=>{
+      const btn=card.querySelector("button");
+      if(!btn)return;
+
+      const id=findUIId(card);
+      if(!id)return;
+
+      /* Critical fix: remove the actual disabled state from the DOM. */
+      btn.disabled=false;
+      btn.removeAttribute("disabled");
+      btn.style.pointerEvents="auto";
+      btn.style.opacity="1";
+      btn.style.cursor="pointer";
+
+      const equipped=window.pmUserData?.equippedUI===id;
+      btn.textContent=equipped ? "UNEQUIP" : "EQUIP";
+      btn.classList.toggle("pmSecondaryButton",equipped);
+
+      /* Replace the old click handler that only worked for owned items. */
+      btn.onclick=function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        if(typeof window.pmEquipUI==="function"){
+          window.pmEquipUI(id);
+        }
+        return false;
+      };
+
+      card.classList.toggle("equipped",equipped);
+      const status=card.querySelector(".pmCollectionStatus");
+      if(status){
+        status.textContent=equipped ? "EQUIPPED" : "AVAILABLE • BETA";
+        status.classList.toggle("equippedText",equipped);
+      }
+    });
+  }
+
+  /* Run after every My UI render, including renders triggered by navigation. */
+  function hookCollection(){
+    if(typeof window.pmRenderCollection!=="function")return;
+    if(window.pmBetaMyUIHooked)return;
+    const base=window.pmRenderCollection;
+    const wrapped=function(){
+      const result=base.apply(this,arguments);
+      setTimeout(unlockMyUIButtons,0);
+      setTimeout(unlockMyUIButtons,120);
+      return result;
+    };
+    wrapped.__pmBetaMyUIHooked=true;
+    window.pmRenderCollection=wrapped;
+    window.pmBetaMyUIHooked=true;
+  }
+
+  hookCollection();
+
+  /* Catch collections rendered before this final patch runs. */
+  setInterval(()=>{
+    if(betaOn()){
+      hookCollection();
+      unlockMyUIButtons();
+    }
+  },250);
+
+})();
+</script>
