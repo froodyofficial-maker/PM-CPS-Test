@@ -11117,3 +11117,808 @@ body.pmBetaTesterMode #myUIPage button:disabled{
 
 })();
 </script>
+
+
+<style id="pmBetaFullMyUIFinalCSS">
+body.pmBetaTesterMode #pmMyUIList .pmActionButton{
+  pointer-events:auto!important;
+  cursor:pointer!important;
+  opacity:1!important;
+}
+</style>
+
+<script id="pmBetaFullMyUIFinal">
+(function(){
+  "use strict";
+
+  const ACCESS="betaTesterAccess";
+  const MODE="betaTesterMode";
+
+  function betaOn(){
+    return !!(window.pmUserData &&
+      window.pmUserData[ACCESS]===true &&
+      window.pmUserData[MODE]===true);
+  }
+
+  function getUIItems(){
+    const out=[
+      {id:"default",name:"PRO MOUSER",sub:"ORIGINAL UI • ALWAYS AVAILABLE",preview:"PRO MOUSER",owned:true},
+      {id:"neon",name:"NEON PULSE",sub:"CYAN GLOW UI • EXISTING THEME",preview:"NEON PULSE",owned:true}
+    ];
+
+    if(window.PM_SHOP_ITEMS){
+      Object.values(window.PM_SHOP_ITEMS).forEach(item=>{
+        if(!item || item.type!=="ui")return;
+        if(out.some(x=>x.id===item.id))return;
+        out.push({
+          id:item.id,
+          name:item.name||item.id,
+          sub:(item.description||"SHOP UI THEME")+" • BETA TEST",
+          preview:item.name||"UI",
+          owned:true
+        });
+      });
+    }
+    return out;
+  }
+
+  async function betaEquip(id){
+    if(!betaOn()){
+      if(typeof window.pmEquipUI==="function")return window.pmEquipUI(id);
+      return;
+    }
+
+    if(id!=="default" && id!=="neon" && !window.PM_SHOP_ITEMS?.[id]){
+      alert("UI item could not be found.");
+      return;
+    }
+
+    try{
+      if(!window.pmFirebaseReady || !window.pmAuthUser){
+        alert("Your online account is not connected yet.");
+        return;
+      }
+
+      const current=window.pmUserData?.equippedUI||"default";
+      const next=current===id ? "default" : id;
+
+      // Beta testing changes only equippedUI. It NEVER adds ownership or spends coins.
+      window.pmUserData={...(window.pmUserData||{}),equippedUI:next};
+
+      if(typeof window.pmApplyEquippedUI==="function")window.pmApplyEquippedUI();
+
+      await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
+        equippedUI:next,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true});
+
+      renderBetaMyUI();
+    }catch(e){
+      console.error("BETA MY UI EQUIP FAILED",e);
+      alert("Could not equip this UI: "+(e?.message||e));
+    }
+  }
+
+  function renderBetaMyUI(){
+    if(!betaOn())return;
+    const box=document.getElementById("pmMyUIList");
+    if(!box)return;
+
+    const equipped=window.pmUserData?.equippedUI||"default";
+    box.innerHTML="";
+
+    getUIItems().forEach(item=>{
+      const card=document.createElement("div");
+      card.className="pmCollectionItem"+(equipped===item.id?" equipped":"");
+
+      const preview=document.createElement("div");
+      preview.className="pmCollectionPreview";
+
+      if(String(item.id).includes("jaws")){
+        preview.style.cssText="background:linear-gradient(#02060d,#063748,#01151d);color:#e9f7fa;overflow:hidden";
+        preview.innerHTML='<div style="font-weight:900;letter-spacing:2px;position:relative;z-index:2">JAWS<br><span style="font-size:10px;opacity:.7">OCEAN</span></div><div style="position:absolute;right:10%;bottom:22px;width:70px;height:17px;border-radius:50%;background:#001017;opacity:.55"></div>';
+      }else if(String(item.id).includes("void")){
+        preview.classList.add("pmVoidShopPreview");
+        preview.innerHTML='<div class="pmVoidPreviewText">VOID<br><span>MATRIX</span></div>';
+      }else{
+        preview.textContent=item.preview;
+        preview.style.fontWeight="900";
+        preview.style.fontStyle="italic";
+        preview.style.letterSpacing="2px";
+        preview.style.color=item.id==="neon"?"#00e5ff":"#ff1717";
+      }
+
+      const title=document.createElement("div");
+      title.className="pmCollectionItemTitle";
+      title.textContent=item.name;
+
+      const sub=document.createElement("div");
+      sub.className="pmCollectionItemSub";
+      sub.textContent=item.sub;
+
+      const action=document.createElement("button");
+      action.className="pmActionButton "+(equipped===item.id?"pmSecondaryButton":"");
+      action.disabled=false;
+      action.removeAttribute("disabled");
+      action.style.pointerEvents="auto";
+      action.style.opacity="1";
+      action.style.cursor="pointer";
+      action.textContent=equipped===item.id?"UNEQUIP":"EQUIP • BETA";
+      action.addEventListener("click",function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        betaEquip(item.id);
+      });
+
+      const status=document.createElement("div");
+      status.className="pmCollectionStatus"+(equipped===item.id?" equippedText":"");
+      status.textContent=equipped===item.id?"EQUIPPED":"AVAILABLE • BETA";
+
+      card.append(preview,title,sub,action,status);
+      box.appendChild(card);
+    });
+  }
+
+  // In Beta mode completely replace the old My UI renderer for this page.
+  // This avoids the old renderer's real-ownership/disabled-button logic.
+  const oldOpenMyUI=window.openMyUI;
+  window.openMyUI=function(){
+    if(typeof oldOpenMyUI==="function")oldOpenMyUI.apply(this,arguments);
+    setTimeout(renderBetaMyUI,0);
+    setTimeout(renderBetaMyUI,100);
+  };
+
+  // Hook the page renderer after every normal render.
+  document.addEventListener("click",function(e){
+    const btn=e.target.closest?.("#myUIPage .backButton");
+    if(btn)return;
+    if(betaOn() && document.getElementById("myUIPage")?.classList.contains("active")){
+      setTimeout(renderBetaMyUI,0);
+    }
+  },true);
+
+  // Keep it updated when Beta mode/account state changes.
+  setInterval(()=>{
+    if(betaOn() && document.getElementById("myUIPage")?.classList.contains("active")){
+      renderBetaMyUI();
+    }
+  },800);
+
+  setTimeout(()=>{
+    if(betaOn() && document.getElementById("myUIPage")?.classList.contains("active")){
+      renderBetaMyUI();
+    }
+  },500);
+})();
+</script>
+
+
+<style id="pmJawsAlignmentAndMotionFinal">
+/* =========================================================
+   JAWS FINAL VISUAL POLISH
+   Only active while body.jawsOcean is equipped.
+========================================================= */
+
+/* Header: ProMouser + JAWS on the SAME line. */
+body.jawsOcean header .logo{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:10px!important;
+  min-width:0;
+}
+body.jawsOcean .jawsOceanLogo{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  vertical-align:middle!important;
+  margin:0 0 0 8px!important;
+  flex:0 0 auto!important;
+  width:auto!important;
+  height:52px!important;
+}
+body.jawsOcean .jawsOceanLogo img{
+  display:block!important;
+  width:82px!important;
+  height:48px!important;
+  object-fit:contain!important;
+  filter:
+    drop-shadow(0 0 5px rgba(255,18,25,.72))
+    drop-shadow(0 0 13px rgba(255,18,25,.34))!important;
+  animation:jawsLogoFloat 4.8s ease-in-out infinite!important;
+}
+@keyframes jawsLogoFloat{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-2px) scale(1.025)}
+}
+
+/* Main title block: centered, clean, and balanced. */
+body.jawsOcean .title{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  gap:9px!important;
+  margin-bottom:25px!important;
+}
+body.jawsOcean .title h1{
+  width:100%!important;
+  margin:0!important;
+  line-height:.98!important;
+  letter-spacing:3px!important;
+  text-align:center!important;
+  transform-origin:center!important;
+  animation:jawsTitleBreath 5.5s ease-in-out infinite!important;
+}
+body.jawsOcean .title h1 span{
+  display:inline-block!important;
+  margin-left:8px!important;
+  animation:jawsRedWord 3.6s ease-in-out infinite!important;
+}
+body.jawsOcean .title p{
+  margin:0!important;
+  text-align:center!important;
+  max-width:860px!important;
+  line-height:1.4!important;
+  animation:jawsSubtitleDrift 6s ease-in-out infinite!important;
+}
+@keyframes jawsTitleBreath{
+  0%,100%{transform:translateY(0);letter-spacing:3px}
+  50%{transform:translateY(-2px);letter-spacing:4px}
+}
+@keyframes jawsRedWord{
+  0%,100%{opacity:.88;text-shadow:0 0 8px rgba(255,24,32,.35)!important}
+  50%{opacity:1;text-shadow:0 0 12px rgba(255,24,32,.8),0 0 24px rgba(255,24,32,.25)!important}
+}
+@keyframes jawsSubtitleDrift{
+  0%,100%{transform:translateY(0);opacity:.78}
+  50%{transform:translateY(-2px);opacity:1}
+}
+
+/* Stat row stays symmetrical in JAWS mode. */
+body.jawsOcean .stats{
+  width:100%!important;
+  align-items:stretch!important;
+}
+body.jawsOcean .stats .stat{
+  min-width:0!important;
+  text-align:center!important;
+}
+body.jawsOcean .statLabel{
+  animation:jawsLabelFloat 4.5s ease-in-out infinite!important;
+}
+body.jawsOcean .stats .stat:nth-child(2) .statLabel{animation-delay:-1.2s!important}
+body.jawsOcean .stats .stat:nth-child(3) .statLabel{animation-delay:-2.4s!important}
+@keyframes jawsLabelFloat{
+  0%,100%{opacity:.72;transform:translateY(0)}
+  50%{opacity:1;transform:translateY(-1px)}
+}
+
+/* CPS/result box: centered internals, consistent padding, and a clean ocean panel. */
+body.jawsOcean .cpsBox{
+  width:100%!important;
+  margin:32px auto 24px!important;
+  min-height:265px!important;
+  padding:38px 24px 34px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  border-radius:20px!important;
+  border:1px solid rgba(123,229,237,.18)!important;
+  background:
+    radial-gradient(circle at 50% 8%,rgba(75,208,224,.08),transparent 34%),
+    linear-gradient(145deg,rgba(4,28,38,.76),rgba(2,14,21,.84))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035),
+    0 20px 48px rgba(0,0,0,.22)!important;
+}
+body.jawsOcean .cpsStatus{
+  margin:0 0 9px!important;
+  line-height:1.2!important;
+  animation:jawsStatusPulse 2.8s ease-in-out infinite!important;
+}
+body.jawsOcean .cpsNumber{
+  display:block!important;
+  margin:0!important;
+  line-height:.92!important;
+  text-align:center!important;
+  animation:jawsNumberBreathe 4.2s ease-in-out infinite!important;
+}
+body.jawsOcean .cpsLabel{
+  margin-top:14px!important;
+  text-align:center!important;
+  letter-spacing:4px!important;
+  color:#82b9c0!important;
+  animation:jawsLabelFloat 5.2s ease-in-out infinite!important;
+}
+@keyframes jawsStatusPulse{
+  0%,100%{opacity:.72;transform:translateY(0)}
+  50%{opacity:1;transform:translateY(-1px)}
+}
+@keyframes jawsNumberBreathe{
+  0%,100%{transform:scale(1);text-shadow:0 0 14px rgba(123,229,237,.14)}
+  50%{transform:scale(1.018);text-shadow:0 0 18px rgba(123,229,237,.27),0 0 35px rgba(28,141,164,.15)}
+}
+
+/* Result bar stays visually attached to the centered result section. */
+body.jawsOcean .barContainer{
+  width:100%!important;
+  margin:0 auto 26px!important;
+}
+body.jawsOcean .barContainer .bar{
+  transition:width .35s ease-out,filter .35s ease-out!important;
+  filter:drop-shadow(0 0 6px rgba(255,24,32,.18))!important;
+}
+
+/* JAWS-only text motion on the visible page. */
+body.jawsOcean .reactionMessage,
+body.jawsOcean .specialMessage,
+body.jawsOcean .cheaterMessage h2,
+body.jawsOcean .cheaterMessage p,
+body.jawsOcean .pageHeader h1,
+body.jawsOcean .pageHeader p,
+body.jawsOcean .sectionTitle,
+body.jawsOcean .chartTitle{
+  animation:jawsTextRise 4.8s ease-in-out infinite!important;
+}
+@keyframes jawsTextRise{
+  0%,100%{transform:translateY(0);opacity:.88}
+  50%{transform:translateY(-2px);opacity:1}
+}
+
+/* Keep the JAWS header logo compact on smaller screens too. */
+@media(max-width:720px){
+  body.jawsOcean header .logo{gap:6px!important}
+  body.jawsOcean .jawsOceanLogo{height:40px!important;margin-left:3px!important}
+  body.jawsOcean .jawsOceanLogo img{width:64px!important;height:38px!important}
+  body.jawsOcean .title h1{font-size:clamp(34px,8vw,46px)!important;letter-spacing:2px!important}
+  body.jawsOcean .title h1 span{margin-left:4px!important}
+  body.jawsOcean .cpsBox{min-height:235px!important;padding:30px 16px!important}
+}
+</style>
+
+<script id="pmJawsVisualRefreshFinal">
+(function(){
+  "use strict";
+
+  function refreshJawsVisuals(){
+    if(!document.body.classList.contains("jawsOcean"))return;
+    const logo=document.getElementById("jawsOceanLogo");
+    if(logo){
+      logo.style.display="inline-flex";
+      logo.style.alignItems="center";
+    }
+
+    const title=document.querySelector(".title h1");
+    if(title){
+      title.style.textAlign="center";
+      title.style.margin="0";
+    }
+    const sub=document.querySelector(".title p");
+    if(sub)sub.style.textAlign="center";
+
+    const box=document.querySelector(".jawsOcean .cpsBox");
+    if(box){
+      box.style.textAlign="center";
+      box.style.display="flex";
+      box.style.alignItems="center";
+      box.style.justifyContent="center";
+    }
+  }
+
+  setTimeout(refreshJawsVisuals,150);
+  setInterval(refreshJawsVisuals,1200);
+})();
+</script>
+
+
+<style id="pmJawsTrueUIOverhaul">
+/* =========================================================
+   JAWS OCEAN — TRUE UI OVERHAUL
+   This is intentionally more than a color theme:
+   layout, cards, typography, controls, navigation, and
+   animated ocean structure all change while equipped.
+========================================================= */
+
+/* --- Global shell --- */
+body.jawsOcean{
+  --jaws-ink:#e9fbfc;
+  --jaws-muted:#79aeb6;
+  --jaws-cyan:#63dce7;
+  --jaws-cyan2:#0c6e83;
+  --jaws-red:#ff1820;
+  --jaws-deep:#02080d;
+  --jaws-mid:#06232d;
+  --jaws-glass:rgba(4,25,34,.76);
+  background:
+    radial-gradient(ellipse at 50% -8%,rgba(119,198,214,.12),transparent 26%),
+    linear-gradient(180deg,#02060b 0 14%,#041725 30%,#063743 57%,#021923 100%)!important;
+}
+
+/* faint moving caustic bands */
+body.jawsOcean .container::before{
+  content:"";
+  position:fixed;inset:0;pointer-events:none;z-index:-1;
+  background:
+    repeating-linear-gradient(164deg,transparent 0 70px,rgba(113,229,239,.022) 72px 74px,transparent 76px 130px);
+  animation:jawsCaustics 16s linear infinite;
+}
+@keyframes jawsCaustics{
+  from{background-position:0 0}
+  to{background-position:0 260px}
+}
+
+/* --- Header becomes a compact ship/ocean control bar --- */
+body.jawsOcean header{
+  height:74px!important;
+  padding:0 24px!important;
+}
+body.jawsOcean header .logo{
+  min-width:0!important;
+  flex:1 1 auto!important;
+}
+body.jawsOcean header .logoWhite,
+body.jawsOcean header .logoRed{
+  font-size:24px!important;
+  letter-spacing:1.5px!important;
+}
+body.jawsOcean .jawsOceanLogo{
+  margin-left:12px!important;
+  padding-left:11px!important;
+  border-left:1px solid rgba(123,229,237,.22)!important;
+}
+body.jawsOcean .jawsOceanLogo::before{
+  content:"OCEAN UI";
+  margin-right:8px;
+  color:#6ca8b1;
+  font:900 8px/1 Arial,sans-serif;
+  letter-spacing:2px;
+}
+body.jawsOcean .jawsOceanLogo img{
+  width:76px!important;height:42px!important;
+}
+body.jawsOcean header .headerButtons{
+  gap:8px!important;
+}
+body.jawsOcean .headerButton{
+  border-radius:10px!important;
+  padding:9px 12px!important;
+  font-size:10px!important;
+  letter-spacing:1.3px!important;
+  text-transform:uppercase;
+}
+
+/* --- Navigation becomes horizontal ocean tabs --- */
+body.jawsOcean .nav{
+  position:relative!important;
+  display:flex!important;
+  justify-content:center!important;
+  gap:7px!important;
+  padding:12px 8px!important;
+  margin:0 auto 18px!important;
+  border:1px solid rgba(123,229,237,.12)!important;
+  border-radius:16px!important;
+  background:rgba(2,13,19,.54)!important;
+  box-shadow:0 14px 35px rgba(0,0,0,.18)!important;
+  backdrop-filter:blur(12px);
+}
+body.jawsOcean .navButton{
+  flex:0 0 auto!important;
+  min-width:95px!important;
+  border-radius:999px!important;
+  padding:10px 13px!important;
+  background:transparent!important;
+  border:1px solid transparent!important;
+  color:#78aab2!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  letter-spacing:1.2px!important;
+  transition:.22s ease!important;
+}
+body.jawsOcean .navButton.selected{
+  color:#eaffff!important;
+  border-color:rgba(99,220,231,.48)!important;
+  background:linear-gradient(180deg,rgba(16,101,120,.5),rgba(6,47,59,.68))!important;
+  box-shadow:0 0 18px rgba(55,199,214,.14),inset 0 1px 0 rgba(255,255,255,.08)!important;
+}
+
+/* --- Title becomes a cinematic masthead --- */
+body.jawsOcean .title{
+  position:relative!important;
+  padding:24px 30px 22px!important;
+  margin-bottom:22px!important;
+  border:1px solid rgba(123,229,237,.16)!important;
+  border-radius:22px!important;
+  background:
+    linear-gradient(180deg,rgba(5,28,39,.78),rgba(3,15,22,.66))!important;
+  box-shadow:0 18px 44px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.03)!important;
+  overflow:hidden!important;
+}
+body.jawsOcean .title::before{
+  content:"";
+  position:absolute;left:-10%;top:0;width:120%;height:2px;
+  background:linear-gradient(90deg,transparent,#2bbfd1 26%,#ff1820 52%,#2bbfd1 74%,transparent);
+  opacity:.72;
+  animation:jawsMastheadLine 5s ease-in-out infinite;
+}
+@keyframes jawsMastheadLine{
+  0%,100%{transform:translateX(-8%);opacity:.4}
+  50%{transform:translateX(8%);opacity:1}
+}
+body.jawsOcean .title h1{
+  font-size:clamp(40px,5vw,70px)!important;
+  font-weight:1000!important;
+  letter-spacing:6px!important;
+  text-transform:uppercase!important;
+  text-shadow:0 8px 35px rgba(0,0,0,.35)!important;
+}
+body.jawsOcean .title h1 span{
+  color:#ff1820!important;
+  font-style:italic!important;
+}
+body.jawsOcean .title p{
+  font-size:11px!important;
+  letter-spacing:5px!important;
+  text-transform:uppercase!important;
+  color:#6fa9b2!important;
+}
+
+/* --- Stats become instrument modules --- */
+body.jawsOcean .stats{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:12px!important;
+  margin-bottom:22px!important;
+}
+body.jawsOcean .stat{
+  position:relative!important;
+  min-height:132px!important;
+  padding:22px 20px!important;
+  border-radius:18px!important;
+  background:
+    linear-gradient(180deg,rgba(7,36,47,.83),rgba(2,18,25,.9))!important;
+  border:1px solid rgba(99,220,231,.16)!important;
+  overflow:hidden!important;
+  text-align:left!important;
+}
+body.jawsOcean .stat::after{
+  content:"";
+  position:absolute;right:-40px;bottom:-55px;width:120px;height:120px;border-radius:50%;
+  border:1px solid rgba(99,220,231,.07);
+  box-shadow:0 0 0 16px rgba(99,220,231,.022),0 0 0 32px rgba(99,220,231,.014);
+}
+body.jawsOcean .statLabel{
+  display:block!important;
+  font-size:9px!important;
+  font-weight:900!important;
+  letter-spacing:2.5px!important;
+  color:#6ea9b1!important;
+}
+body.jawsOcean .statValue{
+  display:block!important;
+  margin-top:10px!important;
+  font-size:38px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:-1px!important;
+  color:#ecffff!important;
+}
+body.jawsOcean .statHint{
+  margin-top:12px!important;
+  font-size:9px!important;
+  letter-spacing:1.5px!important;
+  color:#648e95!important;
+}
+
+/* --- CPS area becomes a large "deep water" test chamber --- */
+body.jawsOcean .cpsBox{
+  position:relative!important;
+  min-height:390px!important;
+  margin:0 0 18px!important;
+  padding:42px 28px!important;
+  border-radius:24px!important;
+  background:
+    radial-gradient(circle at 50% 6%,rgba(92,210,225,.11),transparent 27%),
+    linear-gradient(160deg,rgba(4,31,41,.9),rgba(1,10,16,.94))!important;
+  border:1px solid rgba(99,220,231,.19)!important;
+  box-shadow:
+    0 28px 65px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.04)!important;
+  overflow:hidden!important;
+}
+body.jawsOcean .cpsBox::before{
+  content:"";
+  position:absolute;left:0;right:0;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,#5cdce9,transparent);
+  opacity:.65;
+}
+body.jawsOcean .cpsBox::after{
+  content:"";
+  position:absolute;
+  left:-20%;right:-20%;bottom:24px;height:90px;
+  background:
+    radial-gradient(ellipse at 35% 50%,rgba(54,186,203,.08),transparent 35%),
+    radial-gradient(ellipse at 65% 40%,rgba(54,186,203,.07),transparent 32%);
+  animation:jawsDeepCurrent 7s ease-in-out infinite alternate;
+  pointer-events:none;
+}
+@keyframes jawsDeepCurrent{
+  from{transform:translateX(-4%);opacity:.6}
+  to{transform:translateX(4%);opacity:1}
+}
+body.jawsOcean .cpsStatus{
+  position:relative!important;
+  z-index:2!important;
+  font-size:11px!important;
+  letter-spacing:5px!important;
+  color:#ff1820!important;
+  text-transform:uppercase!important;
+}
+body.jawsOcean .cpsNumber{
+  position:relative!important;
+  z-index:2!important;
+  font-size:clamp(74px,10vw,150px)!important;
+  line-height:.86!important;
+  letter-spacing:-5px!important;
+  font-weight:1000!important;
+  color:#ecffff!important;
+}
+body.jawsOcean .cpsLabel{
+  position:relative!important;
+  z-index:2!important;
+  margin-top:16px!important;
+  font-size:12px!important;
+  letter-spacing:6px!important;
+  color:#6eaeb7!important;
+}
+
+/* --- Buttons become capsule controls instead of generic purple-style buttons --- */
+body.jawsOcean .pmActionButton,
+body.jawsOcean .shopButton,
+body.jawsOcean .applyTimeButton,
+body.jawsOcean .applyUIButton,
+body.jawsOcean button{
+  border-radius:12px!important;
+  padding:11px 16px!important;
+  font-weight:900!important;
+  letter-spacing:1.2px!important;
+  text-transform:uppercase!important;
+}
+body.jawsOcean .pmActionButton{
+  background:linear-gradient(135deg,#0e7288,#073b4b)!important;
+  border:1px solid rgba(99,220,231,.55)!important;
+  box-shadow:0 8px 22px rgba(11,107,128,.14),inset 0 1px 0 rgba(255,255,255,.08)!important;
+}
+body.jawsOcean .pmActionButton:hover{
+  transform:translateY(-1px)!important;
+  box-shadow:0 12px 28px rgba(11,107,128,.22),0 0 20px rgba(99,220,231,.13)!important;
+}
+
+/* --- Search / form controls become maritime instrument fields --- */
+body.jawsOcean input,
+body.jawsOcean textarea,
+body.jawsOcean select{
+  border-radius:12px!important;
+  background:rgba(2,16,22,.78)!important;
+  border:1px solid rgba(99,220,231,.18)!important;
+  color:#eaffff!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
+body.jawsOcean input:focus,
+body.jawsOcean textarea:focus,
+body.jawsOcean select:focus{
+  border-color:rgba(99,220,231,.58)!important;
+  box-shadow:0 0 0 3px rgba(99,220,231,.07)!important;
+}
+
+/* --- Side shark pass: part of the UI composition, not just a theme background --- */
+body.jawsOcean .container::after{
+  content:"";
+  position:fixed;
+  left:-220px;
+  bottom:18%;
+  width:220px;height:62px;
+  z-index:1;pointer-events:none;
+  opacity:0;
+  border-radius:60% 46% 45% 52%;
+  background:linear-gradient(90deg,#01090f,#071920);
+  box-shadow:30px -16px 0 -13px #020b10;
+  animation:jawsMajorSharkPass 22s linear infinite;
+}
+@keyframes jawsMajorSharkPass{
+  0%,26%{left:-240px;opacity:0}
+  30%{opacity:.17}
+  58%{left:118vw;opacity:.21}
+  64%,100%{left:125vw;opacity:0}
+}
+
+/* --- Fine print / section text gets a different visual language --- */
+body.jawsOcean .sectionTitle,
+body.jawsOcean .chartTitle,
+body.jawsOcean .pageHeader h1{
+  letter-spacing:3px!important;
+  text-transform:uppercase!important;
+  font-weight:1000!important;
+}
+body.jawsOcean .pageHeader p{
+  color:#70a8b0!important;
+  letter-spacing:2px!important;
+}
+
+/* --- Responsive --- */
+@media(max-width:800px){
+  body.jawsOcean .stats{grid-template-columns:1fr!important}
+  body.jawsOcean .nav{overflow:auto;justify-content:flex-start}
+  body.jawsOcean .navButton{min-width:88px!important}
+  body.jawsOcean .title{padding:20px 16px!important}
+  body.jawsOcean .title h1{letter-spacing:3px!important}
+}
+</style>
+
+<script id="pmJawsAutoEffectOnUIEquip">
+(function(){
+  "use strict";
+  const JAWS_UI="ui_jaws_ocean";
+  const JAWS_EFFECT="border_jaws_ocean";
+
+  function active(){
+    return pmUserData?.equippedUI===JAWS_UI;
+  }
+  function available(){
+    return Date.now() < Date.parse("2026-08-23T23:59:59+05:30");
+  }
+
+  async function syncJawsEffect(){
+    if(!active() || !available())return;
+
+    /* JAWS UI owns its bundled profile effect automatically. */
+    if(pmUserData?.equippedBorder===JAWS_EFFECT)return;
+
+    try{
+      pmUserData={...(pmUserData||{}),equippedBorder:JAWS_EFFECT};
+
+      if(pmFirebaseReady&&pmAuthUser){
+        await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
+          equippedBorder:JAWS_EFFECT,
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+      }
+
+      const avatarWrap=document.getElementById("pmProfileAvatar")?.closest(".pmAvatarWrap");
+      if(avatarWrap && typeof window.pmApplyBorderVideo==="function"){
+        window.pmApplyBorderVideo(avatarWrap,pmUserData);
+      }
+    }catch(e){
+      console.warn("JAWS bundled profile effect sync failed:",e);
+    }
+  }
+
+  /* Removing JAWS UI should no longer force the profile effect off.
+     It is the bundled effect of the JAWS UI while that UI is equipped,
+     so re-equipping JAWS restores it automatically. */
+  const baseEquip=window.pmEquipUI;
+  if(typeof baseEquip==="function"){
+    window.pmEquipUI=async function(id){
+      const result=await baseEquip.apply(this,arguments);
+      if(id===JAWS_UI && active())await syncJawsEffect();
+      return result;
+    };
+  }
+
+  /* Catch equip paths that update the state directly. */
+  let last="";
+  setInterval(()=>{
+    const now=pmUserData?.equippedUI||"";
+    if(now!==last){
+      last=now;
+      if(now===JAWS_UI)syncJawsEffect();
+    }
+  },350);
+
+  /* Refresh effect on initial load when JAWS is already equipped. */
+  setTimeout(()=>{if(active())syncJawsEffect()},900);
+})();
+</script>
