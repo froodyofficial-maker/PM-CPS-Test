@@ -10190,6 +10190,155 @@ body.pmBetaTesterMode .pmShopPrice{color:#6eefff!important}
 })();
 </script>
 
+
+<style id="pmBetaCoinsNoticeFix">
+#pmBetaModePanel{
+  position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+  z-index:99990;display:none;min-width:min(520px,90vw);
+  padding:14px 18px;border-radius:16px;
+  background:rgba(3,12,18,.90);border:1px solid rgba(0,229,255,.30);
+  box-shadow:0 18px 55px rgba(0,0,0,.42);backdrop-filter:blur(16px);
+  color:#e8fbff;font-family:Arial,sans-serif
+}
+#pmBetaModePanel.show{display:flex;align-items:center;justify-content:space-between;gap:14px}
+#pmBetaModePanel .pmBetaPanelText{font-size:12px;line-height:1.45}
+#pmBetaModePanel strong{display:block;color:#6eefff;letter-spacing:1.5px;margin-bottom:3px}
+#pmBetaModePanel .pmBetaPanelActions{display:flex;gap:8px;flex-wrap:wrap}
+#pmBetaModePanel button{white-space:nowrap}
+#pmCoinsTemporaryNotice{
+  position:fixed;top:0;left:0;right:0;z-index:100001;
+  background:linear-gradient(90deg,#4a170f,#6a2415,#4a170f);
+  border-bottom:1px solid rgba(255,184,120,.35);
+  color:#fff3e8;padding:9px 46px 9px 18px;
+  font:800 12px/1.35 Arial,sans-serif;text-align:center;
+  display:block;box-shadow:0 6px 25px rgba(0,0,0,.28)
+}
+#pmCoinsTemporaryNotice button{
+  position:absolute;right:12px;top:7px;border:0;background:transparent;
+  color:#fff;font-size:19px;cursor:pointer;line-height:1
+}
+</style>
+<script id="pmBetaCoinsNoticeFixScript">
+(function(){
+  "use strict";
+  const BETA_ACCESS="betaTesterAccess";
+  const BETA_MODE="betaTesterMode";
+  const NOTICE_KEY="promouser_coins_temp_notice_v1";
+
+  function hasAccess(){
+    return !!(window.pmUserData && window.pmUserData[BETA_ACCESS]===true);
+  }
+  function modeOn(){
+    return hasAccess() && window.pmUserData?.[BETA_MODE]===true;
+  }
+
+  function ensureBetaPanel(){
+    if(!hasAccess()){
+      const old=document.getElementById("pmBetaModePanel"); if(old)old.remove();
+      return;
+    }
+    let panel=document.getElementById("pmBetaModePanel");
+    if(!panel){
+      panel=document.createElement("div");
+      panel.id="pmBetaModePanel";
+      panel.innerHTML=`
+        <div class="pmBetaPanelText">
+          <strong>🧪 BETA TESTER ACCESS</strong>
+          All shop items are available for free testing while Beta Tester Mode is on.
+        </div>
+        <div class="pmBetaPanelActions">
+          <button id="pmBetaPanelToggle" class="pmActionButton"></button>
+          <button id="pmBetaPanelOptions" class="pmActionButton">OPTIONS</button>
+        </div>`;
+      document.body.appendChild(panel);
+      panel.querySelector("#pmBetaPanelToggle").onclick=toggleBeta;
+      panel.querySelector("#pmBetaPanelOptions").onclick=()=>{
+        if(typeof openOptions==="function")openOptions();
+      };
+    }
+    panel.classList.toggle("show",hasAccess());
+    const b=panel.querySelector("#pmBetaPanelToggle");
+    if(b)b.textContent=modeOn()?"TURN OFF":"TURN ON";
+  }
+
+  async function toggleBeta(){
+    if(!hasAccess())return;
+    if(!window.pmFirebaseReady||!window.pmAuthUser)return alert("Your online account is not connected yet.");
+    try{
+      const next=!modeOn();
+      await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
+        betaTesterMode:next,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true});
+      // Refresh local state immediately so the UI responds even before the snapshot.
+      window.pmUserData={...(window.pmUserData||{}),betaTesterMode:next};
+      document.body.classList.toggle("pmBetaTesterMode",next);
+      ensureBetaPanel();
+      if(typeof pmRenderShop==="function")pmRenderShop();
+      if(typeof pmRenderCollection==="function")pmRenderCollection();
+    }catch(e){
+      console.error("BETA TOGGLE FAILED",e);
+      alert("Could not change Beta Tester Mode: "+(e?.message||e));
+    }
+  }
+
+  // Make Beta Tester Mode visible in Options too, regardless of whether the
+  // original Options renderer has an account/options card ready.
+  function ensureOptionsBeta(){
+    if(!hasAccess())return;
+    const page=document.getElementById("optionsPage");
+    if(!page)return;
+    let card=document.getElementById("pmBetaOptionsCard");
+    if(!card){
+      card=document.createElement("div");
+      card.id="pmBetaOptionsCard";
+      card.className="optionSection";
+      card.innerHTML=`
+        <div class="optionSectionTitle">🧪 BETA TESTER MODE</div>
+        <div class="pmAuthHint">Admin-granted access. Turn this on to test every shop item for free. Turn it off whenever you want.</div>
+        <button id="pmBetaOptionsToggle" class="pmActionButton"></button>`;
+      page.appendChild(card);
+      card.querySelector("#pmBetaOptionsToggle").onclick=toggleBeta;
+    }
+    card.querySelector("#pmBetaOptionsToggle").textContent=modeOn()?"TURN OFF BETA TESTER MODE":"TURN ON BETA TESTER MODE";
+  }
+
+  function ensureTempCoinNotice(){
+    if(localStorage.getItem(NOTICE_KEY)==="dismissed")return;
+    if(document.getElementById("pmCoinsTemporaryNotice"))return;
+    const n=document.createElement("div");
+    n.id="pmCoinsTemporaryNotice";
+    n.innerHTML=`🪙 <strong>Temporary notice:</strong> Coin balances are currently unavailable due to a Firebase quota issue. Your existing balance and purchases are not being intentionally reset.
+      <button aria-label="Dismiss">×</button>`;
+    n.querySelector("button").onclick=()=>{
+      localStorage.setItem(NOTICE_KEY,"dismissed");
+      n.remove();
+    };
+    document.body.appendChild(n);
+  }
+
+  function sync(){
+    ensureBetaPanel();
+    ensureOptionsBeta();
+    ensureTempCoinNotice();
+  }
+
+  // Wrap the account snapshot so revocation immediately removes the Beta UI.
+  if(typeof firebase!=="undefined" && firebase.firestore && window.pmAuthUser){
+    try{
+      firebase.firestore().collection("users").doc(pmAuthUser.uid).onSnapshot(s=>{
+        if(!s.exists)return;
+        window.pmUserData=s.data()||{};
+        sync();
+      });
+    }catch(e){ console.warn("Beta notice listener:",e); }
+  }
+
+  setTimeout(sync,800);
+  setInterval(sync,1200);
+})();
+</script>
+
 </body>
 </html>
 
