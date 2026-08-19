@@ -2406,6 +2406,151 @@ body.jawsOcean .page.active::before{
 @media(max-width:700px){.pmAdminGiftRestore .pmGiftRestoreRow{grid-template-columns:1fr;}}
 </style>
 
+
+<style id="pmBetaAndGlassFeaturesCSS">
+/* =========================================================
+   ADMIN-GRANTED BETA TESTER MODE
+========================================================= */
+#pmBetaAccessCard{
+  margin-top:14px;padding:16px;border:1px solid rgba(0,229,255,.24);
+  border-radius:14px;background:rgba(5,12,18,.72)
+}
+#pmBetaAccessCard .pmBetaAccessState{font-weight:900;letter-spacing:1px}
+#pmBetaTesterBadge{
+  position:fixed;top:14px;right:18px;z-index:99999;
+  padding:8px 12px;border-radius:999px;
+  background:rgba(4,12,18,.84);border:1px solid rgba(0,229,255,.45);
+  color:#6eefff;font:900 11px/1 Arial;letter-spacing:1.4px;
+  box-shadow:0 8px 30px rgba(0,0,0,.35);display:none
+}
+body.pmBetaTesterMode #pmBetaTesterBadge{display:block}
+#pmBetaOffButton{
+  position:fixed;top:14px;right:18px;z-index:100000;
+  margin-top:42px;display:none
+}
+body.pmBetaTesterMode #pmBetaOffButton{display:block}
+.pmBetaPreviewTag{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:8px;padding:5px 8px;border-radius:999px;
+  background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.2);
+  color:#6eefff;font:800 10px/1 Arial;letter-spacing:1px
+}
+
+/* =========================================================
+   SHOP UI PREVIEW
+========================================================= */
+#pmUiPreviewModal{
+  position:fixed;inset:0;z-index:100000;
+  display:none;align-items:center;justify-content:center;
+  padding:24px;background:rgba(0,0,0,.72);backdrop-filter:blur(8px)
+}
+#pmUiPreviewModal.show{display:flex}
+.pmUiPreviewCard{
+  width:min(820px,94vw);max-height:88vh;overflow:auto;
+  border:1px solid rgba(255,255,255,.14);border-radius:22px;
+  background:#0b1015;box-shadow:0 30px 100px rgba(0,0,0,.7);padding:22px
+}
+.pmUiPreviewHeader{display:flex;justify-content:space-between;align-items:center;gap:15px}
+.pmUiPreviewTitle{font-size:25px;font-weight:950;letter-spacing:2px}
+.pmUiPreviewClose{font-size:20px;min-width:42px}
+.pmUiPreviewViewport{
+  position:relative;min-height:330px;margin:18px 0;padding:28px;
+  overflow:hidden;border-radius:18px;border:1px solid rgba(255,255,255,.12)
+}
+.pmUiPreviewViewport.pmPreviewVoid{
+  background:radial-gradient(circle at 70% 20%,rgba(130,70,255,.22),transparent 30%),linear-gradient(145deg,#090711,#171126);
+  color:#eee
+}
+.pmUiPreviewViewport.pmPreviewJaws{
+  background:radial-gradient(circle at 50% -10%,rgba(110,180,210,.14),transparent 30%),linear-gradient(#02060d 0%,#063748 48%,#01151d 100%);
+  color:#e9f7fa
+}
+.pmUiPreviewViewport.pmPreviewNeon{
+  background:radial-gradient(circle at 50% 20%,rgba(0,229,255,.2),transparent 35%),#05090c;
+  color:#00e5ff
+}
+.pmPreviewMockBar{
+  height:42px;border-radius:12px;margin-bottom:18px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13)
+}
+.pmPreviewMockGrid{display:grid;grid-template-columns:1.5fr 1fr;gap:14px}
+.pmPreviewMockBox{
+  min-height:125px;border-radius:16px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  padding:18px
+}
+.pmPreviewMockButton{
+  display:inline-block;padding:11px 16px;border-radius:10px;
+  margin-top:12px;background:rgba(255,255,255,.09);
+  border:1px solid rgba(255,255,255,.16)
+}
+.pmPreviewShark{
+  position:absolute;right:8%;bottom:25px;width:150px;height:35px;
+  border-radius:60%;background:#001017;opacity:.55;
+  animation:pmPreviewShark 7s linear infinite
+}
+.pmPreviewShark:before{
+  content:"";position:absolute;left:55px;top:-35px;
+  border-left:18px solid transparent;border-right:7px solid transparent;
+  border-bottom:43px solid #001017
+}
+@keyframes pmPreviewShark{from{transform:translateX(170px)}to{transform:translateX(-500px)}}
+.pmPreviewGlass{
+  background:rgba(255,255,255,.13)!important;
+  border:1px solid rgba(255,255,255,.25)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 12px 35px rgba(0,0,0,.18)
+}
+
+/* =========================================================
+   GLASS TEXTURE — INDEPENDENT OVERLAY, COMBINABLE WITH UI
+========================================================= */
+body.pmGlassTexture .page.active .card,
+body.pmGlassTexture .page.active .panel,
+body.pmGlassTexture .page.active .box,
+body.pmGlassTexture .page.active .stat,
+body.pmGlassTexture .page.active .pmShopCard,
+body.pmGlassTexture .page.active .pmCollectionItem,
+body.pmGlassTexture .page.active .pmCheckoutCard,
+body.pmGlassTexture .page.active .pmAdminCard,
+body.pmGlassTexture .page.active .pmAdminRow,
+body.pmGlassTexture .page.active .pmAdminStat,
+body.pmGlassTexture .page.active .pmFriendCard,
+body.pmGlassTexture .page.active .pmProfileCard{
+  background:rgba(255,255,255,.075)!important;
+  border-color:rgba(255,255,255,.20)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 14px 40px rgba(0,0,0,.20)!important;
+  backdrop-filter:blur(18px) saturate(140%);
+  -webkit-backdrop-filter:blur(18px) saturate(140%)
+}
+body.pmGlassTexture .page.active button:not(.backButton),
+body.pmGlassTexture .page.active input,
+body.pmGlassTexture .page.active select,
+body.pmGlassTexture .page.active textarea,
+body.pmGlassTexture .page.active .timeBtn,
+body.pmGlassTexture .page.active .mouseOption,
+body.pmGlassTexture .page.active .uiOption{
+  background:rgba(255,255,255,.09)!important;
+  border:1px solid rgba(255,255,255,.22)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 8px 24px rgba(0,0,0,.16)!important;
+  backdrop-filter:blur(16px) saturate(145%);
+  -webkit-backdrop-filter:blur(16px) saturate(145%)
+}
+body.pmGlassTexture .page.active input,
+body.pmGlassTexture .page.active select,
+body.pmGlassTexture .page.active textarea{
+  border-radius:999px!important
+}
+body.pmGlassTexture .page.active button:not(.backButton),
+body.pmGlassTexture .page.active .timeBtn,
+body.pmGlassTexture .page.active .mouseOption,
+body.pmGlassTexture .page.active .uiOption{
+  border-radius:999px!important
+}
+body.pmGlassTexture .page.active .pmGlassCard{
+  background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.045))!important
+}
+</style>
+
 </head>
 
 
@@ -7159,69 +7304,100 @@ async function pmAdminRenderMessages(box){
     box.innerHTML=chats.length?'<div class="pmAdminList">'+chats.map(m=>`<div class="pmAdminRow"><div class="pmAdminRowInfo"><div class="pmAdminRowTitle">${m.sender===pmAdminTargetId?'TARGET':'OTHER'}</div><div class="pmAdminRowSub">${escapeHtml(m.text||"")} ${m.replyTo?.text?'<br>↪ '+escapeHtml(m.replyTo.text):''}</div></div><button class="pmActionButton pmAdminDanger" onclick="pmAdminDeleteMessage('${escapeHtml(m.chatId)}','${escapeHtml(m.id)}')">DELETE</button></div>`).join('')+'</div>':'<div class="pmEmpty">No messages found.</div>';
 }
 async function pmAdminDeleteTest(testId,rowIndex){
-    if(!confirm("Delete this CPS result permanently?"))return;
-    if(!pmFirebaseReady||!pmAdminTargetId)return alert("Admin account data is not connected.");
-    const db=firebase.firestore(),ref=db.collection("users").doc(pmAdminTargetId);
+    if(!window.pmIsSoleAdmin || !window.pmIsSoleAdmin()){
+        alert("Admin access is restricted to the ProMouser owner account.");
+        return;
+    }
+    if(!pmAdminTargetId){alert("Select a player first.");return;}
+    if(!pmFirebaseReady){alert("Firebase is not connected.");return;}
+    if(!confirm("Delete this CPS result permanently? This will recalculate the player's CPS statistics."))return;
+
+    const db=firebase.firestore();
+    const ref=db.collection("users").doc(String(pmAdminTargetId));
+    const wanted=String(testId||"");
+    const row=Number.isInteger(rowIndex)?rowIndex:-1;
+
     try{
-        const snap=await ref.get();
-        if(!snap.exists)throw new Error("MISSING_ACCOUNT");
-        const d=snap.data()||{};
-        const records=Array.isArray(d.publicTestHistory)?d.publicTestHistory.slice():[];
-        const wanted=String(testId||"");
-        const idx=Number.isInteger(rowIndex)?rowIndex:-1;
-        let deleteIndex=-1;
+        // Use a Firestore transaction so the deletion cannot overwrite a newer
+        // CPS result that was added while the admin panel was open.
+        let deletedScore=0;
+        await db.runTransaction(async tx=>{
+            const snap=await tx.get(ref);
+            if(!snap.exists)throw new Error("MISSING_ACCOUNT");
 
-        // Prefer the unique stored ID. Older results may not have an ID, so
-        // the admin row index is used as a safe fallback for those records.
-        if(wanted) deleteIndex=records.findIndex(x=>String(x?.id||"")===wanted);
-        if(deleteIndex<0 && idx>=0 && idx<records.length){
-            const row=records[idx];
-            if(!wanted || String(row?.id||"")===wanted) deleteIndex=idx;
-        }
-        if(deleteIndex<0)throw new Error("RESULT_NOT_FOUND");
+            const data=snap.data()||{};
+            const records=Array.isArray(data.publicTestHistory)?data.publicTestHistory.slice():[];
+            let deleteIndex=-1;
 
-        const deleted=records[deleteIndex];
-        const remaining=records.filter((_,i)=>i!==deleteIndex);
-        const scores=remaining.map(x=>Number(x?.score)).filter(Number.isFinite);
-        const tests=scores.length;
-        const avg=tests?scores.reduce((a,b)=>a+b,0)/tests:0;
-        const high=tests?Math.max(...scores):0;
+            // First identify the exact stored result by ID.
+            if(wanted) deleteIndex=records.findIndex(x=>String(x?.id||"")===wanted);
 
-        // Recalculate BOTH the public leaderboard stats and the account's
-        // normal CPS stats from the remaining stored results.
-        await ref.set({
-            publicTestHistory:remaining,
-            publicTests:tests,
-            publicAverageCPS:avg,
-            publicHighestCPS:high,
-            tests:tests,
-            averageCPS:avg,
-            highestCPS:high,
-            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true});
+            // Older records may not have IDs. In that case use the exact row
+            // index that the admin clicked.
+            if(deleteIndex<0 && row>=0 && row<records.length){
+                if(!wanted || !String(records[row]?.id||"")) deleteIndex=row;
+            }
 
+            if(deleteIndex<0)throw new Error("RESULT_NOT_FOUND");
+
+            const deleted=records[deleteIndex]||{};
+            deletedScore=Number(deleted.score);
+            if(!Number.isFinite(deletedScore))deletedScore=0;
+
+            const remaining=records.filter((_,i)=>i!==deleteIndex);
+            const scores=remaining.map(x=>Number(x?.score)).filter(Number.isFinite);
+            const tests=scores.length;
+            const avg=tests?scores.reduce((a,b)=>a+b,0)/tests:0;
+            const high=tests?Math.max(...scores):0;
+
+            // Keep the player's stored data, leaderboard data, and CPS stats
+            // synchronized from the same remaining history.
+            tx.update(ref,{
+                publicTestHistory:remaining,
+                publicTests:tests,
+                publicAverageCPS:avg,
+                publicHighestCPS:high,
+                tests:tests,
+                averageCPS:avg,
+                highestCPS:high,
+                updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+            });
+        });
+
+        // Read the committed document back and verify the deletion.
         const verify=await ref.get();
+        if(!verify.exists)throw new Error("MISSING_ACCOUNT");
         const verifyData=verify.data()||{};
         const verifyHistory=Array.isArray(verifyData.publicTestHistory)?verifyData.publicTestHistory:[];
-        if(verifyHistory.length!==remaining.length)throw new Error("DELETE_NOT_VERIFIED");
-        if(wanted && verifyHistory.some(x=>String(x?.id||"")===wanted))throw new Error("DELETE_NOT_VERIFIED");
+
+        if(wanted && verifyHistory.some(x=>String(x?.id||"")===wanted)){
+            throw new Error("DELETE_NOT_VERIFIED");
+        }
 
         pmAdminTargetData=verifyData;
         pmAdminShowTab("tests");
-        // Refresh the live leaderboard immediately as well as through its
-        // Firestore listener, so the deleted result disappears without delay.
+
+        // Refresh global leaderboard immediately if it is currently visible.
         if(typeof loadGlobalLeaderboard==="function" && document.getElementById("globalPage")?.classList.contains("active")){
-            try{loadGlobalLeaderboard();}catch(_){ }
+            await loadGlobalLeaderboard();
         }
-        alert(`Deleted ${Number(deleted?.score||0).toFixed(2)} CPS result. Stats were recalculated from the remaining tests.`);
+
+        alert(`Deleted ${deletedScore.toFixed(2)} CPS. Player data and leaderboard statistics were recalculated.`);
     }catch(e){
         console.error("Admin CPS delete failed:",e);
         const code=e?.code||"unknown";
         const detail=e?.message||String(e);
-        if(code==="permission-denied")alert("Could not delete that result: Firebase denied the admin write. Your Firestore security rules need to allow your admin account to update other users, or this operation must be moved to a trusted Cloud Function.");
-        else if(detail==="RESULT_NOT_FOUND")alert("Could not delete that result: it no longer exists in this account's CPS history.");
-        else if(detail==="DELETE_NOT_VERIFIED")alert("Could not delete that result: Firebase did not confirm the deletion.");
-        else alert("Could not delete that result. Firebase error: "+detail);
+        if(code==="permission-denied"){
+            alert("CPS deletion was blocked by Firestore rules. Publish the included firestore.rules file, then try again.");
+        }else if(detail==="RESULT_NOT_FOUND"){
+            alert("That CPS result could not be found in the player's stored history.");
+        }else if(detail==="DELETE_NOT_VERIFIED"){
+            alert("Firebase did not confirm the deletion. Nothing was considered complete.");
+        }else if(detail==="MISSING_ACCOUNT"){
+            alert("The player's Firebase account document could not be found.");
+        }else{
+            alert("CPS deletion failed: "+detail);
+        }
     }
 }
 async function pmAdminDeleteMessage(chatId,messageId){if(!confirm("Delete this message?"))return;try{await firebase.firestore().collection("chats").doc(chatId).collection("messages").doc(messageId).delete();pmAdminShowTab("messages");}catch(e){console.error(e);alert("Could not delete message.");}}
@@ -9751,6 +9927,336 @@ body.glitchPop .pmCoinPill{
   setTimeout(()=>{applyJaws();ensureJawsShop();},1200);
 })();
 </script>
+
+<script id="pmBetaGlassAndPreviewFeatures">
+(function(){
+"use strict";
+
+const BETA_FIELD="betaTesterAccess";
+const GLASS_ID="texture_glass";
+const GLASS_PRICE=1000;
+const BETA_BADGE_ID="pmBetaTesterBadge";
+const BETA_OFF_ID="pmBetaOffButton";
+
+/* ---------- helpers ---------- */
+function pmBetaHasAccess(data=pmUserData){
+  return data?.[BETA_FIELD]===true;
+}
+function pmGlassEquipped(data=pmUserData){
+  return data?.equippedGlassTexture===true;
+}
+function pmSetBetaVisual(on){
+  document.body.classList.toggle("pmBetaTesterMode",!!on);
+  if(on){
+    let b=document.getElementById(BETA_BADGE_ID);
+    if(!b){
+      b=document.createElement("div");
+      b.id=BETA_BADGE_ID;
+      b.textContent="BETA TESTER MODE";
+      document.body.appendChild(b);
+    }
+    let off=document.getElementById(BETA_OFF_ID);
+    if(!off){
+      off=document.createElement("button");
+      off.id=BETA_OFF_ID;
+      off.className="pmActionButton";
+      off.textContent="TURN OFF BETA MODE";
+      off.onclick=window.pmDisableBetaTesterMode;
+      document.body.appendChild(off);
+    }
+  }
+  try{ if(typeof pmRenderShop==="function")pmRenderShop(); }catch(e){}
+  try{ if(typeof pmRenderCollection==="function")pmRenderCollection(); }catch(e){}
+}
+function pmApplyGlassTexture(){
+  document.body.classList.toggle("pmGlassTexture",pmGlassEquipped());
+}
+function pmSyncCosmeticVisuals(){
+  pmSetBetaVisual(pmBetaHasAccess());
+  pmApplyGlassTexture();
+}
+
+/* ---------- beta access ---------- */
+window.pmDisableBetaTesterMode=async function(){
+  if(!pmBetaHasAccess())return;
+  try{
+    await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
+      betaTesterMode:false,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+    // Access remains granted; this simply turns the mode off.
+    document.body.classList.remove("pmBetaTesterMode");
+    const b=document.getElementById(BETA_BADGE_ID);if(b)b.remove();
+    const off=document.getElementById(BETA_OFF_ID);if(off)off.remove();
+    alert("Beta Tester Mode turned off. You can turn it back on from your account options.");
+  }catch(e){console.error(e);alert("Could not turn off Beta Tester Mode.");}
+};
+window.pmEnableBetaTesterMode=async function(){
+  if(!pmBetaHasAccess())return alert("You do not currently have Beta Tester access.");
+  try{
+    await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
+      betaTesterMode:true,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+    pmSetBetaVisual(true);
+  }catch(e){console.error(e);alert("Could not enable Beta Tester Mode.");}
+};
+
+/* Keep the user's local mode switch separate from the access grant. */
+function pmBetaModeOn(data=pmUserData){
+  return pmBetaHasAccess(data) && data?.betaTesterMode!==false;
+}
+
+/* ---------- virtual ownership + free beta purchases ---------- */
+const oldPmOwn=window.pmOwn;
+window.pmOwn=function(id){
+  if(pmBetaModeOn())return true;
+  return typeof oldPmOwn==="function" ? oldPmOwn(id) : false;
+};
+if(typeof window.pmIsOwnedCosmetic==="function"){
+  const oldOwned=window.pmIsOwnedCosmetic;
+  window.pmIsOwnedCosmetic=function(id){
+    if(pmBetaModeOn())return true;
+    return oldOwned(id);
+  };
+}
+if(typeof window.dbRunPurchase==="function"){
+  const oldPurchase=window.dbRunPurchase;
+  window.dbRunPurchase=async function(itemId){
+    if(pmBetaModeOn())return true;
+    return oldPurchase.apply(this,arguments);
+  };
+}
+if(typeof window.pmPurchaseItem==="function"){
+  const oldPurchaseItem=window.pmPurchaseItem;
+  window.pmPurchaseItem=async function(itemId,asGift=false){
+    if(pmBetaModeOn() && !asGift){
+      try{
+        if(typeof pmEquipUI==="function" && PM_SHOP_ITEMS[itemId]?.type==="ui"){
+          await pmEquipUI(itemId);
+        }
+      }catch(e){console.error(e);}
+      return true;
+    }
+    return oldPurchaseItem.apply(this,arguments);
+  };
+}
+
+/* ---------- Glass Texture shop item ---------- */
+if(typeof PM_SHOP_ITEMS!=="undefined"){
+  PM_SHOP_ITEMS[GLASS_ID]={
+    id:GLASS_ID,name:"GLASS TEXTURE",price:GLASS_PRICE,
+    description:"A frosted glass overlay for buttons, cards, boxes and rounded search bars. Works with any UI.",
+    type:"texture"
+  };
+}
+window.pmEquipGlassTexture=async function(){
+  if(!pmFirebaseReady||!pmAuthUser||!pmUserData)return alert("Your online account is not connected yet.");
+  const owned=pmBetaModeOn() || (typeof pmOwn==="function"&&pmOwn(GLASS_ID));
+  if(!owned)return alert("Buy Glass Texture first.");
+  try{
+    const next=!pmGlassEquipped();
+    await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
+      equippedGlassTexture:next,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+    await pmLoadOwnProfile();
+    pmApplyGlassTexture();
+  }catch(e){console.error(e);alert("Could not change Glass Texture.");}
+};
+
+/* ---------- UI preview ---------- */
+function pmPreviewKind(item){
+  const id=String(item?.id||"").toLowerCase();
+  if(id.includes("jaws"))return "jaws";
+  if(id.includes("void"))return "void";
+  if(id.includes("neon"))return "neon";
+  return "default";
+}
+function pmBuildPreview(item){
+  let m=document.getElementById("pmUiPreviewModal");
+  if(!m){
+    m=document.createElement("div");m.id="pmUiPreviewModal";
+    m.innerHTML=`
+      <div class="pmUiPreviewCard">
+        <div class="pmUiPreviewHeader">
+          <div><div id="pmUiPreviewTitle" class="pmUiPreviewTitle"></div><div id="pmUiPreviewPrice" class="pmAuthHint"></div></div>
+          <button id="pmUiPreviewClose" class="pmActionButton pmUiPreviewClose">×</button>
+        </div>
+        <div id="pmUiPreviewViewport" class="pmUiPreviewViewport"></div>
+        <div id="pmUiPreviewDescription" class="pmAuthHint"></div>
+        <div id="pmUiPreviewActions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px"></div>
+      </div>`;
+    document.body.appendChild(m);
+    document.getElementById("pmUiPreviewClose").onclick=()=>m.classList.remove("show");
+    m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("show");});
+  }
+  const kind=pmPreviewKind(item);
+  const v=document.getElementById("pmUiPreviewViewport");
+  v.className="pmUiPreviewViewport pmPreview"+kind[0].toUpperCase()+kind.slice(1);
+  v.innerHTML=`
+    <div class="pmPreviewMockBar"></div>
+    <div class="pmPreviewMockGrid">
+      <div class="pmPreviewMockBox"><strong>${item.name}</strong><br><span style="opacity:.7">LIVE UI PREVIEW</span><div class="pmPreviewMockButton">BUTTON</div></div>
+      <div class="pmPreviewMockBox"><strong>PROFILE</strong><br><span style="opacity:.7">Cards • Stats • Search</span></div>
+    </div>
+    ${kind==="jaws"?'<div class="pmPreviewShark"></div>':""}
+    ${item.id===GLASS_ID?'<div class="pmPreviewGlass" style="position:absolute;left:35%;right:35%;bottom:28px;height:42px;border-radius:999px"></div>':""}`;
+  document.getElementById("pmUiPreviewTitle").textContent=item.name;
+  document.getElementById("pmUiPreviewPrice").textContent=pmBetaModeOn()?"BETA TESTER • FREE":"🪙 "+Number(item.price||0).toLocaleString();
+  document.getElementById("pmUiPreviewDescription").textContent=item.description||"";
+  const actions=document.getElementById("pmUiPreviewActions");actions.innerHTML="";
+  const close=document.createElement("button");close.className="pmActionButton";close.textContent="BACK";
+  close.onclick=()=>m.classList.remove("show");actions.appendChild(close);
+  if(item.type==="texture"){
+    const b=document.createElement("button");b.className="pmActionButton";
+    b.textContent=pmGlassEquipped()?"UNEQUIP":"EQUIP"+(pmBetaModeOn()?" FREE":" • 1,000 🪙");
+    b.onclick=()=>window.pmEquipGlassTexture();actions.appendChild(b);
+  }else{
+    const b=document.createElement("button");b.className="pmActionButton";
+    b.textContent=pmBetaModeOn()?"EQUIP FREE (BETA)":"BUY / GIVE • "+Number(item.price||0).toLocaleString()+" 🪙";
+    b.onclick=()=>{m.classList.remove("show"); if(typeof openShopCheckout==="function")openShopCheckout(item.id);};actions.appendChild(b);
+  }
+  m.classList.add("show");
+}
+
+/* Change shop-home purchase buttons to SEE. We preserve the existing item ID
+   by reading the original onclick attribute once. */
+function pmConvertShopButtons(){
+  const roots=document.querySelectorAll("#shopPage, #pmShopPage");
+  roots.forEach(root=>{
+    root.querySelectorAll("button").forEach(btn=>{
+      const txt=(btn.textContent||"").trim().toUpperCase();
+      if(!/^BUY\b|^BUY •|^GIFT CODE/.test(txt))return;
+      if(btn.dataset.pmPreviewButton==="1")return;
+      const attr=btn.getAttribute("onclick")||"";
+      const m=attr.match(/(?:openShopCheckout|pmPurchaseItem)\(\s*['"]([^'"]+)['"]/);
+      if(!m)return;
+      const id=m[1],item=PM_SHOP_ITEMS?.[id];
+      if(!item)return;
+      btn.dataset.pmPreviewButton="1";
+      btn.removeAttribute("onclick");
+      btn.textContent="SEE";
+      btn.disabled=false;
+      btn.onclick=()=>pmBuildPreview(item);
+    });
+  });
+}
+
+/* Add preview to the actual self/gift checkout page too. */
+const oldCheckout=window.openShopCheckout;
+window.openShopCheckout=function(itemId){
+  oldCheckout.apply(this,arguments);
+  setTimeout(()=>{
+    const item=PM_SHOP_ITEMS?.[itemId];if(!item)return;
+    let host=document.getElementById("pmCheckoutPreviewHost");
+    const page=document.getElementById("shopCheckoutPage");
+    if(!page)return;
+    if(!host){
+      host=document.createElement("div");host.id="pmCheckoutPreviewHost";
+      const first=page.querySelector(".pmCheckoutCard")||page.firstElementChild;
+      if(first)first.parentNode.insertBefore(host,first);
+    }
+    host.innerHTML="";
+    const button=document.createElement("button");
+    button.className="pmActionButton";
+    button.textContent="👁️ PREVIEW "+item.name;
+    button.onclick=()=>pmBuildPreview(item);
+    host.appendChild(button);
+  },0);
+};
+
+/* ---------- My UI collection additions ---------- */
+const oldCollection=window.pmRenderCollection;
+window.pmRenderCollection=function(){
+  oldCollection.apply(this,arguments);
+  const box=document.getElementById("pmMyUIList");
+  if(!box)return;
+  const owned=pmBetaModeOn() || (typeof pmOwn==="function"&&pmOwn(GLASS_ID));
+  const card=document.createElement("div");
+  card.className="pmCollectionItem"+(pmGlassEquipped()?" equipped":"");
+  card.innerHTML=`<div class="pmCollectionPreview pmPreviewGlass">GLASS</div>
+    <div class="pmCollectionItemTitle">GLASS TEXTURE</div>
+    <div class="pmCollectionItemSub">1,000 COINS • COMBINABLE WITH ANY UI</div>`;
+  const b=document.createElement("button");b.className="pmActionButton"+(pmGlassEquipped()?" pmSecondaryButton":"");
+  b.textContent=pmGlassEquipped()?"UNEQUIP":owned?"EQUIP":"NOT OWNED";b.disabled=!owned;b.onclick=window.pmEquipGlassTexture;
+  card.appendChild(b);box.appendChild(card);
+};
+
+/* ---------- Admin beta access ---------- */
+window.pmAdminSetBetaAccess=async function(enabled){
+  if(!window.pmIsSoleAdmin || !window.pmIsSoleAdmin())return alert("Admin access is restricted to the ProMouser owner account.");
+  if(!pmAdminTargetId)return;
+  try{
+    const ref=firebase.firestore().collection("users").doc(pmAdminTargetId);
+    await ref.set({
+      betaTesterAccess:!!enabled,
+      betaTesterMode:!!enabled,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+    pmAdminTargetData=(await ref.get()).data();
+    pmAdminShowTab("overview");
+    alert(enabled?"Beta Tester access granted.":"Beta Tester access removed. All beta-only access is now disabled for this account.");
+  }catch(e){console.error(e);alert("Could not change Beta Tester access.");}
+};
+
+/* Inject admin control into the target overview. */
+const oldAdminShowTab=window.pmAdminShowTab;
+window.pmAdminShowTab=async function(tab){
+  await oldAdminShowTab.apply(this,arguments);
+  if(tab!=="overview"||!pmAdminTargetData)return;
+  const box=document.getElementById("pmAdminTabContent");
+  if(!box)return;
+  const active=pmAdminTargetData.betaTesterAccess===true;
+  const card=document.createElement("div");
+  card.id="pmBetaAccessCard";
+  card.innerHTML=`<div class="pmAdminRowTitle">🧪 BETA TESTER ACCESS</div>
+    <div class="pmAdminRowSub" style="margin:6px 0 12px">Give this user temporary access to every shop item for free. They can turn Beta Tester Mode on/off themselves. Removing access immediately removes their virtual beta ownership.</div>
+    <div class="pmBetaAccessState">${active?"ACCESS GRANTED":"ACCESS NOT GRANTED"}</div>`;
+  const b=document.createElement("button");b.className="pmActionButton "+(active?"pmAdminDanger":"");
+  b.style.marginTop="10px";b.textContent=active?"REMOVE BETA ACCESS":"GRANT BETA ACCESS";
+  b.onclick=()=>window.pmAdminSetBetaAccess(!active);
+  card.appendChild(b);box.appendChild(card);
+};
+
+/* ---------- Live account listener: admin revocation instantly removes beta access ---------- */
+let pmBetaUnsub=null;
+function pmStartBetaWatcher(){
+  if(pmBetaUnsub)pmBetaUnsub();
+  if(!pmFirebaseReady||!pmAuthUser)return;
+  pmBetaUnsub=firebase.firestore().collection("users").doc(pmAuthUser.uid).onSnapshot(snap=>{
+    if(!snap.exists)return;
+    const d=snap.data()||{};
+    pmUserData=d;
+    if(!d[BETA_FIELD]){
+      document.body.classList.remove("pmBetaTesterMode");
+      const b=document.getElementById(BETA_BADGE_ID);if(b)b.remove();
+      const off=document.getElementById(BETA_OFF_ID);if(off)off.remove();
+    }else if(d.betaTesterMode!==false){
+      pmSetBetaVisual(true);
+    }else{
+      document.body.classList.remove("pmBetaTesterMode");
+      const b=document.getElementById(BETA_BADGE_ID);if(b)b.remove();
+      const off=document.getElementById(BETA_OFF_ID);if(off)off.remove();
+    }
+    pmApplyGlassTexture();
+  },err=>console.warn("Beta watcher:",err));
+}
+
+/* Run after Firebase/account initialization and on navigation. */
+setTimeout(()=>{
+  pmStartBetaWatcher();
+  pmSyncCosmeticVisuals();
+  pmConvertShopButtons();
+},1200);
+setInterval(()=>{
+  pmConvertShopButtons();
+  pmApplyGlassTexture();
+},1200);
+
+})();
+</script>
+
 </body>
 </html>
 
