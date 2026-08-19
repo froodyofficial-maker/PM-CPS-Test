@@ -10339,6 +10339,133 @@ body.pmBetaTesterMode .pmShopPrice{color:#6eefff!important}
 })();
 </script>
 
+
+<script id="pmBetaUIEquipFinalFix">
+(function(){
+  "use strict";
+
+  const BETA_ACCESS="betaTesterAccess";
+  const BETA_MODE="betaTesterMode";
+
+  function betaOn(){
+    return !!(window.pmUserData &&
+      window.pmUserData[BETA_ACCESS]===true &&
+      window.pmUserData[BETA_MODE]===true);
+  }
+
+  /*
+    Final Beta Tester UI override.
+    The old UI system checks real ownedCosmetics in several places, so
+    virtual pmOwn() alone is not enough. In Beta Mode this wrapper lets the
+    user equip ANY registered UI without permanently granting ownership.
+  */
+  const baseEquipUI=window.pmEquipUI;
+  window.pmEquipUI=async function(id){
+    if(!betaOn()){
+      return baseEquipUI.apply(this,arguments);
+    }
+
+    if(!window.pmFirebaseReady || !window.pmAuthUser || !window.pmUserData){
+      alert("Your online account is not connected yet.");
+      return false;
+    }
+
+    const item=window.PM_SHOP_ITEMS?.[id];
+    if(id==="default" || id==="neon"){
+      // Built-in themes are always available.
+    }else if(!item || item.type!=="ui"){
+      alert("That item is not a UI theme.");
+      return false;
+    }
+
+    try{
+      const current=window.pmUserData.equippedUI||"default";
+      const next=current===id ? "default" : id;
+
+      // Beta access is a testing permission, not a purchase. Do not modify
+      // ownedCosmetics or coins. Keep the selected UI in the live account
+      // document so navigation/refresh continues to show the chosen test UI.
+      await firebase.firestore()
+        .collection("users")
+        .doc(pmAuthUser.uid)
+        .set({
+          equippedUI: next,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+
+      window.pmUserData={
+        ...(window.pmUserData||{}),
+        equippedUI:next
+      };
+
+      if(typeof window.pmApplyEquippedUI==="function"){
+        window.pmApplyEquippedUI();
+      }
+      if(typeof window.pmRenderCollection==="function"){
+        window.pmRenderCollection();
+      }
+      if(typeof window.pmRenderShop==="function"){
+        window.pmRenderShop();
+      }
+      return true;
+    }catch(e){
+      console.error("BETA UI EQUIP FAILED",e);
+      alert("Could not equip this UI: "+(e?.message||e));
+      return false;
+    }
+  };
+
+  /* Make every UI owned in Beta mode when collection cards render. */
+  const baseCollection=window.pmRenderCollection;
+  if(typeof baseCollection==="function"){
+    window.pmRenderCollection=function(){
+      baseCollection.apply(this,arguments);
+      if(!betaOn())return;
+      document.querySelectorAll("#pmMyUIList .pmCollectionItem").forEach(card=>{
+        const button=card.querySelector("button");
+        if(!button)return;
+        if(button.textContent.trim().toUpperCase()==="NOT OWNED"){
+          button.disabled=false;
+          button.textContent=(card.classList.contains("equipped")?"UNEQUIP":"EQUIP");
+          const title=(card.querySelector(".pmCollectionItemTitle")?.textContent||"").toUpperCase();
+          if(title && !["PRO MOUSER","NEON PULSE"].includes(title)){
+            const id=[...(window.PM_SHOP_ITEMS?Object.values(window.PM_SHOP_ITEMS):[])].find(x=>String(x?.name||"").toUpperCase()===title)?.id;
+            if(id)button.onclick=()=>window.pmEquipUI(id);
+          }
+        }
+      });
+    };
+  }
+
+  /*
+    If the admin revokes Beta access, never leave a beta UI equipped.
+    This is handled locally as well as by the Firebase listener.
+  */
+  function enforceRevocation(){
+    const d=window.pmUserData||{};
+    if(d[BETA_ACCESS]!==true && d.equippedUI && window.PM_SHOP_ITEMS?.[d.equippedUI]){
+      window.pmUserData={...d,equippedUI:"default"};
+      if(window.pmAuthUser && window.pmFirebaseReady){
+        firebase.firestore().collection("users").doc(window.pmAuthUser.uid).set({
+          equippedUI:"default",
+          betaTesterMode:false,
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true}).catch(e=>console.warn("Beta UI revoke sync:",e));
+      }
+      if(typeof window.pmApplyEquippedUI==="function")window.pmApplyEquippedUI();
+    }
+  }
+
+  setInterval(enforceRevocation,1000);
+  setTimeout(()=>{
+    if(betaOn()){
+      if(typeof window.pmRenderCollection==="function")window.pmRenderCollection();
+      if(typeof window.pmRenderShop==="function")window.pmRenderShop();
+    }
+  },1200);
+})();
+</script>
+
 </body>
 </html>
 
