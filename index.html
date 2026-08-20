@@ -2876,23 +2876,6 @@ body.jawsOcean .page.active::before{
                 </div>
                 <div class="pmShopOwnedNote" id="pmVoidOwnedNote"></div>
             </div>
-
-            <div class="pmShopCard" id="pmGlassTextureShopCard">
-                <div class="pmShopPreview" style="background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.04));backdrop-filter:blur(14px);">
-                    <div style="height:70px;margin:14px;border-radius:18px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 12px 30px rgba(0,0,0,.22)"></div>
-                    <div style="height:22px;width:65%;margin:0 auto;border-radius:999px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25)"></div>
-                </div>
-                <div class="pmShopName">GLASS TEXTURE</div>
-                <div class="pmShopMeta"><span>COMBINABLE OVER ANY UI</span><span class="pmShopPrice">🪙 1000</span></div>
-                <div class="pmShopDescription">Frosted glass buttons, boxes, cards and round glossy search bars. Works alongside any UI theme.</div>
-                <div class="pmShopActions">
-                    <button class="pmActionButton" id="pmGlassBuyButton" onclick="openShopCheckout('texture_glass')">BUY • 1000 🪙</button>
-                    <button class="pmActionButton pmSecondaryButton" id="pmGlassEquipButton" onclick="pmToggleGlassTexture()" style="display:none;">EQUIP</button>
-                </div>
-                <div class="pmShopOwnedNote" id="pmGlassOwnedNote"></div>
-            </div>
-        </div>
-    </div>
 </div>
 
 
@@ -6505,7 +6488,6 @@ const PM_ADMIN_CODE="cool@321321";
 const PM_SHOP_ITEMS={
     border_67:{id:"border_67",name:"67 BORDER EFFECT",price:300,description:"A looping animated 67 profile border.",type:"border"},
     ui_void_matrix:{id:"ui_void_matrix",name:"VOID MATRIX UI",price:1500,description:"A dark futuristic interface theme.",type:"ui"},
-    texture_glass:{id:"texture_glass",name:"GLASS TEXTURE",price:1000,description:"Frosted glass texture for buttons, cards, boxes and search bars. Combines with any UI.",type:"texture"}
 };
 let pmCheckoutItemId=null;
 let pmAdminTargetId=null;
@@ -9771,29 +9753,6 @@ body.glitchPop .pmCoinPill{
 </script>
 
 
-<style>
-/* Glass Texture global overlay */
-body.pmGlassTexture .page.active .stat,
-body.pmGlassTexture .page.active .pmShopCard,
-body.pmGlassTexture .page.active .pmCheckoutCard,
-body.pmGlassTexture .page.active .secondaryPage,
-body.pmGlassTexture .page.active .panel,
-body.pmGlassTexture .page.active .box,
-body.pmGlassTexture .page.active .card,
-body.pmGlassTexture .page.active input,
-body.pmGlassTexture .page.active textarea,
-body.pmGlassTexture .page.active select,
-body.pmGlassTexture .page.active button:not(.backButton){
-  background:rgba(255,255,255,.075)!important;
-  border-color:rgba(255,255,255,.22)!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 10px 30px rgba(0,0,0,.18)!important;
-  backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);
-}
-body.pmGlassTexture .page.active input,
-body.pmGlassTexture .page.active textarea,
-body.pmGlassTexture .page.active select,
-body.pmGlassTexture .page.active button:not(.backButton){border-radius:999px!important}</style>
-
 </body>
 </html>
 
@@ -11930,3 +11889,260 @@ body.jawsOcean .cpsBox{
   padding:34px 24px!important;
 }
 </style>
+
+
+<style id="pmThreeNewUIThemes">
+/* =========================================================
+   THREE BRAND-NEW FULL UI OVERHAULS
+   Completely separate visual systems from ProMouser / Neon / Void / JAWS.
+========================================================= */
+
+/* ---------------- FLUX DECK ---------------- */
+body.uiFluxDeck{
+  --fd-bg:#071018;--fd-panel:#0e1a23;--fd-panel2:#132633;--fd-line:#27546b;
+  --fd-ink:#eaf7ff;--fd-muted:#7ea6ba;--fd-accent:#ff9d2d;
+  background:
+    radial-gradient(circle at 20% 10%,rgba(255,157,45,.08),transparent 25%),
+    linear-gradient(135deg,#050a0f,#081721 45%,#0b1d2a)!important;
+  color:var(--fd-ink)!important;
+  font-family:Inter,Arial,sans-serif!important;
+}
+body.uiFluxDeck header{
+  height:66px!important;padding:0 28px!important;background:#071018!important;
+  border-bottom:1px solid var(--fd-line)!important;box-shadow:none!important;
+}
+body.uiFluxDeck header .logo{letter-spacing:2px!important;text-transform:uppercase!important;font-size:22px!important;font-style:normal!important}
+body.uiFluxDeck header .logoRed{color:var(--fd-accent)!important;text-shadow:none!important}
+body.uiFluxDeck .container{max-width:1180px!important;padding-top:28px!important}
+body.uiFluxDeck .title{text-align:left!important;display:grid!important;grid-template-columns:1fr auto;align-items:end;gap:15px;padding:0 0 18px;margin-bottom:20px;border-bottom:1px solid var(--fd-line)}
+body.uiFluxDeck .title h1{font-size:40px!important;letter-spacing:0!important;font-style:normal!important;text-shadow:none!important}
+body.uiFluxDeck .title h1 span{color:var(--fd-accent)!important}
+body.uiFluxDeck .title p{grid-column:1/-1;margin:0!important;color:var(--fd-muted)!important;letter-spacing:2px!important;text-transform:uppercase}
+body.uiFluxDeck .stats{grid-template-columns:repeat(3,1fr)!important;gap:10px!important}
+body.uiFluxDeck .stat{border-radius:4px!important;background:linear-gradient(180deg,var(--fd-panel),#0b151c)!important;border:1px solid var(--fd-line)!important;padding:20px!important;text-align:left!important;box-shadow:none!important}
+body.uiFluxDeck .stat::before{display:none!important}
+body.uiFluxDeck .statLabel{color:var(--fd-muted)!important;font-size:10px!important;letter-spacing:2.5px!important}
+body.uiFluxDeck .statValue{color:var(--fd-ink)!important;font-size:38px!important}
+body.uiFluxDeck .statHint{color:#587587!important}
+body.uiFluxDeck .cpsBox{margin-top:14px!important;min-height:300px!important;padding:34px!important;border-radius:4px!important;background:linear-gradient(180deg,#0e1a23,#09121a)!important;border:1px solid var(--fd-line)!important;box-shadow:none!important;display:grid!important;grid-template-columns:180px 1fr 180px;align-items:center!important}
+body.uiFluxDeck .cpsStatus{grid-column:1!important;grid-row:1!important;align-self:start!important;text-align:left!important;color:var(--fd-accent)!important;letter-spacing:2px!important}
+body.uiFluxDeck .cpsNumber{grid-column:2!important;grid-row:1!important;font-size:108px!important;text-shadow:none!important;color:#fff!important}
+body.uiFluxDeck .cpsLabel{grid-column:3!important;grid-row:1!important;text-align:right!important;color:var(--fd-muted)!important;letter-spacing:2px!important}
+body.uiFluxDeck .barContainer{margin-top:14px!important}
+body.uiFluxDeck button:not(.backButton){border-radius:4px!important;background:#122633!important;border:1px solid var(--fd-line)!important;color:var(--fd-ink)!important;box-shadow:none!important}
+body.uiFluxDeck button:not(.backButton):hover{border-color:var(--fd-accent)!important;background:#182f3e!important;transform:none!important}
+body.uiFluxDeck input,body.uiFluxDeck textarea,body.uiFluxDeck select{border-radius:4px!important;background:#0a151d!important;border:1px solid var(--fd-line)!important;color:#fff!important}
+
+/* ---------------- TERMINAL 88 ---------------- */
+body.uiTerminal88{
+  --tm-bg:#050805;--tm-green:#77ff72;--tm-dim:#4b8f4a;--tm-grid:rgba(119,255,114,.07);
+  background:#050805!important;color:#b9ffb5!important;font-family:"Courier New",monospace!important;
+}
+body.uiTerminal88::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9998;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.12)),repeating-linear-gradient(0deg,rgba(119,255,114,.035) 0 1px,transparent 1px 4px);mix-blend-mode:screen;opacity:.5}
+body.uiTerminal88 header{height:62px!important;background:#050805!important;border-bottom:1px solid #1d3b1c!important;box-shadow:none!important}
+body.uiTerminal88 .logo{font-family:"Courier New",monospace!important;font-style:normal!important;font-size:20px!important;letter-spacing:1px!important}
+body.uiTerminal88 .logoRed{color:var(--tm-green)!important;text-shadow:0 0 8px rgba(119,255,114,.5)!important}
+body.uiTerminal88 .container{max-width:1040px!important;padding-top:24px!important}
+body.uiTerminal88 .title{padding:14px 0!important;text-align:left!important;border-top:1px dashed #2a5129;border-bottom:1px dashed #2a5129;margin-bottom:16px}
+body.uiTerminal88 .title h1{font:900 34px/1 "Courier New",monospace!important;letter-spacing:0!important;text-shadow:none!important;text-transform:none!important}
+body.uiTerminal88 .title h1::before{content:"> ";color:var(--tm-dim)}
+body.uiTerminal88 .title h1 span{color:var(--tm-green)!important}
+body.uiTerminal88 .title p{margin:8px 0 0!important;color:var(--tm-dim)!important;letter-spacing:1px!important}
+body.uiTerminal88 .stats{grid-template-columns:repeat(3,1fr)!important;gap:8px!important}
+body.uiTerminal88 .stat{border-radius:0!important;background:rgba(0,10,0,.6)!important;border:1px solid #1d3b1c!important;padding:18px!important;text-align:left!important;box-shadow:inset 0 0 0 1px rgba(119,255,114,.025)!important}
+body.uiTerminal88 .stat::before{display:none!important}
+body.uiTerminal88 .statLabel{color:var(--tm-dim)!important;font-family:"Courier New",monospace!important}
+body.uiTerminal88 .statValue{color:var(--tm-green)!important;font-family:"Courier New",monospace!important;text-shadow:0 0 9px rgba(119,255,114,.28)!important;font-size:35px!important}
+body.uiTerminal88 .statHint{color:#315f31!important}
+body.uiTerminal88 .cpsBox{margin-top:12px!important;min-height:260px!important;padding:28px!important;border-radius:0!important;background:linear-gradient(180deg,rgba(0,10,0,.85),rgba(0,6,0,.92))!important;border:1px solid #1d3b1c!important;box-shadow:inset 0 0 70px rgba(119,255,114,.025)!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important}
+body.uiTerminal88 .cpsStatus{font-family:"Courier New",monospace!important;color:var(--tm-dim)!important;letter-spacing:1px!important;text-align:left!important}
+body.uiTerminal88 .cpsNumber{font-family:"Courier New",monospace!important;color:var(--tm-green)!important;text-shadow:0 0 13px rgba(119,255,114,.4)!important;font-size:105px!important}
+body.uiTerminal88 .cpsLabel{font-family:"Courier New",monospace!important;color:#4f8d4d!important;letter-spacing:1px!important}
+body.uiTerminal88 button:not(.backButton){border-radius:0!important;background:#071007!important;color:var(--tm-green)!important;border:1px solid #2b5b29!important;box-shadow:none!important;font-family:"Courier New",monospace!important;text-transform:none!important}
+body.uiTerminal88 button:not(.backButton):hover{background:#0b190a!important;border-color:var(--tm-green)!important;transform:none!important}
+body.uiTerminal88 input,body.uiTerminal88 textarea,body.uiTerminal88 select{border-radius:0!important;background:#020602!important;border:1px solid #245023!important;color:var(--tm-green)!important;font-family:"Courier New",monospace!important}
+
+/* ---------------- PAPER//02 ---------------- */
+body.uiPaper02{
+  --pp-bg:#ede7da;--pp-paper:#f6f0e5;--pp-ink:#1b1b19;--pp-muted:#666058;--pp-red:#a63b2b;
+  background:#ddd4c5!important;color:var(--pp-ink)!important;font-family:Georgia,"Times New Roman",serif!important;
+}
+body.uiPaper02 header{height:92px!important;background:var(--pp-bg)!important;color:var(--pp-ink)!important;border-bottom:3px double #222!important;box-shadow:none!important;padding:0 44px!important}
+body.uiPaper02 .logo{font-family:Georgia,serif!important;font-style:normal!important;font-size:26px!important;letter-spacing:0!important;color:var(--pp-ink)!important;text-shadow:none!important}
+body.uiPaper02 .logoWhite,.body.uiPaper02 .logoRed{color:var(--pp-ink)!important;text-shadow:none!important}
+body.uiPaper02 .logoRed{color:var(--pp-red)!important}
+body.uiPaper02 .container{max-width:1120px!important;padding-top:30px!important}
+body.uiPaper02 .title{display:grid!important;grid-template-columns:1fr 250px;gap:25px;align-items:end;text-align:left!important;background:var(--pp-paper)!important;border:1px solid #bbb1a2!important;border-radius:0!important;padding:28px!important;margin-bottom:18px!important;box-shadow:0 8px 0 rgba(27,27,25,.08)!important}
+body.uiPaper02 .title h1{font-family:Georgia,serif!important;font-size:48px!important;letter-spacing:-1px!important;font-style:normal!important;text-shadow:none!important;color:var(--pp-ink)!important}
+body.uiPaper02 .title h1 span{color:var(--pp-red)!important}
+body.uiPaper02 .title p{grid-column:2;grid-row:1;margin:0!important;text-align:right!important;color:var(--pp-muted)!important;letter-spacing:1px!important}
+body.uiPaper02 .stats{grid-template-columns:2fr 1fr 1fr!important;gap:12px!important}
+body.uiPaper02 .stat{background:var(--pp-paper)!important;border:1px solid #bdb2a2!important;border-radius:0!important;padding:24px!important;text-align:left!important;box-shadow:5px 5px 0 rgba(27,27,25,.08)!important}
+body.uiPaper02 .stat::before{display:none!important}
+body.uiPaper02 .statLabel{color:var(--pp-muted)!important;font-family:Arial,sans-serif!important;letter-spacing:1px!important}
+body.uiPaper02 .statValue{color:var(--pp-ink)!important;font-family:Georgia,serif!important;font-size:40px!important}
+body.uiPaper02 .statHint{color:#81796f!important;font-family:Arial,sans-serif!important}
+body.uiPaper02 .cpsBox{margin-top:16px!important;min-height:300px!important;padding:38px!important;border-radius:0!important;background:var(--pp-paper)!important;border:1px solid #bdb2a2!important;box-shadow:8px 8px 0 rgba(27,27,25,.09)!important;display:grid!important;grid-template-columns:1fr 2fr 1fr;align-items:center!important}
+body.uiPaper02 .cpsStatus{color:var(--pp-red)!important;text-align:left!important;font-family:Arial,sans-serif!important;letter-spacing:1px!important}
+body.uiPaper02 .cpsNumber{color:var(--pp-ink)!important;text-shadow:none!important;font-family:Georgia,serif!important;font-size:104px!important;font-style:normal!important}
+body.uiPaper02 .cpsLabel{color:var(--pp-muted)!important;text-align:right!important;font-family:Arial,sans-serif!important;letter-spacing:1px!important}
+body.uiPaper02 button:not(.backButton){border-radius:0!important;background:var(--pp-ink)!important;color:#fff!important;border:1px solid #111!important;box-shadow:3px 3px 0 rgba(27,27,25,.18)!important;font-family:Arial,sans-serif!important}
+body.uiPaper02 button:not(.backButton):hover{background:var(--pp-red)!important;transform:none!important}
+body.uiPaper02 input,body.uiPaper02 textarea,body.uiPaper02 select{border-radius:0!important;background:#fffaf1!important;border:1px solid #aaa092!important;color:var(--pp-ink)!important;font-family:Arial,sans-serif!important}
+
+/* Shared full-page secondary pages adapt too. */
+body.uiFluxDeck .secondaryPage{background:#0a151d!important;border:1px solid #27546b!important}
+body.uiTerminal88 .secondaryPage{background:#050905!important;border:1px solid #1d3b1c!important}
+body.uiPaper02 .secondaryPage{background:var(--pp-paper)!important;border:1px solid #bdb2a2!important;border-radius:0!important;color:var(--pp-ink)!important}
+body.uiPaper02 .pageHeader h1,body.uiPaper02 .sectionTitle{font-family:Georgia,serif!important;color:var(--pp-ink)!important}
+
+@media(max-width:800px){
+  body.uiFluxDeck .title{grid-template-columns:1fr!important}
+  body.uiFluxDeck .cpsBox{display:flex!important;flex-direction:column!important;text-align:center!important}
+  body.uiFluxDeck .cpsStatus,body.uiFluxDeck .cpsLabel{align-self:center!important;text-align:center!important}
+  body.uiPaper02 .title{grid-template-columns:1fr!important}
+  body.uiPaper02 .title p{grid-column:1!important;text-align:left!important}
+  body.uiPaper02 .stats{grid-template-columns:1fr!important}
+  body.uiPaper02 .cpsBox{display:flex!important;flex-direction:column!important;text-align:center!important}
+  body.uiPaper02 .cpsStatus,body.uiPaper02 .cpsLabel{align-self:center!important;text-align:center!important}
+}
+</style>
+
+<script id="pmThreeNewUIThemesScript">
+(function(){
+  "use strict";
+  const NEW_UI={
+    ui_flux_deck:{id:"ui_flux_deck",name:"FLUX DECK",price:1800,description:"A complete modular control-deck interface with angular panels, instrument stats and split-layout navigation.",type:"ui"},
+    ui_terminal_88:{id:"ui_terminal_88",name:"TERMINAL 88",price:2100,description:"A full phosphor-terminal interface with CRT scanlines, command-style typography and zero-rounded geometry.",type:"ui"},
+    ui_paper_02:{id:"ui_paper_02",name:"PAPER//02",price:2400,description:"A complete editorial paper interface with print-style layouts, serif typography, ink panels and document-like controls.",type:"ui"}
+  };
+
+  Object.keys(NEW_UI).forEach(id=>{ if(typeof PM_SHOP_ITEMS!=="undefined") PM_SHOP_ITEMS[id]=NEW_UI[id]; });
+
+  /* Remove any stale legacy overlay/card nodes left by an older cached copy. */
+  function removeLegacyTextureNodes(){
+    document.querySelectorAll('[id*="LegacyGlass"],[class*="LegacyGlass"]').forEach(el=>el.remove());
+  }
+
+  function isNewUI(id){return !!NEW_UI[id];}
+  function owns(id){return typeof pmOwn==="function"&&pmOwn(id);}
+
+  function applyNewUI(){
+    const body=document.body;if(!body)return;
+    body.classList.remove("uiFluxDeck","uiTerminal88","uiPaper02");
+    const id=pmUserData?.equippedUI||"default";
+    if(id==="ui_flux_deck")body.classList.add("uiFluxDeck");
+    else if(id==="ui_terminal_88")body.classList.add("uiTerminal88");
+    else if(id==="ui_paper_02")body.classList.add("uiPaper02");
+  }
+
+  /* Let the existing purchase system own the transaction. These UIs are normal
+     PM_SHOP_ITEMS, so buying, gifting and redeeming continue to use existing code. */
+  const oldEquip=window.pmEquipUI;
+  if(typeof oldEquip==="function"&&!oldEquip.__threeNewUI){
+    const wrapped=async function(id){
+      if(!isNewUI(id))return oldEquip.apply(this,arguments);
+      if(!pmFirebaseReady||!pmAuthUser||!pmUserData){alert("Your online account is not connected yet.");return false;}
+      if(!owns(id)){alert("Buy this UI from the Shop first.");return false;}
+      const next=pmUserData.equippedUI===id?"default":id;
+      try{
+        pmUserData={...(pmUserData||{}),equippedUI:next};
+        if(typeof pmApplyEquippedUI==="function")pmApplyEquippedUI();
+        applyNewUI();
+        await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({equippedUI:next,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+        if(typeof pmLoadOwnProfile==="function")await pmLoadOwnProfile();
+        if(typeof pmApplyEquippedUI==="function")pmApplyEquippedUI();
+        applyNewUI();
+        renderNewMyUICards();
+        return true;
+      }catch(e){
+        console.error("New UI equip failed:",e);
+        try{if(typeof pmLoadOwnProfile==="function")await pmLoadOwnProfile();pmApplyEquippedUI();applyNewUI();}catch(_){ }
+        alert("Could not change your UI.");return false;
+      }
+    };
+    wrapped.__threeNewUI=true;window.pmEquipUI=wrapped;
+  }
+
+  function newShopCard(id){
+    const item=NEW_UI[id];
+    const card=document.createElement("div");
+    card.className="pmShopCard pmReworkedUICard";
+    card.dataset.uiId=id;
+    card.innerHTML=`
+      <div class="pmShopPreview pmNewUIPreview ${id}">
+        <div class="pmNewUIPreviewMark">${item.name}</div>
+        <div class="pmNewUIPreviewLine"></div>
+        <div class="pmNewUIPreviewBlocks"><i></i><i></i><i></i></div>
+      </div>
+      <div class="pmShopName">${item.name}</div>
+      <div class="pmShopMeta"><span>FULL UI OVERHAUL</span><span class="pmShopPrice">🪙 ${item.price}</span></div>
+      <div class="pmShopDescription">${item.description}</div>
+      <div class="pmShopActions">
+        <button class="pmActionButton pmNewUIBuy" type="button">BUY • ${item.price} 🪙</button>
+        <button class="pmActionButton pmSecondaryButton pmNewUIEquip" type="button" style="display:none">EQUIP</button>
+      </div>
+      <div class="pmShopOwnedNote pmNewUINote"></div>`;
+    card.querySelector(".pmNewUIBuy").onclick=()=>openShopCheckout(id);
+    card.querySelector(".pmNewUIEquip").onclick=()=>pmEquipUI(id);
+    return card;
+  }
+
+  function ensureNewShopCards(){
+    const grid=document.querySelector("#shopPage .pmShopGrid");if(!grid)return;
+    Object.keys(NEW_UI).forEach(id=>{
+      let card=grid.querySelector('.pmReworkedUICard[data-ui-id="'+id+'"]');
+      if(!card){card=newShopCard(id);grid.appendChild(card);}
+      const owned=owns(id),equipped=pmUserData?.equippedUI===id;
+      const buy=card.querySelector(".pmNewUIBuy"),equip=card.querySelector(".pmNewUIEquip"),note=card.querySelector(".pmNewUINote");
+      if(buy){buy.disabled=owned;buy.textContent=owned?"OWNED":"BUY • "+NEW_UI[id].price+" 🪙";}
+      if(equip){equip.style.display=owned?"inline-block":"none";equip.textContent=equipped?"UNEQUIP":"EQUIP";equip.disabled=false;}
+      if(note)note.textContent=owned?(equipped?NEW_UI[id].name+" is equipped.":"You own this UI."):"";
+    });
+  }
+
+  function renderNewMyUICards(){
+    const box=document.getElementById("pmMyUIList");if(!box)return;
+    box.querySelectorAll(".pmReworkedUICard").forEach(x=>x.remove());
+    const equipped=pmUserData?.equippedUI||"default";
+    Object.values(NEW_UI).forEach(item=>{
+      const card=document.createElement("div");
+      const owned=owns(item.id),eq=equipped===item.id;
+      card.className="pmCollectionItem pmReworkedUICard"+(eq?" equipped":"");
+      card.dataset.uiId=item.id;
+      card.innerHTML=`
+        <div class="pmCollectionPreview pmNewUICollectionPreview ${item.id}">
+          <div>${item.name}</div>
+        </div>
+        <div class="pmCollectionItemTitle">${item.name}</div>
+        <div class="pmCollectionItemSub">FULL UI OVERHAUL • ${item.price} COINS</div>
+        <button type="button" class="pmActionButton ${eq?"pmSecondaryButton":""}">${eq?"UNEQUIP":owned?"EQUIP":"NOT OWNED"}</button>
+        <div class="pmCollectionStatus${eq?" equippedText":""}">${eq?"EQUIPPED":owned?"AVAILABLE":"NOT OWNED"}</div>`;
+      const btn=card.querySelector("button");btn.disabled=!owned;btn.onclick=()=>pmEquipUI(item.id);
+      box.appendChild(card);
+    });
+  }
+
+  /* Final wrapper so old My UI renderer stays intact, with only three cards added. */
+  if(typeof window.pmRenderCollection==="function"&&!window.pmRenderCollection.__threeNewUI){
+    const oldCollection=window.pmRenderCollection;
+    const wrapped=function(){
+      const result=oldCollection.apply(this,arguments);
+      setTimeout(renderNewMyUICards,0);
+      return result;
+    };
+    wrapped.__threeNewUI=true;window.pmRenderCollection=wrapped;
+  }
+
+  const oldApply=window.pmApplyEquippedUI;
+  if(typeof oldApply==="function"&&!oldApply.__threeNewUI){
+    const wrappedApply=function(){const r=oldApply.apply(this,arguments);applyNewUI();return r;};
+    wrappedApply.__threeNewUI=true;window.pmApplyEquippedUI=wrappedApply;
+  }
+
+  removeLegacyTextureNodes();
+  setTimeout(()=>{removeLegacyTextureNodes();applyNewUI();ensureNewShopCards();renderNewMyUICards();},300);
+  setTimeout(()=>{removeLegacyTextureNodes();applyNewUI();ensureNewShopCards();renderNewMyUICards();},1000);
+  setInterval(()=>{ensureNewShopCards();if(document.getElementById("myUIPage")?.classList.contains("active"))renderNewMyUICards();},1800);
+})();
+</script>
