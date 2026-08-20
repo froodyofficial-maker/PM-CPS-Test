@@ -10072,1094 +10072,6 @@ body.auroraFlow .pmAuroraShopPreview{
 </script>
 
 
-<!-- =========================================================
-     JAWS PROFILE EFFECT + LIMITED JAWS UI FINAL PATCH
-     JAWS UI shop availability ends 2026-08-23 23:59:59 IST.
-     The JAWS profile effect is independent of the JAWS UI.
-========================================================= -->
-<style id="pmJawsProfileEffectFinalStyle">
-.pmJawsProfileEffect{
-  position:absolute;inset:-2px;width:calc(100% + 4px);height:calc(100% + 4px);
-  border:2px solid rgba(91,220,235,.9);border-radius:12px;
-  pointer-events:none;z-index:6;overflow:hidden;
-  box-shadow:0 0 8px rgba(67,211,229,.45),inset 0 0 8px rgba(67,211,229,.18);
-  background:linear-gradient(180deg,rgba(81,210,226,.08),transparent 42%,rgba(0,15,22,.08));
-}
-.pmJawsProfileEffect::before{
-  content:"";position:absolute;left:-55%;top:6%;width:42%;height:22%;
-  background:linear-gradient(90deg,transparent,#071820 45%,#02090d 100%);
-  border-radius:60% 42% 48% 55%;
-  clip-path:polygon(0 52%,12% 31%,18% 55%,64% 24%,82% 0,90% 34%,100% 58%,83% 72%,64% 56%,20% 78%,0 69%);
-  opacity:.9;animation:pmJawsProfileShark 7s linear infinite;
-}
-.pmJawsProfileEffect::after{
-  content:"";position:absolute;inset:0;
-  background:
-    radial-gradient(circle at 18% 22%,rgba(185,245,250,.8) 0 1px,transparent 2px),
-    radial-gradient(circle at 72% 74%,rgba(185,245,250,.65) 0 1px,transparent 2px),
-    linear-gradient(112deg,transparent 0 35%,rgba(140,230,240,.10) 47%,transparent 59%);
-  opacity:.55;animation:pmJawsWaterShimmer 4s ease-in-out infinite alternate;
-}
-@keyframes pmJawsProfileShark{
-  0%,12%{left:-55%;opacity:0}
-  18%{opacity:.85}
-  52%{left:108%;opacity:.78}
-  60%,100%{left:125%;opacity:0}
-}
-@keyframes pmJawsWaterShimmer{from{transform:translateX(-4%);opacity:.3}to{transform:translateX(5%);opacity:.7}}
-.pmJawsEffectShopPreview{position:relative;display:grid;place-items:center;overflow:hidden;background:linear-gradient(#052d3a,#03141d)!important}
-.pmJawsEffectShopPreview .pmJawsEffectMiniAvatar{width:112px;height:112px;border-radius:10px;object-fit:cover;border:1px solid #2a7380}
-.pmJawsEffectShopPreview .pmJawsProfileEffect{inset:calc(50% - 58px);width:116px;height:116px}
-.pmJawsCollectionPreview{position:relative;overflow:hidden;background:linear-gradient(#052d3a,#03141d)!important}
-.pmJawsCollectionPreview img{width:100%;height:100%;object-fit:contain;padding:8px;filter:drop-shadow(0 0 8px rgba(255,30,30,.6))}
-.pmJawsLimited{color:#ff7a7a;font-weight:900;letter-spacing:1px;font-size:11px;margin-top:7px}
-</style>
-<script id="pmJawsProfileEffectFinalScript">
-(function(){
-  "use strict";
-  const UI_ID="ui_jaws_ocean";
-  const EFFECT_ID="border_jaws_ocean";
-  const UI_EXPIRES_AT=Date.parse("2026-08-23T23:59:59+05:30");
-
-  function available(){ return Date.now() < UI_EXPIRES_AT; }
-  function ownedUI(){ return typeof pmOwn === "function" && pmOwn(UI_ID); }
-  function uiEquipped(){ return pmUserData?.equippedUI===UI_ID; }
-  // The profile effect is bundled with the JAWS UI purchase. It is NOT a separate shop item.
-  function ownsEffect(){ return ownedUI() && available(); }
-  function effectEquipped(data=pmUserData){ return data?.equippedBorder===EFFECT_ID && ownsEffect(); }
-
-  /* ---------- JAWS EFFECT ---------- */
-  function makeEffectOverlay(){
-    const el=document.createElement("div");
-    el.className="pmJawsProfileEffect";
-    el.setAttribute("aria-hidden","true");
-    return el;
-  }
-  function applyJawsEffect(container,data){
-    if(!container)return;
-    container.querySelectorAll(".pmJawsProfileEffect").forEach(el=>el.remove());
-    if(effectEquipped(data))container.appendChild(makeEffectOverlay());
-  }
-
-  if(typeof window.pmApplyBorderVideo==="function"&&!window.pmApplyBorderVideo.__jawsBundledFinal){
-    const base=window.pmApplyBorderVideo;
-    const wrapped=function(container,data){
-      base.apply(this,arguments);
-      applyJawsEffect(container,data);
-    };
-    wrapped.__jawsBundledFinal=true;
-    window.pmApplyBorderVideo=wrapped;
-  }
-
-  // JAWS effect can be equipped independently of the currently equipped UI,
-  // but only while the player owns the JAWS UI and the 5-day event is active.
-  window.pmEquipJawsProfileEffect=async function(){
-    if(!pmFirebaseReady||!pmAuthUser||!pmUserData)return alert("Your online account is not connected yet.");
-    if(!available())return alert("The JAWS limited-time theme and profile effect have expired.");
-    if(!ownedUI())return alert("The JAWS Profile Effect is included with the JAWS Ocean UI.");
-    const next=effectEquipped()?"":EFFECT_ID;
-    try{
-      await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
-        equippedBorder:next,
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      },{merge:true});
-      pmUserData.equippedBorder=next;
-      const ownWrap=document.getElementById("pmProfileAvatar")?.closest(".pmAvatarWrap");
-      if(ownWrap)applyJawsEffect(ownWrap,pmUserData);
-      if(typeof pmLoadOwnProfile==="function")await pmLoadOwnProfile();
-    }catch(err){console.error(err);alert("Could not change the JAWS Profile Effect.");}
-  };
-
-  // Add the bundled effect to the user's collection. It remains separate from equippedUI.
-  function addEffectToCollection(){
-    const box=document.getElementById("pmMyUIList");
-    if(!box)return;
-    const old=box.querySelector('[data-pm-jaws-effect="1"]');
-    if(old)old.remove();
-    if(!ownedUI() || !available())return;
-    const card=document.createElement("div");
-    card.className="pmCollectionItem";
-    card.dataset.pmJawsEffect="1";
-    const preview=document.createElement("div");
-    preview.className="pmCollectionPreview pmJawsCollectionPreview";
-    const img=document.createElement("img");
-    img.src=(typeof JAWS_LOGO!=="undefined"?JAWS_LOGO:"");
-    img.alt="JAWS";preview.appendChild(img);
-    const title=document.createElement("div");title.className="pmCollectionItemTitle";title.textContent="JAWS PROFILE EFFECT";
-    const sub=document.createElement("div");sub.className="pmCollectionItemSub";sub.textContent="INCLUDED WITH JAWS UI • EQUIP INDEPENDENTLY";
-    const b=document.createElement("button");
-    b.className="pmActionButton";
-    b.textContent=effectEquipped()?"UNEQUIP":"EQUIP";
-    b.onclick=window.pmEquipJawsProfileEffect;
-    const st=document.createElement("div");
-    st.className="pmCollectionStatus"+(effectEquipped()?" equippedText":"");
-    st.textContent=effectEquipped()?"EQUIPPED":"AVAILABLE";
-    card.append(preview,title,sub,b,st);box.appendChild(card);
-  }
-
-  if(typeof window.pmRenderCollection==="function"&&!window.pmRenderCollection.__jawsBundledCollectionFinal){
-    const baseCollection=window.pmRenderCollection;
-    const wrappedCollection=function(){
-      baseCollection.apply(this,arguments);
-      setTimeout(addEffectToCollection,0);
-    };
-    wrappedCollection.__jawsBundledCollectionFinal=true;
-    window.pmRenderCollection=wrappedCollection;
-  }
-
-  /* ---------- FIVE-DAY EXPIRY ---------- */
-  function expireJawsIfNeeded(){
-    if(available())return;
-
-    // Remove JAWS from the shop completely.
-    document.querySelectorAll('[data-pm-new-item="'+UI_ID+'"],.pmJawsShopCard,.pmJawsEffectShopCard,[data-pm-new-item="'+EFFECT_ID+'"]').forEach(el=>el.remove());
-    if(typeof PM_SHOP_ITEMS!=="undefined"){
-      try{delete PM_SHOP_ITEMS[UI_ID];}catch(_){PM_SHOP_ITEMS[UI_ID]=undefined;}
-      try{delete PM_SHOP_ITEMS[EFFECT_ID];}catch(_){PM_SHOP_ITEMS[EFFECT_ID]=undefined;}
-    }
-
-    // The bundled profile effect expires too.
-    if(pmUserData?.equippedBorder===EFFECT_ID){
-      pmUserData.equippedBorder="";
-      if(pmFirebaseReady&&pmAuthUser){
-        firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
-          equippedBorder:"",
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true}).catch(()=>{});
-      }
-    }
-
-    document.querySelectorAll(".pmJawsProfileEffect").forEach(el=>el.remove());
-    document.querySelectorAll('[data-pm-jaws-effect="1"]').forEach(el=>el.remove());
-
-    // If JAWS itself was equipped, fall back to the default UI.
-    if(pmUserData?.equippedUI===UI_ID){
-      pmUserData.equippedUI="default";
-      if(typeof pmApplyEquippedUI==="function")pmApplyEquippedUI();
-      if(pmFirebaseReady&&pmAuthUser){
-        firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
-          equippedUI:"default",
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true}).catch(()=>{});
-      }
-    }
-  }
-
-  /* ---------- LIMITED SHOP CARD ---------- */
-  function decorateJawsUICard(){
-    expireJawsIfNeeded();
-    if(!available())return;
-    const c=document.querySelector('[data-pm-new-item="'+UI_ID+'"]');
-    if(!c)return;
-    if(!c.querySelector(".pmJawsLimited")){
-      const d=document.createElement("div");
-      d.className="pmJawsLimited";
-      d.textContent="LIMITED • AVAILABLE FOR 5 DAYS";
-      const name=c.querySelector(".pmShopName");
-      if(name)name.after(d);
-    }
-  }
-
-  // No separate JAWS effect shop card. The effect is included with the UI purchase.
-  function ensureJawsBundled(){
-    expireJawsIfNeeded();
-    decorateJawsUICard();
-    addEffectToCollection();
-  }
-
-  if(typeof window.openShop==="function"&&!window.openShop.__jawsBundledShopFinal){
-    const base=window.openShop;
-    const wrapped=function(){
-      base.apply(this,arguments);
-      setTimeout(ensureJawsBundled,80);
-      setTimeout(ensureJawsBundled,350);
-    };
-    wrapped.__jawsBundledShopFinal=true;
-    window.openShop=wrapped;
-  }
-
-  if(typeof window.pmLoadOwnProfile==="function"&&!window.pmLoadOwnProfile.__jawsBundledLoadFinal){
-    const base=window.pmLoadOwnProfile;
-    const wrapped=async function(){
-      const r=await base.apply(this,arguments);
-      setTimeout(ensureJawsBundled,30);
-      return r;
-    };
-    wrapped.__jawsBundledLoadFinal=true;
-    window.pmLoadOwnProfile=wrapped;
-  }
-
-  /* ---------- "LIMITED UI THEME IN SHOP" TEST BANNER ---------- */
-  const BANNER_KEY="promouser_jaws_limited_banner_closed_v1";
-  function addJawsBanner(){
-    const test=document.getElementById("testPage");
-    if(!test||document.getElementById("pmJawsLimitedBanner"))return;
-    if(localStorage.getItem(BANNER_KEY)==="1")return;
-    const banner=document.createElement("div");
-    banner.id="pmJawsLimitedBanner";
-    banner.className="pmJawsLimitedBanner";
-    banner.innerHTML='<div><strong>🦈 LIMITED UI THEME IN SHOP</strong><span>JAWS OCEAN • AVAILABLE FOR 5 DAYS</span></div><button type="button" aria-label="Close">×</button>';
-    const container=test.querySelector(".container");
-    if(container)container.insertBefore(banner,container.firstChild);
-    else test.insertBefore(banner,test.firstChild);
-    banner.querySelector("button").onclick=()=>{
-      localStorage.setItem(BANNER_KEY,"1");
-      banner.remove();
-    };
-  }
-
-  if(!document.getElementById("pmJawsLimitedBannerStyle")){
-    const style=document.createElement("style");
-    style.id="pmJawsLimitedBannerStyle";
-    style.textContent=`
-      .pmJawsLimitedBanner{position:relative;display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0 0 22px;padding:14px 17px;border:1px solid rgba(255,24,32,.48);border-radius:12px;background:linear-gradient(100deg,rgba(3,24,34,.96),rgba(6,63,78,.86));box-shadow:0 8px 25px rgba(0,0,0,.2),0 0 22px rgba(255,24,32,.08);color:#eaffff;z-index:8}.pmJawsLimitedBanner strong{display:block;color:#ff3940;font-size:13px;letter-spacing:2px;text-shadow:0 0 10px rgba(255,24,32,.35)}.pmJawsLimitedBanner span{display:block;margin-top:4px;color:#8fcbd2;font-size:10px;letter-spacing:1.4px}.pmJawsLimitedBanner button{flex:0 0 auto;width:30px;height:30px;border:1px solid rgba(255,255,255,.2);border-radius:8px;background:rgba(0,0,0,.25);color:#dffcff;font-size:22px;line-height:1;cursor:pointer}.pmJawsLimitedBanner button:hover{border-color:#ff3037;color:#ff4a4f;box-shadow:0 0 12px rgba(255,24,32,.2)}.pmJawsLimited{margin:4px 0 7px;color:#ff3940;font-size:9px;font-weight:900;letter-spacing:1.6px;text-shadow:0 0 8px rgba(255,24,32,.35)}
-    `;
-    document.head.appendChild(style);
-  }
-
-  setInterval(()=>{expireJawsIfNeeded();decorateJawsUICard();addEffectToCollection();},30000);
-  setTimeout(()=>{ensureJawsBundled();addJawsBanner();},300);
-  setTimeout(()=>{ensureJawsBundled();addJawsBanner();},1200);
-})();
-</script>
-
-
-<style id="pmJawsAlignmentAndMotionFinal">
-/* =========================================================
-   JAWS FINAL VISUAL POLISH
-   Only active while body.jawsOcean is equipped.
-========================================================= */
-
-/* Header: ProMouser + JAWS on the SAME line. */
-body.jawsOcean header .logo{
-  display:flex!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  gap:10px!important;
-  min-width:0;
-}
-body.jawsOcean .jawsOceanLogo{
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-  vertical-align:middle!important;
-  margin:0 0 0 8px!important;
-  flex:0 0 auto!important;
-  width:auto!important;
-  height:52px!important;
-}
-body.jawsOcean .jawsOceanLogo img{
-  display:block!important;
-  width:82px!important;
-  height:48px!important;
-  object-fit:contain!important;
-  filter:
-    drop-shadow(0 0 5px rgba(255,18,25,.72))
-    drop-shadow(0 0 13px rgba(255,18,25,.34))!important;
-  animation:jawsLogoFloat 4.8s ease-in-out infinite!important;
-}
-@keyframes jawsLogoFloat{
-  0%,100%{transform:translateY(0) scale(1)}
-  50%{transform:translateY(-2px) scale(1.025)}
-}
-
-/* Main title block: centered, clean, and balanced. */
-body.jawsOcean .title{
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:center!important;
-  justify-content:center!important;
-  text-align:center!important;
-  gap:9px!important;
-  margin-bottom:25px!important;
-}
-body.jawsOcean .title h1{
-  width:100%!important;
-  margin:0!important;
-  line-height:.98!important;
-  letter-spacing:3px!important;
-  text-align:center!important;
-  transform-origin:center!important;
-  animation:jawsTitleBreath 5.5s ease-in-out infinite!important;
-}
-body.jawsOcean .title h1 span{
-  display:inline-block!important;
-  margin-left:8px!important;
-  animation:jawsRedWord 3.6s ease-in-out infinite!important;
-}
-body.jawsOcean .title p{
-  margin:0!important;
-  text-align:center!important;
-  max-width:860px!important;
-  line-height:1.4!important;
-  animation:jawsSubtitleDrift 6s ease-in-out infinite!important;
-}
-@keyframes jawsTitleBreath{
-  0%,100%{transform:translateY(0);letter-spacing:3px}
-  50%{transform:translateY(-2px);letter-spacing:4px}
-}
-@keyframes jawsRedWord{
-  0%,100%{opacity:.88;text-shadow:0 0 8px rgba(255,24,32,.35)!important}
-  50%{opacity:1;text-shadow:0 0 12px rgba(255,24,32,.8),0 0 24px rgba(255,24,32,.25)!important}
-}
-@keyframes jawsSubtitleDrift{
-  0%,100%{transform:translateY(0);opacity:.78}
-  50%{transform:translateY(-2px);opacity:1}
-}
-
-/* Stat row stays symmetrical in JAWS mode. */
-body.jawsOcean .stats{
-  width:100%!important;
-  align-items:stretch!important;
-}
-body.jawsOcean .stats .stat{
-  min-width:0!important;
-  text-align:center!important;
-}
-body.jawsOcean .statLabel{
-  animation:jawsLabelFloat 4.5s ease-in-out infinite!important;
-}
-body.jawsOcean .stats .stat:nth-child(2) .statLabel{animation-delay:-1.2s!important}
-body.jawsOcean .stats .stat:nth-child(3) .statLabel{animation-delay:-2.4s!important}
-@keyframes jawsLabelFloat{
-  0%,100%{opacity:.72;transform:translateY(0)}
-  50%{opacity:1;transform:translateY(-1px)}
-}
-
-/* CPS/result box: centered internals, consistent padding, and a clean ocean panel. */
-body.jawsOcean .cpsBox{
-  width:100%!important;
-  margin:32px auto 24px!important;
-  min-height:265px!important;
-  padding:38px 24px 34px!important;
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:center!important;
-  justify-content:center!important;
-  text-align:center!important;
-  border-radius:20px!important;
-  border:1px solid rgba(123,229,237,.18)!important;
-  background:
-    radial-gradient(circle at 50% 8%,rgba(75,208,224,.08),transparent 34%),
-    linear-gradient(145deg,rgba(4,28,38,.76),rgba(2,14,21,.84))!important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.035),
-    0 20px 48px rgba(0,0,0,.22)!important;
-}
-body.jawsOcean .cpsStatus{
-  margin:0 0 9px!important;
-  line-height:1.2!important;
-  animation:jawsStatusPulse 2.8s ease-in-out infinite!important;
-}
-body.jawsOcean .cpsNumber{
-  display:block!important;
-  margin:0!important;
-  line-height:.92!important;
-  text-align:center!important;
-  animation:jawsNumberBreathe 4.2s ease-in-out infinite!important;
-}
-body.jawsOcean .cpsLabel{
-  margin-top:14px!important;
-  text-align:center!important;
-  letter-spacing:4px!important;
-  color:#82b9c0!important;
-  animation:jawsLabelFloat 5.2s ease-in-out infinite!important;
-}
-@keyframes jawsStatusPulse{
-  0%,100%{opacity:.72;transform:translateY(0)}
-  50%{opacity:1;transform:translateY(-1px)}
-}
-@keyframes jawsNumberBreathe{
-  0%,100%{transform:scale(1);text-shadow:0 0 14px rgba(123,229,237,.14)}
-  50%{transform:scale(1.018);text-shadow:0 0 18px rgba(123,229,237,.27),0 0 35px rgba(28,141,164,.15)}
-}
-
-/* Result bar stays visually attached to the centered result section. */
-body.jawsOcean .barContainer{
-  width:100%!important;
-  margin:0 auto 26px!important;
-}
-body.jawsOcean .barContainer .bar{
-  transition:width .35s ease-out,filter .35s ease-out!important;
-  filter:drop-shadow(0 0 6px rgba(255,24,32,.18))!important;
-}
-
-/* JAWS-only text motion on the visible page. */
-body.jawsOcean .reactionMessage,
-body.jawsOcean .specialMessage,
-body.jawsOcean .cheaterMessage h2,
-body.jawsOcean .cheaterMessage p,
-body.jawsOcean .pageHeader h1,
-body.jawsOcean .pageHeader p,
-body.jawsOcean .sectionTitle,
-body.jawsOcean .chartTitle{
-  animation:jawsTextRise 4.8s ease-in-out infinite!important;
-}
-@keyframes jawsTextRise{
-  0%,100%{transform:translateY(0);opacity:.88}
-  50%{transform:translateY(-2px);opacity:1}
-}
-
-/* Keep the JAWS header logo compact on smaller screens too. */
-@media(max-width:720px){
-  body.jawsOcean header .logo{gap:6px!important}
-  body.jawsOcean .jawsOceanLogo{height:40px!important;margin-left:3px!important}
-  body.jawsOcean .jawsOceanLogo img{width:64px!important;height:38px!important}
-  body.jawsOcean .title h1{font-size:clamp(34px,8vw,46px)!important;letter-spacing:2px!important}
-  body.jawsOcean .title h1 span{margin-left:4px!important}
-  body.jawsOcean .cpsBox{min-height:235px!important;padding:30px 16px!important}
-}
-</style>
-
-<script id="pmJawsVisualRefreshFinal">
-(function(){
-  "use strict";
-
-  function refreshJawsVisuals(){
-    if(!document.body.classList.contains("jawsOcean"))return;
-    const logo=document.getElementById("jawsOceanLogo");
-    if(logo){
-      logo.style.display="inline-flex";
-      logo.style.alignItems="center";
-    }
-
-    const title=document.querySelector(".title h1");
-    if(title){
-      title.style.textAlign="center";
-      title.style.margin="0";
-    }
-    const sub=document.querySelector(".title p");
-    if(sub)sub.style.textAlign="center";
-
-    const box=document.querySelector(".jawsOcean .cpsBox");
-    if(box){
-      box.style.textAlign="center";
-      box.style.display="flex";
-      box.style.alignItems="center";
-      box.style.justifyContent="center";
-    }
-  }
-
-  setTimeout(refreshJawsVisuals,150);
-  setInterval(refreshJawsVisuals,1200);
-})();
-</script>
-
-
-<style id="pmJawsTrueUIOverhaul">
-/* =========================================================
-   JAWS OCEAN — TRUE UI OVERHAUL
-   This is intentionally more than a color theme:
-   layout, cards, typography, controls, navigation, and
-   animated ocean structure all change while equipped.
-========================================================= */
-
-/* --- Global shell --- */
-body.jawsOcean{
-  --jaws-ink:#e9fbfc;
-  --jaws-muted:#79aeb6;
-  --jaws-cyan:#63dce7;
-  --jaws-cyan2:#0c6e83;
-  --jaws-red:#ff1820;
-  --jaws-deep:#02080d;
-  --jaws-mid:#06232d;
-  --jaws-glass:rgba(4,25,34,.76);
-  background:
-    radial-gradient(ellipse at 50% -8%,rgba(119,198,214,.12),transparent 26%),
-    linear-gradient(180deg,#02060b 0 14%,#041725 30%,#063743 57%,#021923 100%)!important;
-}
-
-/* faint moving caustic bands */
-body.jawsOcean .container::before{
-  content:"";
-  position:fixed;inset:0;pointer-events:none;z-index:-1;
-  background:
-    repeating-linear-gradient(164deg,transparent 0 70px,rgba(113,229,239,.022) 72px 74px,transparent 76px 130px);
-  animation:jawsCaustics 16s linear infinite;
-}
-@keyframes jawsCaustics{
-  from{background-position:0 0}
-  to{background-position:0 260px}
-}
-
-/* --- Header becomes a compact ship/ocean control bar --- */
-body.jawsOcean header{
-  height:74px!important;
-  padding:0 24px!important;
-}
-body.jawsOcean header .logo{
-  min-width:0!important;
-  flex:1 1 auto!important;
-}
-body.jawsOcean header .logoWhite,
-body.jawsOcean header .logoRed{
-  font-size:24px!important;
-  letter-spacing:1.5px!important;
-}
-body.jawsOcean .jawsOceanLogo{
-  margin-left:12px!important;
-  padding-left:11px!important;
-  border-left:1px solid rgba(123,229,237,.22)!important;
-}
-body.jawsOcean .jawsOceanLogo::before{
-  content:"OCEAN UI";
-  margin-right:8px;
-  color:#6ca8b1;
-  font:900 8px/1 Arial,sans-serif;
-  letter-spacing:2px;
-}
-body.jawsOcean .jawsOceanLogo img{
-  width:76px!important;height:42px!important;
-}
-body.jawsOcean header .headerButtons{
-  gap:8px!important;
-}
-body.jawsOcean .headerButton{
-  border-radius:10px!important;
-  padding:9px 12px!important;
-  font-size:10px!important;
-  letter-spacing:1.3px!important;
-  text-transform:uppercase;
-}
-
-/* --- Navigation becomes horizontal ocean tabs --- */
-body.jawsOcean .nav{
-  position:relative!important;
-  display:flex!important;
-  justify-content:center!important;
-  gap:7px!important;
-  padding:12px 8px!important;
-  margin:0 auto 18px!important;
-  border:1px solid rgba(123,229,237,.12)!important;
-  border-radius:16px!important;
-  background:rgba(2,13,19,.54)!important;
-  box-shadow:0 14px 35px rgba(0,0,0,.18)!important;
-  backdrop-filter:blur(12px);
-}
-body.jawsOcean .navButton{
-  flex:0 0 auto!important;
-  min-width:95px!important;
-  border-radius:999px!important;
-  padding:10px 13px!important;
-  background:transparent!important;
-  border:1px solid transparent!important;
-  color:#78aab2!important;
-  font-size:10px!important;
-  font-weight:900!important;
-  letter-spacing:1.2px!important;
-  transition:.22s ease!important;
-}
-body.jawsOcean .navButton.selected{
-  color:#eaffff!important;
-  border-color:rgba(99,220,231,.48)!important;
-  background:linear-gradient(180deg,rgba(16,101,120,.5),rgba(6,47,59,.68))!important;
-  box-shadow:0 0 18px rgba(55,199,214,.14),inset 0 1px 0 rgba(255,255,255,.08)!important;
-}
-
-/* --- Title becomes a cinematic masthead --- */
-body.jawsOcean .title{
-  position:relative!important;
-  padding:24px 30px 22px!important;
-  margin-bottom:22px!important;
-  border:1px solid rgba(123,229,237,.16)!important;
-  border-radius:22px!important;
-  background:
-    linear-gradient(180deg,rgba(5,28,39,.78),rgba(3,15,22,.66))!important;
-  box-shadow:0 18px 44px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.03)!important;
-  overflow:hidden!important;
-}
-body.jawsOcean .title::before{
-  content:"";
-  position:absolute;left:-10%;top:0;width:120%;height:2px;
-  background:linear-gradient(90deg,transparent,#2bbfd1 26%,#ff1820 52%,#2bbfd1 74%,transparent);
-  opacity:.72;
-  animation:jawsMastheadLine 5s ease-in-out infinite;
-}
-@keyframes jawsMastheadLine{
-  0%,100%{transform:translateX(-8%);opacity:.4}
-  50%{transform:translateX(8%);opacity:1}
-}
-body.jawsOcean .title h1{
-  font-size:clamp(40px,5vw,70px)!important;
-  font-weight:1000!important;
-  letter-spacing:6px!important;
-  text-transform:uppercase!important;
-  text-shadow:0 8px 35px rgba(0,0,0,.35)!important;
-}
-body.jawsOcean .title h1 span{
-  color:#ff1820!important;
-  font-style:italic!important;
-}
-body.jawsOcean .title p{
-  font-size:11px!important;
-  letter-spacing:5px!important;
-  text-transform:uppercase!important;
-  color:#6fa9b2!important;
-}
-
-/* --- Stats become instrument modules --- */
-body.jawsOcean .stats{
-  display:grid!important;
-  grid-template-columns:repeat(3,minmax(0,1fr))!important;
-  gap:12px!important;
-  margin-bottom:22px!important;
-}
-body.jawsOcean .stat{
-  position:relative!important;
-  min-height:132px!important;
-  padding:22px 20px!important;
-  border-radius:18px!important;
-  background:
-    linear-gradient(180deg,rgba(7,36,47,.83),rgba(2,18,25,.9))!important;
-  border:1px solid rgba(99,220,231,.16)!important;
-  overflow:hidden!important;
-  text-align:left!important;
-}
-body.jawsOcean .stat::after{
-  content:"";
-  position:absolute;right:-40px;bottom:-55px;width:120px;height:120px;border-radius:50%;
-  border:1px solid rgba(99,220,231,.07);
-  box-shadow:0 0 0 16px rgba(99,220,231,.022),0 0 0 32px rgba(99,220,231,.014);
-}
-body.jawsOcean .statLabel{
-  display:block!important;
-  font-size:9px!important;
-  font-weight:900!important;
-  letter-spacing:2.5px!important;
-  color:#6ea9b1!important;
-}
-body.jawsOcean .statValue{
-  display:block!important;
-  margin-top:10px!important;
-  font-size:38px!important;
-  line-height:1!important;
-  font-weight:1000!important;
-  letter-spacing:-1px!important;
-  color:#ecffff!important;
-}
-body.jawsOcean .statHint{
-  margin-top:12px!important;
-  font-size:9px!important;
-  letter-spacing:1.5px!important;
-  color:#648e95!important;
-}
-
-/* --- CPS area becomes a large "deep water" test chamber --- */
-body.jawsOcean .cpsBox{
-  position:relative!important;
-  min-height:390px!important;
-  margin:0 0 18px!important;
-  padding:42px 28px!important;
-  border-radius:24px!important;
-  background:
-    radial-gradient(circle at 50% 6%,rgba(92,210,225,.11),transparent 27%),
-    linear-gradient(160deg,rgba(4,31,41,.9),rgba(1,10,16,.94))!important;
-  border:1px solid rgba(99,220,231,.19)!important;
-  box-shadow:
-    0 28px 65px rgba(0,0,0,.28),
-    inset 0 1px 0 rgba(255,255,255,.04)!important;
-  overflow:hidden!important;
-}
-body.jawsOcean .cpsBox::before{
-  content:"";
-  position:absolute;left:0;right:0;top:0;height:1px;
-  background:linear-gradient(90deg,transparent,#5cdce9,transparent);
-  opacity:.65;
-}
-body.jawsOcean .cpsBox::after{
-  content:"";
-  position:absolute;
-  left:-20%;right:-20%;bottom:24px;height:90px;
-  background:
-    radial-gradient(ellipse at 35% 50%,rgba(54,186,203,.08),transparent 35%),
-    radial-gradient(ellipse at 65% 40%,rgba(54,186,203,.07),transparent 32%);
-  animation:jawsDeepCurrent 7s ease-in-out infinite alternate;
-  pointer-events:none;
-}
-@keyframes jawsDeepCurrent{
-  from{transform:translateX(-4%);opacity:.6}
-  to{transform:translateX(4%);opacity:1}
-}
-body.jawsOcean .cpsStatus{
-  position:relative!important;
-  z-index:2!important;
-  font-size:11px!important;
-  letter-spacing:5px!important;
-  color:#ff1820!important;
-  text-transform:uppercase!important;
-}
-body.jawsOcean .cpsNumber{
-  position:relative!important;
-  z-index:2!important;
-  font-size:clamp(74px,10vw,150px)!important;
-  line-height:.86!important;
-  letter-spacing:-5px!important;
-  font-weight:1000!important;
-  color:#ecffff!important;
-}
-body.jawsOcean .cpsLabel{
-  position:relative!important;
-  z-index:2!important;
-  margin-top:16px!important;
-  font-size:12px!important;
-  letter-spacing:6px!important;
-  color:#6eaeb7!important;
-}
-
-/* --- Buttons become capsule controls instead of generic purple-style buttons --- */
-body.jawsOcean .pmActionButton,
-body.jawsOcean .shopButton,
-body.jawsOcean .applyTimeButton,
-body.jawsOcean .applyUIButton,
-body.jawsOcean button{
-  border-radius:12px!important;
-  padding:11px 16px!important;
-  font-weight:900!important;
-  letter-spacing:1.2px!important;
-  text-transform:uppercase!important;
-}
-body.jawsOcean .pmActionButton{
-  background:linear-gradient(135deg,#0e7288,#073b4b)!important;
-  border:1px solid rgba(99,220,231,.55)!important;
-  box-shadow:0 8px 22px rgba(11,107,128,.14),inset 0 1px 0 rgba(255,255,255,.08)!important;
-}
-body.jawsOcean .pmActionButton:hover{
-  transform:translateY(-1px)!important;
-  box-shadow:0 12px 28px rgba(11,107,128,.22),0 0 20px rgba(99,220,231,.13)!important;
-}
-
-/* --- Search / form controls become maritime instrument fields --- */
-body.jawsOcean input,
-body.jawsOcean textarea,
-body.jawsOcean select{
-  border-radius:12px!important;
-  background:rgba(2,16,22,.78)!important;
-  border:1px solid rgba(99,220,231,.18)!important;
-  color:#eaffff!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
-}
-body.jawsOcean input:focus,
-body.jawsOcean textarea:focus,
-body.jawsOcean select:focus{
-  border-color:rgba(99,220,231,.58)!important;
-  box-shadow:0 0 0 3px rgba(99,220,231,.07)!important;
-}
-
-/* --- Side shark pass: part of the UI composition, not just a theme background --- */
-body.jawsOcean .container::after{
-  content:"";
-  position:fixed;
-  left:-220px;
-  bottom:18%;
-  width:220px;height:62px;
-  z-index:1;pointer-events:none;
-  opacity:0;
-  border-radius:60% 46% 45% 52%;
-  background:linear-gradient(90deg,#01090f,#071920);
-  box-shadow:30px -16px 0 -13px #020b10;
-  animation:jawsMajorSharkPass 22s linear infinite;
-}
-@keyframes jawsMajorSharkPass{
-  0%,26%{left:-240px;opacity:0}
-  30%{opacity:.17}
-  58%{left:118vw;opacity:.21}
-  64%,100%{left:125vw;opacity:0}
-}
-
-/* --- Fine print / section text gets a different visual language --- */
-body.jawsOcean .sectionTitle,
-body.jawsOcean .chartTitle,
-body.jawsOcean .pageHeader h1{
-  letter-spacing:3px!important;
-  text-transform:uppercase!important;
-  font-weight:1000!important;
-}
-body.jawsOcean .pageHeader p{
-  color:#70a8b0!important;
-  letter-spacing:2px!important;
-}
-
-/* --- Responsive --- */
-@media(max-width:800px){
-  body.jawsOcean .stats{grid-template-columns:1fr!important}
-  body.jawsOcean .nav{overflow:auto;justify-content:flex-start}
-  body.jawsOcean .navButton{min-width:88px!important}
-  body.jawsOcean .title{padding:20px 16px!important}
-  body.jawsOcean .title h1{letter-spacing:3px!important}
-}
-</style>
-
-<script id="pmJawsAutoEffectOnUIEquip">
-(function(){
-  "use strict";
-  const JAWS_UI="ui_jaws_ocean";
-  const JAWS_EFFECT="border_jaws_ocean";
-
-  function active(){
-    return pmUserData?.equippedUI===JAWS_UI;
-  }
-  function available(){
-    return Date.now() < Date.parse("2026-08-23T23:59:59+05:30");
-  }
-
-  async function syncJawsEffect(){
-    if(!active() || !available())return;
-
-    /* JAWS UI owns its bundled profile effect automatically. */
-    if(pmUserData?.equippedBorder===JAWS_EFFECT)return;
-
-    try{
-      pmUserData={...(pmUserData||{}),equippedBorder:JAWS_EFFECT};
-
-      if(pmFirebaseReady&&pmAuthUser){
-        await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
-          equippedBorder:JAWS_EFFECT,
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true});
-      }
-
-      const avatarWrap=document.getElementById("pmProfileAvatar")?.closest(".pmAvatarWrap");
-      if(avatarWrap && typeof window.pmApplyBorderVideo==="function"){
-        window.pmApplyBorderVideo(avatarWrap,pmUserData);
-      }
-    }catch(e){
-      console.warn("JAWS bundled profile effect sync failed:",e);
-    }
-  }
-
-  /* Removing JAWS UI should no longer force the profile effect off.
-     It is the bundled effect of the JAWS UI while that UI is equipped,
-     so re-equipping JAWS restores it automatically. */
-  const baseEquip=window.pmEquipUI;
-  if(typeof baseEquip==="function"){
-    window.pmEquipUI=async function(id){
-      const result=await baseEquip.apply(this,arguments);
-      if(id===JAWS_UI && active())await syncJawsEffect();
-      return result;
-    };
-  }
-
-  /* Catch equip paths that update the state directly. */
-  let last="";
-  setInterval(()=>{
-    const now=pmUserData?.equippedUI||"";
-    if(now!==last){
-      last=now;
-      if(now===JAWS_UI)syncJawsEffect();
-    }
-  },350);
-
-  /* Refresh effect on initial load when JAWS is already equipped. */
-  setTimeout(()=>{if(active())syncJawsEffect()},900);
-})();
-</script>
-
-
-<style id="pmJawsLeaderboardCardEffect">
-/* JAWS profile effect belongs to the player's long leaderboard stats card,
-   never the PFP. */
-body.jawsOcean .pmLeaderboardRow.jawsSelfCard{
-  position:relative!important;
-  overflow:hidden!important;
-  isolation:isolate!important;
-  min-height:88px!important;
-  border-color:rgba(100,225,238,.62)!important;
-  background:
-    radial-gradient(ellipse at 15% 20%,rgba(87,219,234,.22),transparent 31%),
-    radial-gradient(ellipse at 88% 84%,rgba(7,94,118,.25),transparent 37%),
-    linear-gradient(135deg,#07313d 0%,#021721 58%,#063d4a 100%)!important;
-  box-shadow:
-    0 0 0 1px rgba(89,221,234,.08),
-    0 16px 38px rgba(0,0,0,.34),
-    inset 0 1px 0 rgba(215,252,255,.10)!important;
-}
-
-/* moving water streaks */
-body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsCardWater{
-  position:absolute;
-  inset:-50%;
-  z-index:0;
-  pointer-events:none;
-  opacity:.45;
-  background:
-    repeating-linear-gradient(
-      168deg,
-      transparent 0 30px,
-      rgba(145,239,246,.07) 32px 34px,
-      transparent 36px 70px
-    );
-  animation:jawsCardWaterMove 8s linear infinite;
-}
-@keyframes jawsCardWaterMove{
-  from{transform:translate3d(-4%,-2%,0)}
-  to{transform:translate3d(10%,10%,0)}
-}
-
-/* bubbles */
-body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsCardBubbles{
-  position:absolute;
-  inset:0;
-  z-index:1;
-  pointer-events:none;
-  background:
-    radial-gradient(circle at 12% 77%,rgba(215,253,255,.70) 0 2px,transparent 3px),
-    radial-gradient(circle at 29% 63%,rgba(215,253,255,.45) 0 1.5px,transparent 3px),
-    radial-gradient(circle at 57% 79%,rgba(215,253,255,.56) 0 2px,transparent 3px),
-    radial-gradient(circle at 78% 57%,rgba(215,253,255,.42) 0 1.5px,transparent 3px),
-    radial-gradient(circle at 92% 73%,rgba(215,253,255,.55) 0 2px,transparent 3px);
-  animation:jawsCardBubbleRise 7s ease-in-out infinite;
-}
-@keyframes jawsCardBubbleRise{
-  0%,100%{background-position:0 10px,0 12px,0 8px,0 14px,0 11px;opacity:.48}
-  50%{background-position:0 -20px,2px -24px,-2px -20px,2px -28px,-4px -18px;opacity:.95}
-}
-
-/* shark swimming through the card */
-body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsCardShark{
-  position:absolute;
-  left:-190px;
-  top:52%;
-  width:150px;
-  height:44px;
-  z-index:2;
-  pointer-events:none;
-  border-radius:58% 44% 48% 52%;
-  background:linear-gradient(90deg,#01090f,#0a1d24 55%,#031016);
-  opacity:0;
-  box-shadow:0 2px 16px rgba(0,0,0,.30);
-  animation:jawsCardSharkSwim 11s linear infinite;
-}
-body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsCardShark::before{
-  content:"";
-  position:absolute;
-  left:50px;
-  top:-34px;
-  width:0;height:0;
-  border-left:14px solid transparent;
-  border-right:8px solid transparent;
-  border-bottom:40px solid #07171d;
-}
-body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsCardShark::after{
-  content:"";
-  position:absolute;
-  left:-24px;
-  top:5px;
-  width:31px;height:31px;
-  background:#07171d;
-  clip-path:polygon(0 50%,100% 0,72% 50%,100% 100%);
-}
-@keyframes jawsCardSharkSwim{
-  0%,11%{left:-195px;opacity:0;transform:translateY(-50%) scale(.68)}
-  17%{opacity:.78}
-  40%{left:24%;opacity:.84;transform:translateY(-54%) scale(.82)}
-  63%{left:62%;opacity:.62;transform:translateY(-47%) scale(.75)}
-  80%{left:113%;opacity:0;transform:translateY(-50%) scale(.64)}
-  100%{left:120%;opacity:0}
-}
-
-/* put the actual stats/text above the animated effect */
-body.jawsOcean .pmLeaderboardRow.jawsSelfCard > *{
-  position:relative!important;
-  z-index:4!important;
-}
-
-/* only a tiny marker, not a new card or PFP decoration */
-body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsYouMarker{
-  display:inline-block;
-  margin-left:8px;
-  padding:3px 7px;
-  border-radius:999px;
-  border:1px solid rgba(109,228,238,.35);
-  color:#8aeaf1;
-  background:rgba(92,222,234,.08);
-  font:900 8px/1 Arial,sans-serif;
-  letter-spacing:1.2px;
-  vertical-align:middle;
-}
-</style>
-
-<script id="pmJawsLeaderboardEffectFinalPatch">
-(function(){
-  "use strict";
-
-  function clearOld(){
-    document.querySelectorAll(".pmJawsProfileEffect").forEach(el=>el.remove());
-    document.querySelectorAll(".jawsSelfCard").forEach(row=>{
-      row.classList.remove("jawsSelfCard");
-      row.querySelectorAll(".jawsCardWater,.jawsCardBubbles,.jawsCardShark,.jawsYouMarker").forEach(el=>el.remove());
-    });
-  }
-
-  function apply(){
-    clearOld();
-
-    if(!document.body.classList.contains("jawsOcean")) return;
-
-    const uid = window.pmAuthUser?.uid;
-    const box = document.getElementById("globalLeaderboard");
-    if(!uid || !box) return;
-
-    const rows = [...box.querySelectorAll(".pmLeaderboardRow")];
-
-    // The renderer gives each row its player id through this dataset.
-    const self = rows.find(r => r.dataset.pmPlayerId === uid);
-    if(!self) return;
-
-    self.classList.add("jawsSelfCard");
-
-    const water = document.createElement("div");
-    water.className = "jawsCardWater";
-    water.setAttribute("aria-hidden","true");
-
-    const bubbles = document.createElement("div");
-    bubbles.className = "jawsCardBubbles";
-    bubbles.setAttribute("aria-hidden","true");
-
-    const shark = document.createElement("div");
-    shark.className = "jawsCardShark";
-    shark.setAttribute("aria-hidden","true");
-
-    self.append(water,bubbles,shark);
-
-    const name = self.querySelector(".pmPlayerName");
-    if(name && !name.querySelector(".jawsYouMarker")){
-      const m = document.createElement("span");
-      m.className = "jawsYouMarker";
-      m.textContent = "YOUR STATS";
-      name.appendChild(m);
-    }
-  }
-
-  // Patch the existing renderer once, without changing its normal behavior.
-  if(typeof window.renderGlobalLeaderboard === "function" &&
-     !window.renderGlobalLeaderboard.__pmJawsSelfCard){
-    const base = window.renderGlobalLeaderboard;
-    const wrapped = function(rows){
-      const result = base.apply(this, arguments);
-
-      requestAnimationFrame(()=>{
-        const domRows = [...document.querySelectorAll("#globalLeaderboard .pmLeaderboardRow")];
-        (rows || []).forEach((player,i)=>{
-          const row = domRows[i];
-          if(row && player?.id) row.dataset.pmPlayerId = String(player.id);
-        });
-        apply();
-      });
-
-      return result;
-    };
-    wrapped.__pmJawsSelfCard = true;
-    window.renderGlobalLeaderboard = wrapped;
-  }
-
-  // Reapply after navigation/async leaderboard updates.
-  setInterval(apply,1000);
-  setTimeout(apply,300);
-  setTimeout(apply,1200);
-})();
-</script>
-
-
 <style id="pmFinalAdminAndJawsFix">
 /* =========================================================
    FINAL ADMIN COIN/BETA + JAWS SELF LEADERBOARD EFFECT
@@ -11515,64 +10427,64 @@ body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfMarker{
 </script>
 
 
-<!-- =========================================================
-     FINAL JAWS / GLOBAL PROFILE CLICK FIX
-     - No JAWS effect on PFPs
-     - JAWS effect lives on owner's long leaderboard card
-     - JAWS UI is a real My UI item with a working button
-     - Other My UI items are left untouched
-========================================================= -->
-<style id="pmJawsFinalInteractionFixStyle">
-/* Kill the old JAWS PFP overlay so it can never flicker over avatars. */
-.pmJawsProfileEffect{
+<style id="pmJawsLeaderboardProfileCardOnly">
+/* =========================================================
+   JAWS EFFECT — GLOBAL LEADERBOARD CARD ONLY
+   Nothing here touches profile-picture containers.
+========================================================= */
+
+/* Hard-disable any legacy PFP JAWS layer if an old DOM node is cached. */
+.pmJawsProfileEffect,
+[data-pm-jaws-effect],
+.pmJawsProfileEffectFinal{
   display:none!important;
   visibility:hidden!important;
   pointer-events:none!important;
 }
 
-/* The global leaderboard row remains a single stable clickable element. */
-#globalLeaderboard .pmLeaderboardRow{
-  cursor:pointer!important;
-}
-
-/* JAWS card effect: ONLY the owner's long leaderboard row. */
-#globalLeaderboard .pmLeaderboardRow.jawsOwnerLeaderboardCard{
+/* The owner's long leaderboard row becomes the JAWS "profile effect". */
+#globalLeaderboard .pmLeaderboardRow.pmJawsOwnerCard{
   position:relative!important;
   overflow:hidden!important;
   isolation:isolate!important;
-  border:1px solid rgba(86,220,235,.72)!important;
+  min-height:92px!important;
+  border:1px solid rgba(90,222,235,.72)!important;
   background:
-    radial-gradient(ellipse at 12% 18%,rgba(90,229,241,.24),transparent 31%),
-    radial-gradient(ellipse at 84% 86%,rgba(0,90,116,.30),transparent 40%),
-    linear-gradient(135deg,#073642 0%,#021823 55%,#064552 100%)!important;
+    radial-gradient(ellipse at 10% 20%,rgba(93,229,241,.24),transparent 30%),
+    radial-gradient(ellipse at 86% 88%,rgba(1,93,118,.28),transparent 39%),
+    linear-gradient(135deg,#073741 0%,#021823 55%,#064653 100%)!important;
   box-shadow:
     0 0 0 1px rgba(95,229,239,.08),
-    0 18px 42px rgba(0,0,0,.34),
+    0 18px 44px rgba(0,0,0,.34),
     inset 0 1px 0 rgba(225,255,255,.12)!important;
 }
-#globalLeaderboard .pmLeaderboardRow.jawsOwnerLeaderboardCard > *{
+#globalLeaderboard .pmLeaderboardRow.pmJawsOwnerCard > *{
   position:relative!important;
   z-index:8!important;
 }
-#globalLeaderboard .jawsOwnerWater{
+
+/* Moving water */
+#globalLeaderboard .pmJawsCardWater{
   position:absolute!important;
-  inset:-65%!important;
+  inset:-68%!important;
   z-index:0!important;
   pointer-events:none!important;
+  opacity:.52!important;
   background:repeating-linear-gradient(
     166deg,
     transparent 0 30px,
     rgba(160,242,248,.08) 32px 35px,
     transparent 37px 72px
   )!important;
-  opacity:.52!important;
-  animation:jawsOwnerWaterMove 8s linear infinite!important;
+  animation:pmJawsWaterFlow 8s linear infinite!important;
 }
-@keyframes jawsOwnerWaterMove{
-  from{transform:translate3d(-4%,-2%,0)}
+@keyframes pmJawsWaterFlow{
+  from{transform:translate3d(-4%,-3%,0)}
   to{transform:translate3d(10%,12%,0)}
 }
-#globalLeaderboard .jawsOwnerBubbles{
+
+/* Bubbles */
+#globalLeaderboard .pmJawsCardBubbles{
   position:absolute!important;
   inset:0!important;
   z-index:1!important;
@@ -11584,13 +10496,15 @@ body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfMarker{
     radial-gradient(circle at 79% 57%,rgba(223,255,255,.44) 0 1.5px,transparent 3px),
     radial-gradient(circle at 92% 74%,rgba(223,255,255,.60) 0 2px,transparent 3px);
   opacity:.5!important;
-  animation:jawsOwnerBubblesMove 6.5s ease-in-out infinite!important;
+  animation:pmJawsBubblesRise 6.5s ease-in-out infinite!important;
 }
-@keyframes jawsOwnerBubblesMove{
+@keyframes pmJawsBubblesRise{
   0%,100%{background-position:0 12px,0 10px,0 9px,0 14px,0 10px;opacity:.48}
   50%{background-position:0 -18px,3px -24px,-2px -18px,2px -27px,-4px -20px;opacity:.95}
 }
-#globalLeaderboard .jawsOwnerShark{
+
+/* Shark swimming through the stats card */
+#globalLeaderboard .pmJawsCardShark{
   position:absolute!important;
   left:-190px!important;
   top:56%!important;
@@ -11602,9 +10516,9 @@ body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfMarker{
   background:linear-gradient(90deg,#01090f,#091d24 58%,#031017)!important;
   box-shadow:0 2px 16px rgba(0,0,0,.30)!important;
   opacity:0!important;
-  animation:jawsOwnerSharkSwim 10.5s linear infinite!important;
+  animation:pmJawsCardSharkSwim 10.5s linear infinite!important;
 }
-#globalLeaderboard .jawsOwnerShark::before{
+#globalLeaderboard .pmJawsCardShark::before{
   content:""!important;
   position:absolute!important;
   left:48px!important;
@@ -11614,7 +10528,7 @@ body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfMarker{
   border-right:8px solid transparent!important;
   border-bottom:39px solid #07171d!important;
 }
-#globalLeaderboard .jawsOwnerShark::after{
+#globalLeaderboard .pmJawsCardShark::after{
   content:""!important;
   position:absolute!important;
   left:-23px!important;
@@ -11623,14 +10537,15 @@ body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfMarker{
   background:#07171d!important;
   clip-path:polygon(0 50%,100% 0,72% 50%,100% 100%)!important;
 }
-@keyframes jawsOwnerSharkSwim{
+@keyframes pmJawsCardSharkSwim{
   0%,11%{left:-195px;opacity:0;transform:translateY(-50%) scale(.68)}
   18%{opacity:.84}
   45%{left:31%;opacity:.84;transform:translateY(-53%) scale(.84)}
   68%{left:66%;opacity:.58;transform:translateY(-48%) scale(.76)}
   82%,100%{left:115%;opacity:0;transform:translateY(-50%) scale(.62)}
 }
-#globalLeaderboard .jawsOwnerMarker{
+
+#globalLeaderboard .pmJawsOwnerLabel{
   display:inline-block!important;
   margin-left:8px!important;
   padding:3px 7px!important;
@@ -11643,339 +10558,266 @@ body.jawsOcean .pmLeaderboardRow.jawsSelfCard .jawsSelfMarker{
   vertical-align:middle!important;
 }
 
-/* My UI JAWS card */
-#pmMyUIList .pmFinalJawsUICard{
-  border-color:rgba(100,220,235,.55)!important;
-  background:linear-gradient(145deg,rgba(4,42,54,.86),rgba(2,15,22,.94))!important;
+/* JAWS card in My UI */
+#pmMyUIList .pmJawsUiRepairCard{
+  border-color:rgba(91,220,235,.55)!important;
+  background:linear-gradient(145deg,rgba(4,40,53,.88),rgba(2,15,22,.95))!important;
 }
-#pmMyUIList .pmFinalJawsUICard .pmFinalJawsPreview{
-  position:relative!important;
-  overflow:hidden!important;
-  background:linear-gradient(#042d39,#03141d)!important;
-  display:grid!important;
-  place-items:center!important;
-}
-#pmMyUIList .pmFinalJawsUICard .pmFinalJawsPreview::before{
-  content:""!important;
-  position:absolute!important;
-  width:95px!important;height:26px!important;
-  border-radius:60%!important;
-  background:#020d13!important;
-  right:16px!important;bottom:18px!important;
-  opacity:.72!important;
-}
-#pmMyUIList .pmFinalJawsUICard .pmFinalJawsPreview::after{
-  content:""!important;
-  position:absolute!important;
-  right:57px!important;bottom:38px!important;
-  border-left:9px solid transparent!important;
-  border-right:5px solid transparent!important;
-  border-bottom:25px solid #020d13!important;
-}
-#pmMyUIList .pmFinalJawsUICard img{
-  position:relative!important;
-  z-index:2!important;
-  max-width:92%!important;
-  max-height:90%!important;
-  object-fit:contain!important;
-  filter:drop-shadow(0 0 4px rgba(255,20,25,.5))!important;
-}
-#pmMyUIList .pmFinalJawsUICard button{
+#pmMyUIList .pmJawsUiRepairCard button{
   pointer-events:auto!important;
   cursor:pointer!important;
   opacity:1!important;
 }
+#pmMyUIList .pmJawsUiRepairPreview{
+  position:relative!important;
+  display:grid!important;
+  place-items:center!important;
+  overflow:hidden!important;
+  background:linear-gradient(#053443,#03151e)!important;
+}
+#pmMyUIList .pmJawsUiRepairPreview::before{
+  content:""!important;
+  position:absolute!important;
+  right:18px!important;
+  bottom:18px!important;
+  width:88px!important;
+  height:25px!important;
+  border-radius:60%!important;
+  background:#020c12!important;
+  opacity:.75!important;
+}
+#pmMyUIList .pmJawsUiRepairPreview::after{
+  content:""!important;
+  position:absolute!important;
+  right:57px!important;
+  bottom:39px!important;
+  border-left:9px solid transparent!important;
+  border-right:5px solid transparent!important;
+  border-bottom:25px solid #020c12!important;
+}
 </style>
 
-<script id="pmJawsFinalInteractionFixScript">
+<script id="pmJawsLeaderboardProfileCardOnlyScript">
 (function(){
   "use strict";
 
-  const JAWS_ID="ui_jaws_ocean";
-  const EFFECT_ID="border_jaws_ocean";
+  const JAWS_UI_ID="ui_jaws_ocean";
+  const JAWS_BORDER_ID="border_jaws_ocean";
+  const EXPIRY=Date.parse("2026-08-23T23:59:59+05:30");
 
   function jawsOwned(){
-    return !!(
-      window.pmUserData &&
-      Array.isArray(window.pmUserData.ownedCosmetics) &&
-      window.pmUserData.ownedCosmetics.includes(JAWS_ID)
-    );
+    return typeof pmOwn==="function" && pmOwn(JAWS_UI_ID);
   }
-
   function jawsEquipped(){
-    return window.pmUserData?.equippedUI===JAWS_ID;
+    return pmUserData?.equippedUI===JAWS_UI_ID;
   }
 
-  /* ---------- permanently suppress the old PFP JAWS effect ---------- */
-  function stripJawsPfpEffects(){
-    document.querySelectorAll(".pmJawsProfileEffect").forEach(el=>el.remove());
+  /* ---------- Remove the old PFP effect permanently ---------- */
+  async function removeLegacyPfpEffect(){
+    document.querySelectorAll(".pmJawsProfileEffect,[data-pm-jaws-effect]").forEach(x=>x.remove());
 
-    const ownAvatar=document.getElementById("pmProfileAvatar")?.parentElement;
-    ownAvatar?.querySelectorAll(".pmJawsProfileEffect").forEach(el=>el.remove());
-
-    const publicAvatar=document.getElementById("pmPublicAvatar")?.parentElement;
-    publicAvatar?.querySelectorAll(".pmJawsProfileEffect").forEach(el=>el.remove());
+    if(pmUserData?.equippedBorder===JAWS_BORDER_ID){
+      pmUserData.equippedBorder="";
+      if(pmFirebaseReady&&pmAuthUser){
+        try{
+          await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
+            equippedBorder:"",
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+          },{merge:true});
+        }catch(e){
+          console.warn("Could not clear old JAWS PFP effect:",e);
+        }
+      }
+    }
   }
 
-  /* Keep old wrapper chains from re-adding the PFP effect. */
-  function neutralizeBorderRenderer(){
-    if(typeof window.pmApplyBorderVideo!=="function")return;
-    if(window.pmApplyBorderVideo.__pmFinalNoJawsPfp)return;
-
-    const base=window.pmApplyBorderVideo;
-    const wrapped=function(container,data){
-      const result=base.apply(this,arguments);
-      container?.querySelectorAll?.(".pmJawsProfileEffect").forEach(el=>el.remove());
-      return result;
-    };
-    wrapped.__pmFinalNoJawsPfp=true;
-    window.pmApplyBorderVideo=wrapped;
-  }
-
-  /* ---------- real JAWS UI equip ---------- */
-  async function equipJawsDirect(){
-    if(!window.pmFirebaseReady || !window.pmAuthUser || !window.pmUserData){
+  /* ---------- Make the actual My UI JAWS button work ---------- */
+  async function equipJawsFromMyUI(){
+    if(!pmFirebaseReady||!pmAuthUser||!pmUserData){
       alert("Your online account is not connected yet.");
-      return false;
+      return;
     }
     if(!jawsOwned()){
-      alert("Buy the JAWS Ocean UI from the Shop first.");
-      return false;
+      alert("Buy the JAWS Ocean UI first.");
+      return;
     }
 
-    const next=jawsEquipped() ? "default" : JAWS_ID;
+    const next=jawsEquipped()?"default":JAWS_UI_ID;
 
     try{
-      /* Update local state first. */
-      window.pmUserData.equippedUI=next;
+      pmUserData={...pmUserData,equippedUI:next};
 
-      if(typeof window.pmApplyEquippedUI==="function")window.pmApplyEquippedUI();
-      if(typeof window.pmRenderCollection==="function")window.pmRenderCollection();
+      await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
+        equippedUI:next,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      },{merge:true});
 
-      await firebase.firestore()
-        .collection("users")
-        .doc(pmAuthUser.uid)
-        .set({
-          equippedUI:next,
-          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-        },{merge:true});
+      if(typeof pmLoadOwnProfile==="function")await pmLoadOwnProfile();
+      if(typeof pmApplyEquippedUI==="function")pmApplyEquippedUI();
 
-      /* Refresh persisted state once, then redraw exactly once. */
-      if(typeof window.pmLoadOwnProfile==="function"){
-        await window.pmLoadOwnProfile();
-      }
-      if(typeof window.pmApplyEquippedUI==="function")window.pmApplyEquippedUI();
-      ensureFinalJawsUICard();
-      decorateOwnLeaderboardCard();
-      return true;
+      repairJawsUiCard();
+      renderJawsOwnerCard();
     }catch(err){
-      console.error("Final JAWS equip failed:",err);
-      try{
-        if(typeof window.pmLoadOwnProfile==="function")await window.pmLoadOwnProfile();
-      }catch(_){}
-      alert("Could not change your JAWS UI.");
-      return false;
+      console.error("JAWS UI equip failed:",err);
+      try{if(typeof pmLoadOwnProfile==="function")await pmLoadOwnProfile();}catch(_){}
+      alert("Could not change the JAWS UI.");
     }
   }
-  window.pmFinalEquipJaws=equpJawsDirectSafe;
-  function equpJawsDirectSafe(){
-    return equipJawsDirect();
-  }
 
-  /* ---------- My UI: remove the wrong standalone PFP effect card and
-     replace it with a proper JAWS UI item. ---------- */
-  function ensureFinalJawsUICard(){
+  function repairJawsUiCard(){
     const box=document.getElementById("pmMyUIList");
     if(!box)return;
 
-    box.querySelectorAll('[data-pm-jaws-effect="1"],.pmJawsProfileEffectCollectionCard')
-      .forEach(el=>el.remove());
+    /* Delete old standalone profile-effect card. */
+    box.querySelectorAll(
+      '[data-pm-jaws-effect="1"],.pmJawsProfileEffectCollectionCard'
+    ).forEach(x=>x.remove());
 
-    let card=box.querySelector(".pmFinalJawsUICard");
+    /* Remove only stale duplicate JAWS repair cards. */
+    const cards=[...box.querySelectorAll(".pmJawsUiRepairCard")];
+    cards.slice(1).forEach(x=>x.remove());
+
+    let card=cards[0];
+
+    /* Prefer the official JAWS UI card created by the JAWS theme script. */
+    if(!card){
+      card=box.querySelector('[data-pm-jaws-ui="1"]');
+    }
+
     if(!card){
       card=document.createElement("div");
-      card.className="pmCollectionItem pmFinalJawsUICard";
+      card.className="pmCollectionItem pmJawsUiRepairCard";
       card.innerHTML=`
-        <div class="pmCollectionPreview pmFinalJawsPreview">
-          <img alt="JAWS">
-        </div>
+        <div class="pmCollectionPreview pmJawsUiRepairPreview"></div>
         <div class="pmCollectionItemTitle">JAWS OCEAN UI</div>
-        <div class="pmCollectionItemSub">COMPLETE UI OVERHAUL • INCLUDED SHARK LEADERBOARD EFFECT</div>
+        <div class="pmCollectionItemSub">COMPLETE UI OVERHAUL • LIMITED-TIME UI</div>
         <button type="button" class="pmActionButton"></button>
         <div class="pmCollectionStatus"></div>`;
       box.appendChild(card);
-      card.querySelector("button").addEventListener("click",function(e){
-        e.preventDefault();
-        e.stopPropagation();
-        equipJawsDirect();
-      },true);
     }
 
-    /* Pull the already-defined JAWS logo from the actual JAWS theme script
-       through the shop preview if available; otherwise use text only. */
-    const img=card.querySelector("img");
-    const source=document.querySelector(".pmJawsShopLogo");
-    if(img){
-      if(source?.src)img.src=source.src;
-      else img.removeAttribute("src");
-    }
+    card.classList.add("pmJawsUiRepairCard");
 
+    const owned=jawsOwned();
+    const eq=jawsEquipped();
     const button=card.querySelector("button");
     const status=card.querySelector(".pmCollectionStatus");
-    const eq=jawsEquipped();
-    const owned=jawsOwned();
 
-    button.disabled=!owned;
-    button.removeAttribute("disabled");
-    button.style.pointerEvents="auto";
-    button.style.cursor="pointer";
-    button.textContent=eq?"UNEQUIP":owned?"EQUIP":"NOT OWNED";
-    button.className="pmActionButton"+(eq?" pmSecondaryButton":"");
-
-    card.classList.toggle("equipped",eq);
-    status.textContent=eq?"EQUIPPED":"AVAILABLE";
-    status.className="pmCollectionStatus"+(eq?" equippedText":"");
+    if(button){
+      button.disabled=!owned;
+      if(owned)button.removeAttribute("disabled");
+      button.style.pointerEvents="auto";
+      button.style.cursor="pointer";
+      button.style.opacity="1";
+      button.textContent=eq?"UNEQUIP":owned?"EQUIP":"NOT OWNED";
+      button.className="pmActionButton"+(eq?" pmSecondaryButton":"");
+    }
+    if(status){
+      status.textContent=eq?"EQUIPPED":owned?"AVAILABLE":"NOT OWNED";
+      status.className="pmCollectionStatus"+(eq?" equippedText":"");
+    }
   }
 
-  /* Capture phase gives the JAWS button one authoritative handler, even if
-     an older renderer attached a broken/disabled handler to the same card. */
+  /* Capture phase catches the click even when an old handler was attached.
+     Disabled state is removed for owned JAWS immediately before click. */
   document.addEventListener("click",function(e){
-    const button=e.target.closest?.("#pmMyUIList .pmFinalJawsUICard button");
-    if(!button)return;
+    const b=e.target.closest?.('#pmMyUIList [data-pm-jaws-ui="1"] button,#pmMyUIList .pmJawsUiRepairCard button');
+    if(!b)return;
+    if(!jawsOwned())return;
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
-    equipJawsDirect();
+    equipJawsFromMyUI();
   },true);
 
-  /* ---------- owner's GLOBAL LEADERBOARD card effect ---------- */
-  function clearOwnEffect(){
-    document.querySelectorAll("#globalLeaderboard .jawsOwnerLeaderboardCard").forEach(row=>{
-      row.classList.remove("jawsOwnerLeaderboardCard");
-      row.querySelectorAll(".jawsOwnerWater,.jawsOwnerBubbles,.jawsOwnerShark,.jawsOwnerMarker")
-        .forEach(el=>el.remove());
+  /* ---------- Global leaderboard card effect ---------- */
+  function clearCardEffect(){
+    document.querySelectorAll("#globalLeaderboard .pmJawsOwnerCard").forEach(row=>{
+      row.classList.remove("pmJawsOwnerCard");
+      row.querySelectorAll(".pmJawsCardWater,.pmJawsCardBubbles,.pmJawsCardShark,.pmJawsOwnerLabel")
+        .forEach(x=>x.remove());
     });
-
-    /* Remove old competing effect classes/elements. */
-    document.querySelectorAll("#globalLeaderboard .jawsSelfCard,#globalLeaderboard .jawsSelfProfileEffect")
-      .forEach(row=>{
-        row.classList.remove("jawsSelfCard","jawsSelfProfileEffect");
-        row.querySelectorAll(
-          ".jawsSelfWater,.jawsSelfBubbles,.jawsSelfShark,.jawsSelfMarker,"+
-          ".jawsCardWaterFX,.jawsCardBubblesFX,.jawsCardSharkFX,.jawsYouLabelFX"
-        ).forEach(el=>el.remove());
-      });
   }
 
-  function decorateOwnLeaderboardCard(){
-    clearOwnEffect();
+  function renderJawsOwnerCard(rows=null){
+    clearCardEffect();
     if(!jawsEquipped())return;
 
     const box=document.getElementById("globalLeaderboard");
-    const uid=window.pmAuthUser?.uid;
-    const me=window.pmUserData||{};
-    if(!box || !uid)return;
+    const uid=pmAuthUser?.uid;
+    if(!box||!uid)return;
 
-    const username=String(me.username||"").trim().toLowerCase();
-    const rows=[...box.querySelectorAll(".pmLeaderboardRow")];
+    const domRows=[...box.querySelectorAll(".pmLeaderboardRow")];
+    let row=null;
 
-    let row=rows.find(r=>String(r.dataset.pmJawsPlayerId||"")===String(uid));
-
-    /* Fallback to the visible username. */
-    if(!row && username){
-      row=rows.find(r=>{
-        const name=r.querySelector(".pmPlayerName");
-        return name && name.textContent.trim().toLowerCase().startsWith(username);
-      });
+    if(Array.isArray(rows)&&rows.length){
+      const index=rows.findIndex(p=>String(p?.id||"")===String(uid));
+      if(index>=0)row=domRows[index];
     }
+
+    if(!row){
+      row=domRows.find(r=>String(r.dataset.pmJawsPlayerId||"")===String(uid));
+    }
+
+    if(!row){
+      const username=String(pmUserData?.username||"").trim().toLowerCase();
+      if(username){
+        row=domRows.find(r=>{
+          const n=r.querySelector(".pmPlayerName");
+          return n && n.textContent.trim().toLowerCase().startsWith(username);
+        });
+      }
+    }
+
     if(!row)return;
 
-    row.classList.add("jawsOwnerLeaderboardCard");
+    row.classList.add("pmJawsOwnerCard");
 
     const water=document.createElement("div");
-    water.className="jawsOwnerWater";
+    water.className="pmJawsCardWater";
     const bubbles=document.createElement("div");
-    bubbles.className="jawsOwnerBubbles";
+    bubbles.className="pmJawsCardBubbles";
     const shark=document.createElement("div");
-    shark.className="jawsOwnerShark";
+    shark.className="pmJawsCardShark";
 
-    water.setAttribute("aria-hidden","true");
-    bubbles.setAttribute("aria-hidden","true");
-    shark.setAttribute("aria-hidden","true");
-
+    [water,bubbles,shark].forEach(x=>x.setAttribute("aria-hidden","true"));
     row.append(water,bubbles,shark);
 
     const name=row.querySelector(".pmPlayerName");
-    if(name && !name.querySelector(".jawsOwnerMarker")){
-      const marker=document.createElement("span");
-      marker.className="jawsOwnerMarker";
-      marker.textContent="JAWS • YOUR STATS";
-      name.appendChild(marker);
+    if(name&&!name.querySelector(".pmJawsOwnerLabel")){
+      const label=document.createElement("span");
+      label.className="pmJawsOwnerLabel";
+      label.textContent="JAWS • YOUR STATS";
+      name.appendChild(label);
     }
   }
 
-  /* ---------- stable leaderboard click fix ----------
-     Reassert exactly one stable onclick on each row after rendering. */
-  function fixLeaderboardClicks(){
-    document.querySelectorAll("#globalLeaderboard .pmLeaderboardRow").forEach(row=>{
-      const uid=row.dataset.pmJawsPlayerId;
-      if(!uid)return;
-      if(row.dataset.pmFinalClickBound==="1")return;
-      row.dataset.pmFinalClickBound="1";
-      row.addEventListener("click",function(e){
-        if(e.defaultPrevented)return;
-        const target=e.target;
-        if(target.closest?.("button,a,input,select,textarea"))return;
-        if(typeof window.openPublicProfile==="function"){
-          window.openPublicProfile(uid);
-        }
-      });
-    });
-  }
-
-  /* Patch the global renderer only to tag rows with their real UID. */
-  function hookLeaderboardRenderer(){
-    if(typeof window.renderGlobalLeaderboard!=="function")return;
-    if(window.renderGlobalLeaderboard.__pmFinalJawsOwnerHook)return;
-
+  /* Tag rows with their real UID and then apply the effect. */
+  if(typeof window.renderGlobalLeaderboard==="function" &&
+     !window.renderGlobalLeaderboard.__pmJawsCardFinal){
     const base=window.renderGlobalLeaderboard;
     const wrapped=function(rows){
       const result=base.apply(this,arguments);
       requestAnimationFrame(()=>{
-        const domRows=[...document.querySelectorAll("#globalLeaderboard .pmLeaderboardRow")];
-        (rows||[]).forEach((player,index)=>{
-          const row=domRows[index];
-          if(row && player?.id){
-            row.dataset.pmJawsPlayerId=String(player.id);
-          }
+        const dom=[...document.querySelectorAll("#globalLeaderboard .pmLeaderboardRow")];
+        (rows||[]).forEach((player,i)=>{
+          if(dom[i]&&player?.id)dom[i].dataset.pmJawsPlayerId=String(player.id);
         });
-        fixLeaderboardClicks();
-        decorateOwnLeaderboardCard();
+        renderJawsOwnerCard(rows);
       });
       return result;
     };
-    wrapped.__pmFinalJawsOwnerHook=true;
+    wrapped.__pmJawsCardFinal=true;
     window.renderGlobalLeaderboard=wrapped;
   }
 
-  /* React to Firebase/account and navigation changes without rewriting the
-     leaderboard repeatedly. */
-  setInterval(function(){
-    neutralizeBorderRenderer();
-    stripJawsPfpEffects();
-    ensureFinalJawsUICard();
-    hookLeaderboardRenderer();
-    fixLeaderboardClicks();
-    decorateOwnLeaderboardCard();
-  },800);
+  function sync(){
+    removeLegacyPfpEffect();
+    repairJawsUiCard();
+    renderJawsOwnerCard();
+  }
 
-  setTimeout(function(){
-    neutralizeBorderRenderer();
-    stripJawsPfpEffects();
-    ensureFinalJawsUICard();
-    hookLeaderboardRenderer();
-    fixLeaderboardClicks();
-    decorateOwnLeaderboardCard();
-  },300);
+  setTimeout(sync,300);
+  setInterval(sync,900);
 })();
 </script>
