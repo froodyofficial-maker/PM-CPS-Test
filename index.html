@@ -6172,7 +6172,12 @@ function renderGlobalLeaderboard(rows){
         info.append(name,sub);playerEl.append(avatarBox,info);
         const best=document.createElement("div");best.className="pmScore";best.textContent=Number(player.publicHighestCPS||0).toFixed(2);
         const avg=document.createElement("div");avg.className="pmScore";avg.textContent=Number(player.publicAverageCPS||0).toFixed(2);
-        row.setAttribute("data-jaws-ocean-card",document.body.classList.contains("jawsOcean")?"true":"false");row.append(rank,playerEl,best,avg);box.appendChild(row);
+        row.setAttribute("data-jaws-ocean-card",document.body.classList.contains("jawsOcean")?"true":"false");
+        row.dataset.pmPlayerId=String(player.id||"");
+        row.dataset.pmPlayerEquippedUI=String(player.equippedUI||"");
+        row.append(rank,playerEl,best,avg);
+        box.appendChild(row);
+        pmApplyPublicJawsCardEffect(row,player);
     });
 }
 
@@ -11683,237 +11688,245 @@ body.jawsOcean #globalLeaderboard .pmLeaderboardRow:hover{
 }
 </style>
 
-<script id="pmJawsClassicFinal">
+
+
+<style id="pmJawsPublicEffectFinal">
+/* =========================================================
+   PUBLIC JAWS LEADERBOARD EFFECT
+   The effect is stored on the player's account, so EVERY viewer
+   sees it. It never depends on the viewer's equipped UI.
+========================================================= */
+#globalLeaderboard .jawsPublicCard{
+  position:relative!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  border-color:rgba(90,222,235,.62)!important;
+  background:
+    radial-gradient(ellipse at 11% 18%,rgba(90,229,241,.20),transparent 30%),
+    radial-gradient(ellipse at 86% 88%,rgba(0,90,116,.25),transparent 38%),
+    linear-gradient(135deg,#073642 0%,#021823 55%,#064552 100%)!important;
+  box-shadow:
+    0 0 0 1px rgba(95,229,239,.07),
+    0 12px 30px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(225,255,255,.08)!important;
+}
+#globalLeaderboard .jawsPublicCard > *{
+  position:relative!important;
+  z-index:8!important;
+}
+#globalLeaderboard .jawsPublicWater{
+  position:absolute!important;
+  inset:-65%!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  opacity:.36!important;
+  background:repeating-linear-gradient(
+    166deg,
+    transparent 0 28px,
+    rgba(160,242,248,.065) 30px 33px,
+    transparent 35px 68px
+  )!important;
+  animation:jawsPublicWaterMove 9s linear infinite!important;
+}
+@keyframes jawsPublicWaterMove{
+  from{transform:translate3d(-3%,-1%,0)}
+  to{transform:translate3d(8%,8%,0)}
+}
+#globalLeaderboard .jawsPublicBubbles{
+  position:absolute!important;
+  inset:0!important;
+  z-index:1!important;
+  pointer-events:none!important;
+  opacity:.38!important;
+  background:
+    radial-gradient(circle at 12% 80%,rgba(223,255,255,.65) 0 2px,transparent 3px),
+    radial-gradient(circle at 28% 67%,rgba(223,255,255,.40) 0 1.5px,transparent 3px),
+    radial-gradient(circle at 59% 79%,rgba(223,255,255,.48) 0 2px,transparent 3px),
+    radial-gradient(circle at 79% 56%,rgba(223,255,255,.35) 0 1.5px,transparent 3px);
+  animation:jawsPublicBubblesMove 7s ease-in-out infinite!important;
+}
+@keyframes jawsPublicBubblesMove{
+  0%,100%{background-position:0 8px,0 8px,0 8px,0 10px;opacity:.34}
+  50%{background-position:0 -14px,2px -18px,-2px -16px,0 -20px;opacity:.68}
+}
+#globalLeaderboard .jawsPublicShark{
+  position:absolute!important;
+  left:-175px!important;
+  top:58%!important;
+  width:118px!important;
+  height:32px!important;
+  z-index:2!important;
+  pointer-events:none!important;
+  border-radius:58% 44% 48% 52%!important;
+  background:linear-gradient(90deg,#01090f,#091d24 58%,#031017)!important;
+  opacity:0!important;
+  animation:jawsPublicSharkMove 12s linear infinite!important;
+}
+#globalLeaderboard .jawsPublicShark::before{
+  content:""!important;
+  position:absolute!important;
+  left:40px!important;
+  top:-25px!important;
+  width:0!important;
+  height:0!important;
+  border-left:11px solid transparent!important;
+  border-right:6px solid transparent!important;
+  border-bottom:30px solid #07171d!important;
+}
+#globalLeaderboard .jawsPublicShark::after{
+  content:""!important;
+  position:absolute!important;
+  left:-20px!important;
+  top:4px!important;
+  width:26px!important;
+  height:26px!important;
+  background:#07171d!important;
+  clip-path:polygon(0 50%,100% 0,72% 50%,100% 100%)!important;
+}
+@keyframes jawsPublicSharkMove{
+  0%,15%{left:-175px;opacity:0;transform:translateY(-50%) scale(.66)}
+  22%{opacity:.58}
+  48%{left:34%;opacity:.62;transform:translateY(-52%) scale(.76)}
+  69%{left:70%;opacity:.42}
+  84%,100%{left:116%;opacity:0}
+}
+#globalLeaderboard .jawsPublicMarker{
+  display:inline-block!important;
+  margin-left:7px!important;
+  padding:3px 6px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(118,231,240,.28)!important;
+  background:rgba(90,222,235,.06)!important;
+  color:#91dbe2!important;
+  font:900 8px/1 Arial,sans-serif!important;
+  letter-spacing:1.1px!important;
+  vertical-align:middle!important;
+}
+
+/* Keep the leaderboard row itself stable/clickable. */
+#globalLeaderboard .pmLeaderboardRow,
+#globalLeaderboard .pmLeaderboardRow:hover,
+#globalLeaderboard .pmLeaderboardRow:focus,
+#globalLeaderboard .pmLeaderboardRow:active{
+  cursor:pointer!important;
+}
+#globalLeaderboard .jawsPublicWater,
+#globalLeaderboard .jawsPublicBubbles,
+#globalLeaderboard .jawsPublicShark{
+  pointer-events:none!important;
+}
+</style>
+
+<script id="pmJawsPublicEffectFinalScript">
 (function(){
   "use strict";
+  const JAWS_UI_ID="ui_jaws_ocean";
 
-  const JAWS_ID="ui_jaws_ocean";
-
-  function ownsJaws(){
-    const d=window.pmUserData||{};
-    return Array.isArray(d.ownedCosmetics) && d.ownedCosmetics.includes(JAWS_ID);
-  }
-  function equipped(){
-    return window.pmUserData?.equippedUI===JAWS_ID;
-  }
-
-  /* ---------- remove all old JAWS PFP effect artifacts ---------- */
-  function cleanPfpArtifacts(){
-    document.querySelectorAll(".pmJawsProfileEffect,.pmJawsProfileEffectCollectionCard")
+  function cleanRow(row){
+    if(!row)return;
+    row.classList.remove("jawsPublicCard");
+    row.querySelectorAll(".jawsPublicWater,.jawsPublicBubbles,.jawsPublicShark,.jawsPublicMarker")
       .forEach(el=>el.remove());
   }
 
-  /* ---------- JAWS owner leaderboard effect
-     IMPORTANT: no row height/min-height overrides. This means the card is
-     exactly the same size as everyone else's card. ---------- */
-  function clearClassicOwnerCard(){
-    document.querySelectorAll("#globalLeaderboard .jawsClassicOwnerCard")
-      .forEach(row=>{
-        row.classList.remove("jawsClassicOwnerCard");
-        row.querySelectorAll(
-          ".jawsClassicOwnerWater,.jawsClassicOwnerBubbles,.jawsClassicOwnerShark,.jawsClassicOwnerMarker"
-        ).forEach(el=>el.remove());
-      });
-  }
-
-  function applyClassicOwnerCard(){
-    if(!equipped())return;
-    const box=document.getElementById("globalLeaderboard");
-    const uid=window.pmAuthUser?.uid;
-    if(!box||!uid)return;
-
-    let row=box.querySelector(
-      '.pmLeaderboardRow[data-pmPlayerId="'+CSS.escape(String(uid))+'"]'
-    );
-    if(!row){
-      row=[...box.querySelectorAll(".pmLeaderboardRow")].find(r=>
-        String(r.dataset.pmPlayerId||"")===String(uid)
-      );
-    }
-    if(!row){
-      const username=String(window.pmUserData?.username||"").trim().toLowerCase();
-      if(username){
-        row=[...box.querySelectorAll(".pmLeaderboardRow")].find(r=>{
-          const n=r.querySelector(".pmPlayerName");
-          return n && n.textContent.trim().toLowerCase().startsWith(username);
-        });
-      }
-    }
+  function pmApplyPublicJawsCardEffect(row,player){
     if(!row)return;
+    cleanRow(row);
 
-    if(row.classList.contains("jawsClassicOwnerCard"))return;
+    // IMPORTANT: This checks the PLAYER'S stored equipped UI, not the viewer's.
+    // Therefore every person looking at the leaderboard sees the effect.
+    if(String(player?.equippedUI||"")!==JAWS_UI_ID)return;
 
-    clearClassicOwnerCard();
-    row.classList.add("jawsClassicOwnerCard");
+    row.classList.add("jawsPublicCard");
 
     const water=document.createElement("div");
-    water.className="jawsClassicOwnerWater";
-    water.style.cssText=`
-      position:absolute;inset:-55%;z-index:0;pointer-events:none;opacity:.38;
-      background:repeating-linear-gradient(166deg,transparent 0 28px,
-      rgba(155,241,247,.065) 30px 33px,transparent 35px 68px);
-      animation:jawsClassicWater 9s linear infinite;
-    `;
-
+    water.className="jawsPublicWater";
     const bubbles=document.createElement("div");
-    bubbles.className="jawsClassicOwnerBubbles";
-    bubbles.style.cssText=`
-      position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.45;
-      background:
-      radial-gradient(circle at 12% 80%,rgba(223,255,255,.65) 0 2px,transparent 3px),
-      radial-gradient(circle at 28% 67%,rgba(223,255,255,.40) 0 1.5px,transparent 3px),
-      radial-gradient(circle at 59% 79%,rgba(223,255,255,.48) 0 2px,transparent 3px),
-      radial-gradient(circle at 79% 56%,rgba(223,255,255,.35) 0 1.5px,transparent 3px);
-      animation:jawsClassicBubbles 7s ease-in-out infinite;
-    `;
-
+    bubbles.className="jawsPublicBubbles";
     const shark=document.createElement("div");
-    shark.className="jawsClassicOwnerShark";
-    shark.style.cssText=`
-      position:absolute;left:-170px;top:58%;width:118px;height:32px;z-index:2;
-      pointer-events:none;border-radius:58% 44% 48% 52%;
-      background:linear-gradient(90deg,#01090f,#091d24 58%,#031017);
-      opacity:0;animation:jawsClassicShark 12s linear infinite;
-    `;
-    shark.innerHTML='<i></i>';
+    shark.className="jawsPublicShark";
 
-    const name=row.querySelector(".pmPlayerName");
-    if(name&&!name.querySelector(".jawsClassicOwnerMarker")){
-      const marker=document.createElement("span");
-      marker.className="jawsClassicOwnerMarker";
-      marker.textContent="JAWS";
-      marker.style.cssText=`
-        display:inline-block;margin-left:7px;padding:3px 6px;border-radius:999px;
-        border:1px solid rgba(118,231,240,.28);background:rgba(90,222,235,.06);
-        color:#91dbe2;font:900 8px/1 Arial,sans-serif;letter-spacing:1.1px;
-        vertical-align:middle;
-      `;
-      name.appendChild(marker);
-    }
+    water.setAttribute("aria-hidden","true");
+    bubbles.setAttribute("aria-hidden","true");
+    shark.setAttribute("aria-hidden","true");
 
     row.append(water,bubbles,shark);
 
-    const rule=document.createElement("style");
-    rule.id="pmJawsClassicOwnerKeyframes";
-    if(!document.getElementById(rule.id)){
-      rule.textContent=`
-        @keyframes jawsClassicWater{from{transform:translate(-3%,-1%)}to{transform:translate(8%,8%)}}
-        @keyframes jawsClassicBubbles{
-          0%,100%{background-position:0 8px,0 8px,0 8px,0 10px;opacity:.38}
-          50%{background-position:0 -14px,2px -18px,-2px -16px,2px -20px;opacity:.72}
-        }
-        @keyframes jawsClassicShark{
-          0%,15%{left:-175px;opacity:0;transform:translateY(-50%) scale(.66)}
-          22%{opacity:.58}
-          48%{left:34%;opacity:.62;transform:translateY(-52%) scale(.76)}
-          69%{left:70%;opacity:.42}
-          84%,100%{left:116%;opacity:0}
-        }
-        .jawsClassicOwnerShark i{
-          position:absolute;left:40px;top:-25px;width:0;height:0;
-          border-left:11px solid transparent;border-right:6px solid transparent;
-          border-bottom:30px solid #07171d;
-        }
-      `;
-      document.head.appendChild(rule);
+    const name=row.querySelector(".pmPlayerName");
+    if(name && !name.querySelector(".jawsPublicMarker")){
+      const marker=document.createElement("span");
+      marker.className="jawsPublicMarker";
+      marker.textContent="JAWS";
+      name.appendChild(marker);
     }
   }
 
-  /* ---------- stable click handling ---------- */
-  function bindRows(){
+  window.pmApplyPublicJawsCardEffect=pmApplyPublicJawsCardEffect;
+
+  // Re-apply to the currently visible rows after any Firestore refresh.
+  function refreshVisibleRows(){
     document.querySelectorAll("#globalLeaderboard .pmLeaderboardRow").forEach(row=>{
-      if(row.dataset.pmClassicClickBound==="1")return;
-      row.dataset.pmClassicClickBound="1";
-      row.addEventListener("click",function(e){
-        if(e.target.closest?.("button,a,input,select,textarea"))return;
-        const uid=row.dataset.pmPlayerId||row.dataset.pmJawsPlayerId;
-        if(uid&&typeof window.openPublicProfile==="function"){
-          e.preventDefault();
-          e.stopPropagation();
-          window.openPublicProfile(uid);
-        }
-      });
+      const player={
+        id:row.dataset.pmPlayerId||"",
+        equippedUI:row.dataset.pmPlayerEquippedUI||""
+      };
+      pmApplyPublicJawsCardEffect(row,player);
     });
   }
 
-  /* ---------- My UI ---------- */
-  function ensureJawsMyUICard(){
-    const box=document.getElementById("pmMyUIList");
-    if(!box)return;
-
-    let card=box.querySelector(".pmClassicJawsUICard");
-    if(!card){
-      card=document.createElement("div");
-      card.className="pmCollectionItem pmClassicJawsUICard";
-      card.innerHTML=`
-        <div class="pmCollectionPreview" style="display:grid;place-items:center;background:linear-gradient(180deg,#063441,#03131b);overflow:hidden">
-          <div style="font-size:30px;font-weight:1000;letter-spacing:3px;color:#efffff">JAWS</div>
-        </div>
-        <div class="pmCollectionItemTitle">JAWS OCEAN UI</div>
-        <div class="pmCollectionItemSub">CLASSIC OCEAN UI • LEADERBOARD SHARK EFFECT</div>
-        <button type="button" class="pmActionButton"></button>
-        <div class="pmCollectionStatus"></div>
-      `;
-      box.appendChild(card);
-      card.querySelector("button").addEventListener("click",e=>{
-        e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
-        toggleJaws();
-      },true);
-    }
-
-    const btn=card.querySelector("button");
-    const status=card.querySelector(".pmCollectionStatus");
-    const owned=ownsJaws();
-    const isOn=equipped();
-    btn.disabled=!owned;
-    btn.textContent=isOn?"UNEQUIP":owned?"EQUIP":"NOT OWNED";
-    btn.style.pointerEvents=owned?"auto":"none";
-    status.textContent=isOn?"EQUIPPED":owned?"AVAILABLE":"NOT OWNED";
-  }
-
-  async function toggleJaws(){
-    if(!ownsJaws())return alert("You do not own the JAWS Ocean UI.");
-    if(!window.pmFirebaseReady||!window.pmAuthUser)return alert("Your online account is not connected yet.");
-
-    const next=equipped()?"default":JAWS_ID;
-    try{
-      window.pmUserData={...(window.pmUserData||{}),equippedUI:next};
-      if(typeof window.pmApplyEquippedUI==="function")window.pmApplyEquippedUI();
-
-      await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({
-        equippedUI:next,
-        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-      },{merge:true});
-
-      ensureJawsMyUICard();
-      if(next===JAWS_ID)applyClassicOwnerCard();else clearClassicOwnerCard();
-    }catch(e){
-      console.error("JAWS toggle failed:",e);
-      alert("Could not equip JAWS UI.");
-    }
-  }
-
-  function tagRowsWithIds(){
-    /* If the renderer already supplies data-pmPlayerId, do nothing. */
-    document.querySelectorAll("#globalLeaderboard .pmLeaderboardRow").forEach(row=>{
-      if(!row.dataset.pmPlayerId && row.dataset.pmJawsPlayerId){
-        row.dataset.pmPlayerId=row.dataset.pmJawsPlayerId;
-      }
-    });
-  }
-
-  cleanPfpArtifacts();
-  ensureJawsMyUICard();
-  bindRows();
-  tagRowsWithIds();
-  if(equipped())applyClassicOwnerCard();
-
-  setInterval(()=>{
-    cleanPfpArtifacts();
-    ensureJawsMyUICard();
-    bindRows();
-    tagRowsWithIds();
-    if(equipped())applyClassicOwnerCard(); else clearClassicOwnerCard();
-  },1300);
+  // The leaderboard renderer calls the effect directly for each player.
+  // These periodic refreshes are ONLY a safety net and do not rebuild
+  // already-correct rows because renderGlobalLeaderboard controls lifecycle.
+  setTimeout(refreshVisibleRows,250);
+  setInterval(refreshVisibleRows,1800);
 })();
 </script>
+
+
+<style id="pmJawsMastheadAndCpsShapeFix">
+/* Keep the JAWS title as plain page text, not a boxed card. */
+body.jawsOcean .title{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  padding:0!important;
+  margin:0 0 24px!important;
+  overflow:visible!important;
+}
+body.jawsOcean .title::before{
+  display:none!important;
+}
+body.jawsOcean .title h1{
+  margin:0!important;
+  padding:0!important;
+}
+
+/* Restore the rounded CPS result box shape from the normal UI. */
+body.jawsOcean .cpsBox{
+  border-radius:22px!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(circle at 50% 8%,rgba(95,221,232,.08),transparent 32%),
+    linear-gradient(145deg,rgba(4,30,40,.84),rgba(2,14,21,.90))!important;
+  border:1px solid rgba(99,220,231,.18)!important;
+  box-shadow:
+    0 18px 44px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+
+/* Preserve the normal proportions and centered result internals. */
+body.jawsOcean .cpsBox .cpsStatus,
+body.jawsOcean .cpsBox .cpsNumber,
+body.jawsOcean .cpsBox .cpsLabel{
+  text-align:center!important;
+}
+body.jawsOcean .cpsBox .cpsStatus{margin-bottom:10px!important}
+body.jawsOcean .cpsBox .cpsLabel{margin-top:14px!important}
+
+/* Slightly reduce the amount of empty space so it matches the standard card. */
+body.jawsOcean .cpsBox{
+  min-height:320px!important;
+  padding:34px 24px!important;
+}
+</style>
