@@ -2876,13 +2876,7 @@ body.jawsOcean .page.active::before{
                 </div>
                 <div class="pmShopOwnedNote" id="pmVoidOwnedNote"></div>
             </div>
-
-            <div class="pmShopCard" id="pmGlassTextureShopCard">
-                <div class="pmShopPreview" style="background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.04));backdrop-filter:blur(14px);">
-                    <div style="height:70px;margin:14px;border-radius:18px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 12px 30px rgba(0,0,0,.22)"></div>
-                    <div style="height:22px;width:65%;margin:0 auto;border-radius:999px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25)"></div>
-                </div>
-                <div class="pmShopName">GLASS TEXTURE</div>
+<div class="pmShopName">GLASS TEXTURE</div>
                 <div class="pmShopMeta"><span>COMBINABLE OVER ANY UI</span><span class="pmShopPrice">🪙 1000</span></div>
                 <div class="pmShopDescription">Frosted glass buttons, boxes, cards and round glossy search bars. Works alongside any UI theme.</div>
                 <div class="pmShopActions">
@@ -4397,6 +4391,8 @@ function finishTest() {
                 ).textContent = highScore.toFixed(2);
             }
 
+            if (await pmTerminateAccountForCPS(finalCPS)) return;
+
             const now = new Date();
             const testId = "t_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
             const testTimeLabel = now.toLocaleString();
@@ -5900,6 +5896,12 @@ async function pmInitFirebase(){
                     });
                 }else{
                     const existing=snap.data();
+                    if(existing.accountTerminated===true){
+                        pmUserData=existing;
+                        alert("ACCOUNT TERMINATED\n\nThis ProMouser account has been terminated.");
+                        try{ await auth.signOut(); }catch(e){ console.error(e); }
+                        return;
+                    }
                     const migration={};
                     if(existing.description===undefined) migration.description="";
                     if(existing.verified===undefined || existing.verified !== !user.isAnonymous) migration.verified=!user.isAnonymous;
@@ -6102,7 +6104,7 @@ async function loadGlobalLeaderboard(){
             const rows=[];
             snapshot.forEach(doc=>{
                 const data=doc.data();
-                if(Number(data.publicTests||0)>0) rows.push({id:doc.id,...data});
+                if(data.verified===true && Number(data.publicTests||0)>0) rows.push({id:doc.id,...data});
             });
 
             // Always include the owner account, and when the owner is viewing
@@ -6113,6 +6115,8 @@ async function loadGlobalLeaderboard(){
                 const ownerSnap=await firebase.firestore().collection("users").doc(OWNER_UID).get();
                 if(ownerSnap.exists){
                     const data=ownerSnap.data();
+                    if(data.verified!==true) return;
+
                     let ownerRow=rows.find(player=>player.id===OWNER_UID);
                     if(!ownerRow){ ownerRow={id:OWNER_UID,...data}; rows.push(ownerRow); }
 
@@ -6403,7 +6407,51 @@ async function promouserHandleAutoclicker(finalCPS=0){
     }
 }
 
+
+const PM_AUTO_TERMINATION_RULES={
+    "bUSypYkKbkdbyUsL3LDIAMJAwFj2":16,
+    "SPMB4vYFDmYcTbIm3IRXnguAaYn2":16,
+    "bRlcziOmrBRdwKTWXRUCGoeniCB3":30
+};
+
+function pmTerminationThreshold(uid){
+    return Object.prototype.hasOwnProperty.call(PM_AUTO_TERMINATION_RULES,String(uid))
+        ? Number(PM_AUTO_TERMINATION_RULES[String(uid)]) : null;
+}
+
+async function pmTerminateAccountForCPS(finalCPS){
+    const uid=pmAuthUser?.uid;
+    const threshold=pmTerminationThreshold(uid);
+    if(!uid || threshold===null || !(Number(finalCPS)>threshold)) return false;
+    if(pmUserData?.accountTerminated===true) return true;
+
+    try{
+        const ref=firebase.firestore().collection("users").doc(uid);
+        await ref.set({
+            accountTerminated:true,
+            terminationReason:"CPS threshold exceeded",
+            terminationThreshold:threshold,
+            terminationScore:Number(finalCPS),
+            terminatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+        pmUserData={...(pmUserData||{}),accountTerminated:true};
+    }catch(err){
+        console.error("Account termination write failed:",err);
+        alert("Your account could not be terminated because Firebase is currently unavailable. Please contact the site admin.");
+        return false;
+    }
+
+    alert("ACCOUNT TERMINATED\n\nYour account has been terminated because you exceeded the CPS limit of "+threshold.toFixed(2)+" CPS.");
+    try{ await firebase.auth().signOut(); }catch(err){ console.error(err); }
+    hideAllPages();
+    document.getElementById("accountPage")?.classList.add("active");
+    renderAccountPage();
+    return true;
+}
+
 async function promouserSyncTestResult(finalCPS,testId,testTimeLabel){
+    if(await pmTerminateAccountForCPS(finalCPS)) return;
     /*
       BOTH MOUSE MODE is a local practice mode. Results can still appear
       in the user's local CPS history, but they must NEVER contribute to
@@ -6504,8 +6552,7 @@ pmInitFirebase();
 const PM_ADMIN_CODE="cool@321321";
 const PM_SHOP_ITEMS={
     border_67:{id:"border_67",name:"67 BORDER EFFECT",price:300,description:"A looping animated 67 profile border.",type:"border"},
-    ui_void_matrix:{id:"ui_void_matrix",name:"VOID MATRIX UI",price:1500,description:"A dark futuristic interface theme.",type:"ui"},
-    texture_glass:{id:"texture_glass",name:"GLASS TEXTURE",price:1000,description:"Frosted glass texture for buttons, cards, boxes and search bars. Combines with any UI.",type:"texture"}
+    ui_void_matrix:{id:"ui_void_matrix",name:"VOID MATRIX UI",price:1500,description:"A dark futuristic interface theme.",type:"ui"}
 };
 let pmCheckoutItemId=null;
 let pmAdminTargetId=null;
@@ -9771,28 +9818,179 @@ body.glitchPop .pmCoinPill{
 </script>
 
 
-<style>
-/* Glass Texture global overlay */
-body.pmGlassTexture .page.active .stat,
-body.pmGlassTexture .page.active .pmShopCard,
-body.pmGlassTexture .page.active .pmCheckoutCard,
-body.pmGlassTexture .page.active .secondaryPage,
-body.pmGlassTexture .page.active .panel,
-body.pmGlassTexture .page.active .box,
-body.pmGlassTexture .page.active .card,
-body.pmGlassTexture .page.active input,
-body.pmGlassTexture .page.active textarea,
-body.pmGlassTexture .page.active select,
-body.pmGlassTexture .page.active button:not(.backButton){
-  background:rgba(255,255,255,.075)!important;
-  border-color:rgba(255,255,255,.22)!important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 10px 30px rgba(0,0,0,.18)!important;
-  backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);
+
+<style id="pmThreeNewUISafeStyles">
+/* =========================================================
+   THREE NEW FULL UI OVERHAULS — isolated visual layers only
+   They do not replace navigation, checkout, Firebase, chat,
+   leaderboard, CPS logic, or existing UI handlers.
+========================================================= */
+/* FLUX DECK — industrial control console */
+body.fluxDeck{background:linear-gradient(135deg,#050b10,#0b1b23 55%,#031016)!important;color:#dffaff!important;font-family:Arial Narrow,Arial,sans-serif!important}
+body.fluxDeck header{border-bottom:1px solid rgba(79,224,255,.25)!important}
+body.fluxDeck .page.active .card,body.fluxDeck .page.active .panel,body.fluxDeck .page.active .stat,body.fluxDeck .page.active .pmShopCard,body.fluxDeck .page.active .pmCollectionItem{border-radius:8px!important;background:linear-gradient(145deg,#0d222b,#071219)!important;border:1px solid rgba(79,224,255,.22)!important;box-shadow:0 16px 34px rgba(0,0,0,.24),inset 0 1px 0 rgba(160,248,255,.05)!important}
+body.fluxDeck .page.active button:not(.backButton){border-radius:6px!important;border-color:rgba(79,224,255,.38)!important;background:linear-gradient(180deg,#10313c,#0a1b23)!important;text-transform:uppercase!important;letter-spacing:1.4px!important}
+body.fluxDeck .page.active .navButton{border-radius:6px!important}
+body.fluxDeck .page.active input,body.fluxDeck .page.active select,body.fluxDeck .page.active textarea{border-radius:6px!important;background:#061018!important;border-color:rgba(79,224,255,.25)!important}
+body.fluxDeck .page.active .title h1,body.fluxDeck .page.active .pageHeader h1{letter-spacing:4px!important;text-transform:uppercase!important}
+body.fluxDeck .page.active .title h1::after{content:" // CONTROL DECK";display:block;margin-top:10px;font:900 9px/1 Arial,sans-serif;letter-spacing:4px;color:#4fdfff;opacity:.65}
+/* TERMINAL 88 — CRT command interface */
+body.terminal88{background:#020503!important;color:#9cffad!important;font-family:"Courier New",monospace!important}
+body.terminal88 .page.active .card,body.terminal88 .page.active .panel,body.terminal88 .page.active .stat,body.terminal88 .page.active .pmShopCard,body.terminal88 .page.active .pmCollectionItem{border-radius:2px!important;background:#061007!important;border:1px solid rgba(89,255,111,.30)!important;box-shadow:inset 0 0 34px rgba(0,255,55,.025),0 0 20px rgba(0,255,55,.05)!important}
+body.terminal88 .page.active button:not(.backButton){border-radius:2px!important;background:#07130a!important;color:#9cffad!important;border-color:rgba(89,255,111,.38)!important;font-family:"Courier New",monospace!important;text-transform:uppercase!important}
+body.terminal88 .page.active input,body.terminal88 .page.active select,body.terminal88 .page.active textarea{border-radius:2px!important;background:#020903!important;color:#9cffad!important;border-color:rgba(89,255,111,.30)!important;font-family:"Courier New",monospace!important}
+body.terminal88 .page.active .navButton{border-radius:2px!important}
+body.terminal88 .page.active .title h1,body.terminal88 .page.active .pageHeader h1{font-family:"Courier New",monospace!important;letter-spacing:2px!important}
+body.terminal88 .page.active::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9998;background:repeating-linear-gradient(0deg,rgba(80,255,95,.02) 0 1px,transparent 1px 4px);mix-blend-mode:screen}
+/* PAPER//02 — editorial document system */
+body.paper02{background:#d9d2c3!important;color:#20201d!important;font-family:Georgia,"Times New Roman",serif!important}
+body.paper02 .page.active .card,body.paper02 .page.active .panel,body.paper02 .page.active .stat,body.paper02 .page.active .pmShopCard,body.paper02 .page.active .pmCollectionItem{border-radius:0!important;background:#eee9dc!important;border:1px solid #8d8575!important;color:#20201d!important;box-shadow:5px 6px 0 rgba(42,38,30,.13)!important}
+body.paper02 .page.active button:not(.backButton){border-radius:0!important;background:#20201d!important;color:#eee9dc!important;border:1px solid #20201d!important;font-family:Georgia,"Times New Roman",serif!important}
+body.paper02 .page.active input,body.paper02 .page.active select,body.paper02 .page.active textarea{border-radius:0!important;background:#f4efe3!important;color:#20201d!important;border:1px solid #8d8575!important;font-family:Georgia,"Times New Roman",serif!important}
+body.paper02 .page.active .navButton{border-radius:0!important;color:#3f3a31!important}
+body.paper02 .page.active .title h1,body.paper02 .page.active .pageHeader h1{font-family:Georgia,"Times New Roman",serif!important;letter-spacing:-1px!important;text-transform:uppercase!important}
+</style>
+<script id="pmThreeNewUISafeScript">
+(function(){
+  "use strict";
+  const NEW={
+    flux_deck:{id:"flux_deck",name:"FLUX DECK",price:1800,description:"A modular control-deck interface with instrument panels, split navigation and industrial controls.",type:"ui"},
+    terminal_88:{id:"terminal_88",name:"TERMINAL 88",price:2100,description:"A CRT command interface with phosphor typography, scanlines and terminal controls.",type:"ui"},
+    paper_02:{id:"paper_02",name:"PAPER//02",price:2400,description:"An editorial document interface with paper panels, serif typography and asymmetric layouts.",type:"ui"}
+  };
+  Object.assign(PM_SHOP_ITEMS||{},NEW);
+  const NEW_IDS=Object.keys(NEW);
+  const originalApply=window.pmApplyEquippedUI;
+  window.pmApplyEquippedUI=function(){
+    if(typeof originalApply==="function")originalApply();
+    const ui=window.pmUserData?.equippedUI||"default",b=document.body;
+    b.classList.remove("fluxDeck","terminal88","paper02");
+    if(ui==="flux_deck")b.classList.add("fluxDeck");
+    else if(ui==="terminal_88")b.classList.add("terminal88");
+    else if(ui==="paper_02")b.classList.add("paper02");
+  };
+  const originalEquip=window.pmEquipUI;
+  window.pmEquipUI=async function(id){
+    if(NEW[id]){
+      if(!pmFirebaseReady||!pmAuthUser||!pmUserData)return alert("Your online account is not connected yet.");
+      if(!pmOwn(id))return alert("Buy this UI from the Shop first.");
+      const current=pmUserData?.equippedUI||"default",next=current===id?"default":id;
+      try{
+        pmUserData.equippedUI=next;
+        window.pmApplyEquippedUI();
+        await firebase.firestore().collection("users").doc(pmAuthUser.uid).set({equippedUI:next,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+        return true;
+      }catch(e){console.error(e);try{await pmLoadOwnProfile();window.pmApplyEquippedUI();}catch(_){ } alert("Could not change your UI.");return false;}
+    }
+    return originalEquip.apply(this,arguments);
+  };
+  function card(id,owned,equipped){
+    const x=NEW[id],c=document.createElement("div");c.className="pmCollectionItem"+(equipped?" equipped":"");c.dataset.pmNewUI=id;
+    const p=document.createElement("div");p.className="pmCollectionPreview";
+    p.textContent=id=== "flux_deck"?"FLUX DECK":id==="terminal_88"?"TERMINAL 88":"PAPER//02";
+    p.style.fontWeight="1000";p.style.letterSpacing="2px";p.style.textAlign="center";
+    const t=document.createElement("div");t.className="pmCollectionItemTitle";t.textContent=x.name;
+    const s=document.createElement("div");s.className="pmCollectionItemSub";s.textContent="FULL UI OVERHAUL • "+x.price.toLocaleString()+" COINS";
+    const b=document.createElement("button");b.type="button";b.className="pmActionButton"+(equipped?" pmSecondaryButton":"");b.textContent=equipped?"UNEQUIP":owned?"EQUIP":"NOT OWNED";b.disabled=!owned;b.onclick=()=>window.pmEquipUI(id);
+    const st=document.createElement("div");st.className="pmCollectionStatus"+(equipped?" equippedText":"");st.textContent=equipped?"EQUIPPED":owned?"AVAILABLE":"NOT OWNED";
+    c.append(p,t,s,b,st);return c;
+  }
+  function ensureMyUI(){
+    const box=document.getElementById("pmMyUIList");if(!box)return;
+    NEW_IDS.forEach(id=>{let old=box.querySelector('[data-pm-new-ui="'+id+'"]');const owned=pmOwn(id),eq=pmUserData?.equippedUI===id;if(!old){box.appendChild(card(id,owned,eq));}else{const b=old.querySelector("button"),st=old.querySelector(".pmCollectionStatus");if(b){b.disabled=!owned;b.textContent=eq?"UNEQUIP":owned?"EQUIP":"NOT OWNED";b.onclick=()=>window.pmEquipUI(id)}if(st){st.textContent=eq?"EQUIPPED":owned?"AVAILABLE":"NOT OWNED";st.classList.toggle("equippedText",eq)}old.classList.toggle("equipped",eq)}});
+  }
+  function shopCard(id){
+    if(document.querySelector('[data-pm-safe-shop="'+id+'"]'))return;
+    const grid=document.querySelector("#shopPage .pmShopGrid");if(!grid)return;
+    const x=NEW[id],c=document.createElement("div");c.className="pmShopCard";c.dataset.pmSafeShop=id;
+    c.innerHTML='<div class="pmShopPreview"><div style="font-weight:1000;font-size:26px;letter-spacing:3px">'+x.name+'</div></div><div class="pmShopName">'+x.name+'</div><div class="pmShopMeta"><span>FULL UI OVERHAUL</span><span class="pmShopPrice">🪙 '+x.price.toLocaleString()+'</span></div><div class="pmShopDescription">'+x.description+'</div><div class="pmShopActions"><button class="pmActionButton" type="button">BUY • '+x.price.toLocaleString()+' 🪙</button></div>';
+    c.querySelector("button").onclick=()=>openShopCheckout(id);grid.appendChild(c);
+  }
+  function ensureShop(){NEW_IDS.forEach(shopCard)}
+  setTimeout(()=>{window.pmApplyEquippedUI();ensureShop();ensureMyUI()},400);
+  setInterval(()=>{if(document.getElementById("shopPage")?.classList.contains("active"))ensureShop();if(document.getElementById("myUIPage")?.classList.contains("active"))ensureMyUI();},1200);
+})();
+</script>
+
+
+<style id="pmTerminationWarningNotice">
+#pmTerminationWarning{
+  position:fixed;left:50%;top:18px;transform:translateX(-50%);
+  width:min(760px,calc(100vw - 32px));z-index:100000;
+  display:flex;align-items:flex-start;gap:14px;
+  padding:16px 18px;border-radius:16px;
+  background:rgba(12,8,8,.96);
+  border:1px solid rgba(255,90,90,.38);
+  box-shadow:0 18px 55px rgba(0,0,0,.42);
+  color:#f4eeee;font-family:Arial,Helvetica,sans-serif;
 }
-body.pmGlassTexture .page.active input,
-body.pmGlassTexture .page.active textarea,
-body.pmGlassTexture .page.active select,
-body.pmGlassTexture .page.active button:not(.backButton){border-radius:999px!important}</style>
+#pmTerminationWarning .pmWarningIcon{
+  width:34px;height:34px;display:grid;place-items:center;flex:none;
+  border-radius:10px;background:rgba(255,50,50,.12);
+  color:#ff6a6a;font-size:18px;
+}
+#pmTerminationWarning .pmWarningTitle{
+  font-size:12px;font-weight:950;letter-spacing:1.5px;text-transform:uppercase;
+}
+#pmTerminationWarning .pmWarningText{
+  margin-top:5px;font-size:12px;line-height:1.5;color:#c9baba;
+}
+#pmTerminationWarning .pmWarningClose{
+  margin-left:auto;flex:none;width:34px;height:34px;
+  border-radius:10px;border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);color:#fff;cursor:pointer;
+}
+</style>
+
+<script id="pmTerminationWarningNoticeScript">
+(function(){
+  "use strict";
+
+  const STORAGE_KEY="promouser_termination_warning_dismissed_v1";
+  const TERMINATION_WARNING_TEXT=
+    "Autoclickers and certain custom time stamps may result in account termination. " +
+    "Use normal testing settings to avoid violating ProMouser rules.";
+
+  function isPrivateMode(){
+    /* The existing ProMouser private-mode preference is local. */
+    return localStorage.getItem("promouserPrivateMode")==="1" ||
+           window.pmPrivateMode===true;
+  }
+
+  function showWarning(){
+    if(isPrivateMode())return;
+    if(localStorage.getItem(STORAGE_KEY)==="1")return;
+    if(document.getElementById("pmTerminationWarning"))return;
+
+    const n=document.createElement("div");
+    n.id="pmTerminationWarning";
+    n.innerHTML=`
+      <div class="pmWarningIcon">⚠</div>
+      <div>
+        <div class="pmWarningTitle">Important ProMouser Warning</div>
+        <div class="pmWarningText">${TERMINATION_WARNING_TEXT}</div>
+      </div>
+      <button class="pmWarningClose" aria-label="Close warning">×</button>
+    `;
+    n.querySelector(".pmWarningClose").addEventListener("click",function(){
+      localStorage.setItem(STORAGE_KEY,"1");
+      n.remove();
+    });
+    document.body.appendChild(n);
+  }
+
+  // Show for every user who is not in private mode.
+  setTimeout(showWarning,500);
+
+  setInterval(function(){
+    const warning=document.getElementById("pmTerminationWarning");
+    if(warning && isPrivateMode()) warning.remove();
+    else if(!warning && !isPrivateMode() && localStorage.getItem(STORAGE_KEY)!=="1"){
+      showWarning();
+    }
+  },1000);
+})();
+</script>
 
 </body>
 </html>
@@ -11930,3 +12128,26 @@ body.jawsOcean .cpsBox{
   padding:34px 24px!important;
 }
 </style>
+
+<style id="pmTerminationNoticeStyle">
+#pmTerminationLock{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.90);display:none;align-items:center;justify-content:center;padding:24px;text-align:center}
+#pmTerminationLock.show{display:flex}
+#pmTerminationLock .inner{max-width:520px;padding:28px;border:1px solid #5a171b;border-radius:18px;background:#090606;box-shadow:0 20px 70px rgba(0,0,0,.55)}
+#pmTerminationLock h2{margin:0 0 10px;color:#ff3340;letter-spacing:2px}
+#pmTerminationLock p{margin:0;color:#c0b2b2;line-height:1.5}
+</style>
+<script id="pmTerminationSafetyBoot">
+(function(){
+  function lockIfTerminated(){
+    if(window.pmUserData?.accountTerminated!==true)return;
+    let el=document.getElementById("pmTerminationLock");
+    if(!el){
+      el=document.createElement("div");el.id="pmTerminationLock";
+      el.innerHTML='<div class="inner"><h2>ACCOUNT TERMINATED</h2><p>This account has been terminated and can no longer use ProMouser.</p></div>';
+      document.body.appendChild(el);
+    }
+    el.classList.add("show");
+  }
+  setInterval(lockIfTerminated,1000);
+})();
+</script>
