@@ -4273,7 +4273,7 @@ function detectAutoClicker(intervals) {
    FINISH TEST
 ========================================================= */
 
-function finishTest() {
+async function finishTest() {
 
     running = false;
 
@@ -9913,130 +9913,6 @@ body.paper02 .page.active .title h1,body.paper02 .page.active .pageHeader h1{fon
 </script>
 
 
-<style id="pmTerminationWarningStyle">
-#pmTerminationWarning{
-  position:fixed;
-  left:50%;
-  top:18px;
-  transform:translateX(-50%);
-  width:min(760px,calc(100vw - 32px));
-  z-index:2147483000;
-  display:flex;
-  align-items:flex-start;
-  gap:14px;
-  padding:16px 18px;
-  border-radius:16px;
-  background:rgba(12,8,8,.97);
-  border:1px solid rgba(255,90,90,.38);
-  box-shadow:0 18px 55px rgba(0,0,0,.42);
-  color:#f4eeee;
-  font-family:Arial,Helvetica,sans-serif;
-}
-#pmTerminationWarning .pmWarningIcon{
-  width:34px;height:34px;display:grid;place-items:center;flex:none;
-  border-radius:10px;background:rgba(255,50,50,.12);
-  color:#ff6a6a;font-size:18px;
-}
-#pmTerminationWarning .pmWarningTitle{
-  font-size:12px;font-weight:950;letter-spacing:1.5px;text-transform:uppercase;
-}
-#pmTerminationWarning .pmWarningText{
-  margin-top:5px;font-size:12px;line-height:1.5;color:#c9baba;
-}
-#pmTerminationWarning .pmWarningClose{
-  margin-left:auto;flex:none;width:34px;height:34px;
-  border-radius:10px;border:1px solid rgba(255,255,255,.12);
-  background:rgba(255,255,255,.04);color:#fff;cursor:pointer;
-  font-size:20px;line-height:1;
-}
-#pmTerminationWarning .pmWarningClose:hover{
-  background:rgba(255,255,255,.10);
-}
-</style>
-<script id="pmTerminationWarningScript">
-(function(){
-  "use strict";
-
-  var STORAGE_KEY="promouser_termination_warning_dismissed_v3";
-
-  function privateModeEnabled(){
-    return window.pmPrivateMode === true ||
-           (window.pmUserData && window.pmUserData.privateMode === true) ||
-           localStorage.getItem("promouserPrivateMode") === "1";
-  }
-
-  function removeWarning(){
-    var el=document.getElementById("pmTerminationWarning");
-    if(el) el.remove();
-  }
-
-  function showWarning(){
-    if(privateModeEnabled()) return;
-    if(localStorage.getItem(STORAGE_KEY)==="1") return;
-    if(document.getElementById("pmTerminationWarning")) return;
-
-    var n=document.createElement("div");
-    n.id="pmTerminationWarning";
-
-    var icon=document.createElement("div");
-    icon.className="pmWarningIcon";
-    icon.textContent="⚠";
-
-    var content=document.createElement("div");
-
-    var title=document.createElement("div");
-    title.className="pmWarningTitle";
-    title.textContent="Important ProMouser Warning";
-
-    var text=document.createElement("div");
-    text.className="pmWarningText";
-    text.textContent=
-      "Autoclickers and certain custom time stamps can lead to account termination. " +
-      "Use normal testing settings to avoid violating ProMouser rules.";
-
-    var close=document.createElement("button");
-    close.type="button";
-    close.className="pmWarningClose";
-    close.setAttribute("aria-label","Close warning");
-    close.textContent="×";
-
-    close.addEventListener("click",function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      localStorage.setItem(STORAGE_KEY,"1");
-      removeWarning();
-    });
-
-    content.appendChild(title);
-    content.appendChild(text);
-    n.appendChild(icon);
-    n.appendChild(content);
-    n.appendChild(close);
-
-    document.body.appendChild(n);
-  }
-
-  function syncWarning(){
-    if(privateModeEnabled()) removeWarning();
-    else showWarning();
-  }
-
-  function boot(){
-    syncWarning();
-    window.setInterval(syncWarning,1000);
-  }
-
-  if(document.readyState==="loading"){
-    document.addEventListener("DOMContentLoaded",boot,{once:true});
-  }else{
-    boot();
-  }
-})();
-</script>
-
-</body>
-</html>
-
 
 <!-- =========================================================
      USER CPS HISTORY LOCK + AURORA FLOW UI
@@ -12193,3 +12069,90 @@ body.jawsOcean .cpsBox{
   setInterval(lockIfTerminated,1000);
 })();
 </script>
+
+
+
+<style id="pmTerminationWarningStyle">
+#pmTerminationWarning{
+ position:fixed;left:50%;top:18px;transform:translateX(-50%);
+ width:min(760px,calc(100vw - 32px));z-index:2147483000;
+ display:flex;align-items:flex-start;gap:14px;padding:16px 18px;
+ border-radius:16px;background:rgba(12,8,8,.97);
+ border:1px solid rgba(255,90,90,.38);
+ box-shadow:0 18px 55px rgba(0,0,0,.42);
+ color:#f4eeee;font-family:Arial,Helvetica,sans-serif;
+}
+#pmTerminationWarning .pmWarningIcon{
+ width:34px;height:34px;display:grid;place-items:center;flex:none;
+ border-radius:10px;background:rgba(255,50,50,.12);color:#ff6a6a;font-size:18px;
+}
+#pmTerminationWarning .pmWarningTitle{
+ font-size:12px;font-weight:950;letter-spacing:1.5px;text-transform:uppercase;
+}
+#pmTerminationWarning .pmWarningText{
+ margin-top:5px;font-size:12px;line-height:1.5;color:#c9baba;
+}
+#pmTerminationWarning .pmWarningClose{
+ margin-left:auto;flex:none;width:34px;height:34px;border-radius:10px;
+ border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);
+ color:#fff;cursor:pointer;font-size:20px;line-height:1;
+}
+#pmTerminationWarning .pmWarningClose:hover{background:rgba(255,255,255,.10);}
+</style>
+<script id="pmTerminationWarningScript">
+(function(){
+ "use strict";
+ var STORAGE_KEY="promouser_termination_warning_dismissed_v4";
+ function privateMode(){
+   return localStorage.getItem("promouserPrivateMode")==="1";
+ }
+ function removeWarning(){
+   var e=document.getElementById("pmTerminationWarning");
+   if(e)e.remove();
+ }
+ function showWarning(){
+   if(privateMode() || localStorage.getItem(STORAGE_KEY)==="1" ||
+      document.getElementById("pmTerminationWarning")) return;
+   var n=document.createElement("div");
+   n.id="pmTerminationWarning";
+   var icon=document.createElement("div");
+   icon.className="pmWarningIcon";
+   icon.textContent="⚠";
+   var c=document.createElement("div");
+   var title=document.createElement("div");
+   title.className="pmWarningTitle";
+   title.textContent="Important ProMouser Warning";
+   var text=document.createElement("div");
+   text.className="pmWarningText";
+   text.textContent="Autoclickers and certain custom time stamps can lead to account termination. Use normal testing settings to avoid violating ProMouser rules.";
+   var close=document.createElement("button");
+   close.type="button";
+   close.className="pmWarningClose";
+   close.setAttribute("aria-label","Close warning");
+   close.textContent="×";
+   close.addEventListener("click",function(e){
+     e.preventDefault();
+     e.stopPropagation();
+     localStorage.setItem(STORAGE_KEY,"1");
+     removeWarning();
+   });
+   c.appendChild(title);c.appendChild(text);
+   n.appendChild(icon);n.appendChild(c);n.appendChild(close);
+   document.body.appendChild(n);
+ }
+ function sync(){
+   if(privateMode()) removeWarning();
+   else showWarning();
+ }
+ if(document.readyState==="loading"){
+   document.addEventListener("DOMContentLoaded",function(){
+     sync();setInterval(sync,1000);
+   },{once:true});
+ }else{
+   sync();setInterval(sync,1000);
+ }
+})();
+</script>
+
+</body>
+</html>
